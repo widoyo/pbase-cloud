@@ -1,0 +1,16 @@
+{
+    "name": "rpahlevy/pbase-cloud",
+    "description": "Prima Base Cloud",
+    "keywords": ["microframework", "rest", "router", "psr7"],
+    "require": {
+        "php": ">=7.1.30",
+        "monolog/monolog": "^1.17",
+        "slim/slim": "^3.1",
+        "slim/twig-view": "^2.5",
+        "kanellov/slim-twig-flash": "^0.2.0",
+        "vlucas/phpdotenv": "^2.4"
+    },
+    "scripts": {
+        "start": "php -S localhost:8888 -t public"
+    }
+}

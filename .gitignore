@@ -1,0 +1,11 @@
+.git/
+cache/
+logs/*.log
+public/uploads/*
+public/php_errors.log
+vendor/
+raw/
+.env
+*.zip
+composer.lock
+/*.bat

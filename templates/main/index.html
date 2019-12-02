@@ -1,0 +1,128 @@
+{% extends 'layouts/master.html' %}
+
+{% set title = "Home" %}
+
+{% block content %}
+    <!-- <section class="content-header mb-5">
+	<h1>home</h1>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">Dashboard</li>
+    </ol>
+    </section> -->
+    <div class="row">
+      <div class="col">
+    	<h3>Hujan {{ hujan_sejak }}
+            <!-- <a href="#" id="sejak" data-container="body" data-toggle="popover">
+    			{{ hujan_sejak }}
+    		</a> -->
+            <a href="#" data-toggle="collapse" data-target="#sejakForm"><small><i class="fas fa-sync-alt"></i></small></a>
+    		<!-- <span class="text-danger">
+    			&bullet;
+    		</span> -->
+    	</h3>
+        <div id="sejakForm" class="collapse mb-2">
+            <form>
+                <input type='text' name='sejak' value='{{ hujan_sejak }}' class='text-right'>
+                <button type='submit' class='btn btn-primary btn-sm'>
+                    <i class='fas fa-check'></i>
+                </button>
+            </form>
+        </div>
+        {% if not result.curahhujan %}
+            <p><i>Tidak ada hujan dalam <b>{{ hujan_sejak }} hari</b> terakhir.</i></p>
+        {% else %}
+        	<p class="text-muted mb-5">
+        		<i>Hujan yang terjadi selama {{ hujan_sejak }} hari lalu.</i>
+        	</p>
+            <table class="table table-hover">
+                {% for hujan in result.curahhujan %}
+                    <tr>
+                        <td colspan="{% if loop.first %}2{% else %}4{% endif %}">
+                            <span class="hari" data-tgl="{{ hujan.waktu }}">
+                                <span class="text-muted ml-3 font-weight-light">
+                                    {{ hujan.waktu }}
+                                </span>
+                            </span>
+                        </td>
+                        {% if loop.first %}
+                            <td>Hujan</td>
+                            <td>Selama</td>
+                        {% endif %}
+                    </tr>
+                    {% for data in hujan.daftar %}
+                        <tr>
+                            <th></th>
+                            <td>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <a href="{{ path_for('curahhujan.jamjaman', {'id': data.id}) }}?sampling={{ hujan.date }}">
+                                    {{ data.lokasi }}
+                                </a>
+                            </td>
+                            <td class="text-right"><b>{{ data.ch }}</b> mm</td>
+                            <td class="text-right"><b>{{ data.durasi }}</b> menit</td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </table>
+        {% endif %}
+      </div>
+      <div class="col col-md-6" style="border-left: solid 1px #ccc;">
+        <h3>Tinggi Muka Air</h3>
+        {% if not result.tma %}
+            <p><i>Belum ada data Tinggi Muka Air.</i></p>
+        {% else %}
+        	<p class="text-muted mb-5">
+        		<i>Data Tinggi Muka Air terbaru.</i>
+        	</p>
+        {% endif %}
+    	<table class="table table-hover">
+            {% for tma in result.tma %}
+                <tr>
+        			{% if loop.first %}
+                        <td colspan="3">Lokasi</td>
+        				<td>Tinggi Muka Air</td>
+        			{% endif %}
+        		</tr>
+        		<tr>
+                    <th></th>
+        			<td colspan="2">
+        				<i class="fas fa-map-marker-alt"></i>
+        				<a href="{{ path_for('tma.show', {'id': tma.lokasi.id}) }}">
+                            {{ tma.lokasi.nama }}
+        				</a>
+        			</td>
+        			<td class="text-right">
+                        <b>{{ tma.wlev }}</b> meter
+                        <br>
+                        <small  class="hari text-muted" data-tgl="{{ tma.waktu }} {{ tma.jam }}"></small>
+                    </td>
+        		</tr>
+            {% endfor %}
+        </table>
+      </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{{ asset('js/moment.min.js') }}"></script>
+    <script src="{{ asset('js/id.js') }}"></script>
+    <script src="{{ asset('js/bootstrap-editable.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+          $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+          });
+    	     moment.locale('id');
+          $('.hari').each(function (i, e) {
+            console.log($(e).prepend(moment($(e).data('tgl')).fromNow()));
+          });
+          // $('#sejak').popover({
+          //       html: true,
+    		// 	placement: 'right',
+          //       title: "Sejak ? hari",
+          //       content: $('#sejakForm').html()
+          // });
+
+        });
+    </script>
+{% endblock %}
