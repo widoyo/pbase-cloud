@@ -5,16 +5,15 @@
 
         <meta charset="utf-8">
         <meta content="IE=edge" http-equiv="X-UA-Compatible">
-        <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+        <meta content="width=device-width, initial-scale=1" name="viewport">
 
         <title>Login | {{env('APP_NAME', 'App')}}</title>
 
         <!-- Custom fonts for this template-->
         {# <link href="{{asset('css/font-awesome.min.css')}}" rel="stylesheet" type="text/css"> #}
-        {# <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet"> #}
+        <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
 
         <!-- Custom styles for this template-->
-        {# <link href="{{asset('css/sb-admin-2.min.css')}}" rel="stylesheet"> #}
         <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet">
         <link href="{{asset('css/app.css')}}" rel="stylesheet">
 
@@ -31,31 +30,34 @@
                 <div class="col-xl-5 col-lg-6 col-md-8">
 
                     <div class="card o-hidden border-0 shadow-lg my-5">
-                        <div class="card-body p-5">
-                            {% include 'includes/flash.html' %}
+                        <div class="card-body p-0">
+                            <div class="p-5">
 
-                            <h1 class="h4 text-center text-gray-900 mb-4">{{ env('APP_NAME', 'App')}}</h1>
-                            
-                            <form action="" method="post" class="user">
-                                <div class="form-group">
-                                    <input class="form-control form-control-user" name="username" id="username" placeholder="Username" type="text" required autofocus>
+                                {% include 'includes/flash.html' %}
+
+                                <div class="text-center">
+                                    <h1 class="h4 text-gray-900 mb-4">login {{env('APP_NAME', 'App')}}</h1>
                                 </div>
-                                <div class="form-group">
-                                    <input class="form-control form-control-user" name="password" id="password" placeholder="Password" type="password" required>
-                                </div>
-                                {# <div class="form-group">
-                                    <div class="custom-control custom-checkbox small">
-                                        <input class="custom-control-input" id="customCheck" type="checkbox">
-                                        <label class="custom-control-label" for="customCheck">Remember Me</label>
+                                <form action="" method="post" class="user">
+                                    <div class="form-group">
+                                        <input class="form-control form-control-user" name="username" id="username" placeholder="Enter Username" type="text" required autofocus>
                                     </div>
-                                </div> #}
-                                <div class="mt-5">
-                                    <button type="submit" class="btn btn-primary btn-block font-weight-bold">
-                                        Login
-                                    </button><br>
-									<a href="/">Batal</a>
-                                </div>
-                            </form>
+                                    <div class="form-group">
+                                        <input class="form-control form-control-user" name="password" id="password" placeholder="Password" type="password" required>
+                                    </div>
+                                    {# <div class="form-group">
+                                        <div class="custom-control custom-checkbox small">
+                                            <input class="custom-control-input" id="customCheck" type="checkbox">
+                                            <label class="custom-control-label" for="customCheck">Remember Me</label>
+                                        </div>
+                                    </div> #}
+                                    <div class="mt-5">
+                                        <button type="submit" class="btn btn-primary btn-block font-weight-bold">
+                                            Login
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
@@ -65,17 +67,9 @@
 
         </div>
 
-        {# {% include 'layouts/scrolltop.html' %} #}
-
         <!-- Bootstrap core JavaScript-->
         <script src="{{asset('js/jquery.min.js')}}"></script>
         <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script>
-
-        <!-- Core plugin JavaScript-->
-        {# <script src="{{asset('js/jquery.easing.min.js')}}"></script> #}
-
-        <!-- Custom scripts for all pages-->
-        {# <script src="{{asset('js/sb-admin-2.min.js')}}"></script> #}
     </body>
 
 </html>

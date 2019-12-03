@@ -4,19 +4,17 @@
     <head>
         <meta charset="utf-8">
         <meta content="IE=edge" http-equiv="X-UA-Compatible">
-        <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+        <meta content="width=device-width, initial-scale=1" name="viewport">
 
         {% include 'layouts/title.html' %}
 
         <!-- Custom fonts for this template-->
         {# <link href="{{asset('css/font-awesome.min.css')}}" rel="stylesheet" type="text/css"> #}
-        {# <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet"> #}
+        <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
 
         <!-- Custom styles for this template-->
-        {# <link href="{{asset('css/sb-admin-2.min.css')}}" rel="stylesheet"> #}
         <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet">
-        <link href="{{asset('css/app.css?v=7')}}" rel="stylesheet">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+        <link href="{{asset('css/app.css?v=3')}}" rel="stylesheet">
         {# <style>
             .sidebar #sidebarToggle::after,
             .sidebar.toggled #sidebarToggle::after {
@@ -27,18 +25,23 @@
         {% block css %}{% endblock %}
     </head>
 
-    <body id="page-top">
+    <body
+        id="page-top" class="bg-light">
 
         <!-- Page Wrapper -->
         <div id="wrapper">
 
-            {% include 'layouts/navbar.html' %}
+            {% if user() %}
+                {% include 'layouts/navbar.html' %}
+            {% endif %}
 
             <!-- Content Wrapper -->
-            <div class="container" id="content-wrapper">
+            <div class="py-5 container" id="content-wrapper">
 
                 <!-- Main Content -->
                 <div class="mt-3 py-3" id="content">
+
+                    {# {% include 'layouts/topbar.html' %} #}
 
                     <!-- Begin Page Content -->
                     <div class="">
@@ -61,17 +64,9 @@
         </div>
         <!-- End of Page Wrapper -->
 
-        {# {% include 'layouts/scrolltop.html' %} #}
-
         <!-- Bootstrap core JavaScript-->
         <script src="{{asset('js/jquery.min.js')}}"></script>
         <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script>
-
-        <!-- Core plugin JavaScript-->
-        {# <script src="{{asset('js/jquery.easing.min.js')}}"></script> #}
-
-        <!-- Custom scripts for all pages-->
-        {# <script src="{{asset('js/sb-admin-2.min.js')}}"></script> #}
 
         {% block js %}{% endblock %}
     </body>

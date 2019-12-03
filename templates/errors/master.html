@@ -3,10 +3,10 @@
 {% block content %}
 <!-- Error Text -->
 <div class="text-center py-5">
-    <div class="error mx-auto h1 display-1" data-text="{% block code %}{% endblock %}">{{ block('code') }}</div>
+    <div class="error mx-auto h1" data-text="{% block code %}{% endblock %}">{{ block('code') }}</div>
     <p class="lead text-gray-800 mb-5">{% block message %}{% endblock %}</p>
-    {# {% if user() %} #}
-        <a href="/">&larr; Back to Home</a>
-    {# {% endif %} #}
+    {% if user() %}
+        <a href="/logger">&larr; Back to Home</a>
+    {% endif %}
 </div>    
 {% endblock %}

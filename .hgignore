@@ -1,0 +1,6 @@
+syntax: glob
+.env
+.git
+db
+vendor
+composer.lock

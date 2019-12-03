@@ -1,28 +1,5 @@
-<!-- <div class="container mt-2 mb-2 d-none d-sm-block">
-    <div class="row">
-        <div class="col flex-1 d-flex flex-row align-items-center">
-            <div class="flex-1">
-                <a href="/">
-                    <img class="mr-2" src="/img/logo-sda.jpg" alt="" width="40">
-                </a>
-            </div>
-            <div class="flex-1">
-                <a href="/">
-                    <h2 class="h6 font-weight-normal small mb-0">KEMENTRIAN PEKERJAAN UMUM DAN PERUMAHAN RAKYAT</h2>
-                    <h2 class="h6 font-weight-bold mb-0">DIREKTORAT JENDERAL SUMBER DAYA AIR</h2>
-                </a>
-            </div>
-        </div>
-        <div class="col flex-1 text-right">
-            <a href="/">
-                <h2 class="h6 font-weight-normal small mb-0">BALAI WILAYAH SUNGAI</h2>
-                <h2 class="h6 font-weight-bold mb-0">SULAWESI II GORONTALO</h2>
-            </a>
-        </div>
-    </div>
-</div> -->
-<nav class="navbar navbar-expand-md navbar-dark bg-primary sticky-top">
-    <div class="container-fluid px-0">
+<nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+    <div class="container">
         <a href="/logger" class="navbar-brand">{{ env('APP_NAME', 'App') }}</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -32,44 +9,35 @@
             <!-- Sidebar -->
             <ul class="navbar-nav ml-auto">
 
-                <!-- <li class="nav-item {% if title == 'Home'%}active{% endif %}">
-                    <a class="nav-link" href="/">
-                        <i class="fas fa-home mr-1"></i>
-                        Home
-                    </a>
-                </li> -->
+                {% if user().tenant_id == 0 %}
+                    <!-- Nav Item - Tenant -->
+                    <li class="nav-item">
+                            <a class="nav-link" href="/tenant">
+                                Tenant
+                            </a>
+                    </li>
+                {% endif %}
 
-                <li class="nav-item {{ title == 'Logger' ? 'active' : '' }}">
+                <!-- Nav Item - Logger -->
+                <li class="nav-item">
                     <a class="nav-link" href="/logger">
-                        <i class="fas fa-microchip mx-sm-2 ml-1"></i>
                         Logger
                     </a>
                 </li>
 
-                <li class="nav-item {{ title == 'Lokasi' ? 'active' : '' }}">
-                    <a class="nav-link" href="/lokasi">
-                        <i class="fas fa-map-marker-alt mx-sm-2 ml-1"></i>
-                        Lokasi
-                    </a>
-                </li>
+                {% if user().tenant_id == 0 %}
+                    <!-- Nav Item - User -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user">
+                            Users
+                        </a>
+                    </li>
+                {% endif %}
 
-                <!-- <li class="nav-item dropdown {% if title == 'Map'%}active{% endif %}">
-                    <a class="nav-link dropdown-toggle" href="#"
-                      id="navbarPetaDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-map ml-2 mr-2"></i>
-                        Peta
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarPetaDropdown">
-                        <a class="dropdown-item" href="/map/ch">Curah Hujan</a>
-                        <a class="dropdown-item" href="/map/tma">TMA</a>
-                        <a class="dropdown-item" href="/map/klimatologi">Klimatologi</a>
-                    </div>
-                </li> -->
-
+                <!-- Nav Item - Logout -->
                 <li class="nav-item">
                     <form action="/logout" method="post" id="form-logout"></form>
                     <a class="nav-link" href="#" onclick="$('#form-logout').submit()">
-                        <i class="fas fa-sign-out-alt mx-sm-2 ml-1"></i>
                         Logout
                     </a>
                 </li>

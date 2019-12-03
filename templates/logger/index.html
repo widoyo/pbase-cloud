@@ -1,0 +1,212 @@
+{% extends 'layouts/master.html' %}
+
+{% set title = 'Logger' %}
+
+{% block content %}
+
+    {% if (user().tenant_id == 0) %}
+        <!-- Page Heading -->
+        <div class="d-flex align-items-center mb-4">
+            <a href="/logger/add" class="btn btn-primary ml-auto" id="btn-create">Add new logger</a>
+        </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-sm-row align-items-center">
+                <div class="mb-3 mb-sm-0">
+                    <h1 class="h2 font-weight-normal mb-1">Status Logger</h1>
+                    <p class="text-muted mb-0">
+                        Data 24 jam terakhir dari
+                        {{ 'now'|date('d M Y, G:i') }}
+                    </p>
+                </div>
+                <span class="h3 ml-auto mb-0" id="persen-total">
+                    <span class="persen-text">-</span>%
+                    <span class="persen-status text-danger mb-0">&FilledSmallSquare;</span>
+                </span>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row">
+                {% for logger in loggers %}
+                    <div class="col-12 col-sm-6">
+                        <div class="card border-0">
+                            <div class="card-body px-0">
+
+                                <div class="d-flex flex-column flex-sm-row align-items-start mb-2">
+                                    <div class="mb-3 mb-sm-0">
+                                        <h1 class="h5 mb-0">
+                                            {{ logger.sn }}
+                                        </h1>
+                                        <p class="small text-muted mb-0">
+                                            {{ logger.nama_tenant }}
+                                        </p>
+                                    </div>
+                                    <span class="h6 text-muted ml-auto mb-0" id="persen-{{ logger.sn }}">
+                                        <span class="persen-text">-</span>%
+                                        <span class="persen-status text-danger">&FilledSmallSquare;</span>
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <canvas style="height: 60px;" class="w-100 chartjs-render-monitor" data-sn="{{ logger.sn }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script>
+        var canvas = {};
+        var persen = {};
+        var total_data = {{ total_data }};
+        var total_logger = {{ loggers|length }};
+
+        $(function () {
+            setInterval(() => {
+                total_data++;
+            }, 5 * 60 * 1000);
+
+            document.getElementById('btn-create').focus();
+            $('.chartjs-render-monitor').each(function () {
+                var ctx = $(this)[0];
+                var sn = $(this).data('sn');
+
+                persen[sn] = 0;
+                canvas[sn] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                data: [],
+                                // borderColor: "#00ff66",
+                                // fill: false,
+								backgroundColor: "#30D158",
+                                // lineTension: 0,
+                                // label: "Jam",
+                            },
+                            // {
+                            //     data: [],
+                            //     // borderColor: "#eaeaea",
+                            //     // borderWidth: 1,
+                            //     backgroundColor: "#eaeaea",
+                            // }
+                        ]
+                    },
+                    options: {
+                        legend: {
+                            display: false
+                        },
+                        scales: {
+                            xAxes: [
+                                {
+                                    // ticks: {
+                                    //     display: false // this will remove only the label
+                                    // }
+                                    stacked: true,
+									display: false // this will remove all the x-axis grid lines
+                                }
+                            ],
+                            yAxes: [
+                                {
+                                    ticks: {
+                                        // display: false // this will remove only the label
+										beginAtZero: true
+                                    },
+									display: false // this will remove all the x-axis grid lines
+                                }
+                            ],
+                        }
+                    }
+                })
+
+                fetchSensor(sn);
+                setInterval(() => {
+                    fetchSensor(sn);
+                }, 5 * 60 * 1000); // menit
+            });
+        })
+
+        fetchSensor = function(sn) {
+            $.ajax({
+                url: '/api/logger/'+ sn +'/sensor',
+                method: 'get',
+            })
+            .done(function(res) {
+                canvas[sn].data.labels = res.labels;
+                canvas[sn].data.datasets[0].data = res.data;
+                // canvas[sn].data.datasets[1].data = res.targets;
+                canvas[sn].update();
+
+                persen[sn] = Math.floor(res.total_data * 100 / total_data);
+                $('#persen-'+ sn +' > .persen-text').text(persen[sn]);
+
+                var persen_status = $('#persen-'+ sn +' > .persen-status');
+                persen_status.removeClass('text-danger');
+                persen_status.removeClass('text-warning');
+                persen_status.removeClass('text-success');
+                if (persen[sn] < 60) {
+                    persen_status.addClass('text-danger');
+                } else if (persen[sn] < 80) {
+                    persen_status.addClass('text-warning');
+                } else {
+                    persen_status.addClass('text-success');
+                }
+
+                updateTotalPersen(persen);
+            })
+            .fail(function() {
+
+            })
+            .always(function() {
+
+            })
+        }
+
+        updateTotalPersen = function() {
+            var total = 0;
+            var jumlah = 0;
+            for (var p in persen) {
+                jumlah++;
+                total += persen[p];
+            }
+
+            // console.log(total);
+            // console.log(jumlah);
+
+            var persen_total = 0;
+            if (jumlah > 0) {
+                persen_total = Math.floor(total / jumlah);
+            }
+            // console.log(persen_total);
+
+            $('#persen-total > .persen-text').text(persen_total);
+
+            var persen_status = $('#persen-total > .persen-status');
+            persen_status.removeClass('text-danger');
+            persen_status.removeClass('text-warning');
+            persen_status.removeClass('text-success');
+            if (persen_total < 60) {
+                persen_status.addClass('text-danger');
+            } else if (persen_total < 80) {
+                persen_status.addClass('text-warning');
+            } else {
+                persen_status.addClass('text-success');
+            }
+        }
+
+        confirmDelete = function (sn) {
+            return confirm("Hapus logger " + sn + " permanen?");
+        }
+    </script>
+{% endblock %}

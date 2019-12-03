@@ -189,15 +189,13 @@ $container['user'] = function($c) {
  * MIDDLEWARES BLOCK
  */
 
-$loggedinMiddleware = function(Request $request, Response $response, $next) {
-
+$loggedinMiddleware = function (Request $request, Response $response, $next) {
     $user_refresh_time = $this->session->user_refresh_time;
     $now = time();
 
     // cek masa aktif login
-    if (empty($user_refresh_time) || $user_refresh_time < $now) {
+    if (!empty($user_refresh_time) && $user_refresh_time < $now) {
         $this->session->destroy();
-        // die('Silahkan login untuk melanjutkan');
         return $this->response->withRedirect('/login');
     }
 
@@ -208,19 +206,67 @@ $loggedinMiddleware = function(Request $request, Response $response, $next) {
         return $this->response->withRedirect('/login');
     }
 
-    // inject user ke dalam request agar bisa diakses di route
-    $request = $request->withAttribute('user', $user);
+    $this->session->user_refresh_time = strtotime("+1hour");
 
     return $next($request, $response);
 };
 
-$adminRoleMiddleware = function(Request $request, Response $response, $next) {
+$adminRoleMiddleware = function (Request $request, Response $response, $next) {
+    $user = $this->user;
+    if (!$user || $user['tenant_id'] > 0) {
+        $this->flash->addMessage('errors', 'Hanya admin yang diperbolehkan mengakses laman tersebut.');
+        return $this->response->withRedirect('/logger');
+    }
+
+    return $next($request, $response);
+};
+
+$getLoggerMiddleware = function (Request $request, Response $response, $next) {
+	$args = $request->getAttribute('routeInfo')[2];
+    $logger_id = intval($args['id']);
+    $stmt = $this->db->prepare("SELECT * FROM logger WHERE id=:id");
+    $stmt->execute([':id' => $logger_id]);
+    $logger = $stmt->fetch();
 
     $user = $this->user;
-    if (!$user || $user['role'] != '1') {
-        $this->flash->addMessage('errors', 'Hanya admin yang diperbolehkan mengakses laman tersebut.');
-        return $this->response->withRedirect('/admin');
+    if (!$logger || ($user['tenant_id'] > 0 && $user['tenant_id'] != $logger['tenant_id'])) {
+        throw new \Slim\Exception\NotFoundException($request, $response);
     }
+
+    $request = $request->withAttribute('logger', $logger);
+
+    return $next($request, $response);
+};
+
+$getTenantMiddleware = function (Request $request, Response $response, $next) {
+	$args = $request->getAttribute('routeInfo')[2];
+    $tenant_id = intval($args['id']);
+    $stmt = $this->db->prepare("SELECT * FROM tenant WHERE id=:id");
+    $stmt->execute([':id' => $tenant_id]);
+    $tenant = $stmt->fetch();
+
+    $user = $this->user;
+    if (!$tenant || ($user['tenant_id'] > 0 && $user['tenant_id'] != $tenant_id)) {
+        throw new \Slim\Exception\NotFoundException($request, $response);
+    }
+    
+    $request = $request->withAttribute('tenant', $tenant);
+
+    return $next($request, $response);
+};
+
+$getUserMiddleware = function (Request $request, Response $response, $next) {
+	$args = $request->getAttribute('routeInfo')[2];
+    $user_id = intval($args['id']);
+    $stmt = $this->db->prepare("SELECT * FROM users WHERE id=:id");
+    $stmt->execute([':id' => $user_id]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        throw new \Slim\Exception\NotFoundException($request, $response);
+    }
+    
+    $request = $request->withAttribute('user', $user);
 
     return $next($request, $response);
 };
@@ -301,17 +347,14 @@ $app->get('/test', function(Request $request, Response $response) {
 $app->group('/api', function() {
     $app = $this;
 
-    require __DIR__ . '/../src/api/main.php';
-    require __DIR__ . '/../src/api/periodik.php';
+    require __DIR__ . '/../src/api/logger.php';
 });
 
 require __DIR__ . '/../src/main.php';
-// require __DIR__ . '/../src/curahhujan.php';
-// require __DIR__ . '/../src/tma.php';
-// require __DIR__ . '/../src/map.php';
-// require __DIR__ . '/../src/user.php';
-// require __DIR__ . '/../src/admin.php';
-// require __DIR__ . '/../src/lokasi.php';
+require __DIR__ . '/../src/tenant.php';
+require __DIR__ . '/../src/user.php';
+require __DIR__ . '/../src/logger.php';
+require __DIR__ . '/../src/lokasi.php';
 
 /**
  * # ROUTES BLOCK
