@@ -27,7 +27,7 @@
 
         <!-- Page Wrapper -->
         <div id="wrapper">
-            
+
             <ul class="nav nav-pills nav-fill bg-secondary">
                 <li class="nav-item">
                     <a class="nav-link rounded-0 bg-dark text-white" href="/logger">
@@ -41,6 +41,20 @@
                         Lokasi
                     </a>
                 </li>
+                {% if user().tenant_id == 0 %}
+                    <li class="nav-item">
+                        <a class="nav-link rounded-0 text-white" href="/tenant">
+                            <i class="fas fa-building"></i>
+                            Tenant
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rounded-0 text-white" href="/tenant">
+                            <i class="fas fa-user"></i>
+                            Users
+                        </a>
+                    </li>
+                {% endif %}
             </ul>
 
             <!-- Content Wrapper -->
@@ -95,6 +109,14 @@
 
         </div>
         <!-- End of Page Wrapper -->
+
+        {% if user().tenant_id == 0 %}
+            <div class="fixed-bottom text-right p-3">
+                <a class="btn btn-lg btn-primary" href="/logger/add">
+                    <i class="fas fa-plus"></i> Add Logger
+                </a>
+            </div>
+        {% endif %}
 
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
