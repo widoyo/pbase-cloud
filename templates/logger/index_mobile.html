@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta content="IE=edge" http-equiv="X-UA-Compatible">
+        <meta content="width=device-width, initial-scale=1" name="viewport">
+
+        {% set title = 'Logger' %}
+        {% include 'layouts/title.html' %}
+
+        <!-- Custom fonts for this template-->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+
+        <!-- Custom styles for this template-->
+        <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet">
+        <link href="{{asset('css/app.css?v=3')}}" rel="stylesheet">
+        <style>
+            [v-cloak] {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body id="page-top" class="bg-dark text-white">
+
+        <!-- Page Wrapper -->
+        <div id="wrapper">
+            
+            <ul class="nav nav-pills nav-fill bg-secondary">
+                <li class="nav-item">
+                    <a class="nav-link rounded-0 bg-dark text-white" href="/logger">
+                        <i class="fas fa-microchip"></i>
+                        Logger
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-0 text-white" href="#">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Lokasi
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Content Wrapper -->
+            <div class="" id="content-wrapper">
+
+                <!-- Main Content -->
+                <div class="" id="content">
+
+                    <!-- Begin Page Content -->
+                    <div class="list-group list-group-flush" v-cloak>
+                        <a v-for="logger in loggers" href="#" class="list-group-item list-group-item-action bg-dark text-white border-light rounded-0">
+                            <div class="row align-items-center">
+                                <div class="col-2 text-center bg-white text-dark font-weight-bold px-0 py-3 rounded">
+                                    {[{ logger.sn }]}
+                                </div>
+                                <div class="col-10">
+                                    <p class="h5 mb-1">
+                                        <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).fromNow() }]}</span>
+                                        <span v-else class="text-secondary">(no data)</span>
+                                    </p>
+                                    <div class="h6 mb-0 d-flex">
+                                        <p class="mb-0">
+                                            <span v-if="logger.content.tick">
+                                                {[{ logger.content.tick }]} tick
+                                            </span>
+                                            <span v-if="logger.content.distance">
+                                                {[{ logger.content.distance }]} mm
+                                            </span>
+                                        </p>
+                                        <div class="ml-auto">
+                                            <span v-if="logger.content.signal_quality">
+                                                <i class="fas fa-signal"></i>
+                                                {[{ logger.content.signal_quality }]}
+                                            </span>
+                                            <span v-if="logger.content.battery">
+                                                <i class="fas fa-battery-full"></i>
+                                                {[{ logger.content.battery }]}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- /.container-fluid -->
+
+                </div>
+                <!-- End of Main Content -->
+
+            </div>
+            <!-- End of Content Wrapper -->
+
+        </div>
+        <!-- End of Page Wrapper -->
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+        <script src="{{ asset('js/moment.min.js') }}"></script>
+        <script src="{{ asset('js/id.js') }}"></script>
+        {# <script src="{{asset('js/jquery.min.js')}}"></script> #}
+        {# <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script> #}
+
+        <script>
+            moment.locale('id');
+
+            Vue.options.delimiters = ['{[{', '}]}'];
+            var _app = new Vue({
+                el: '#content',
+                data: function () {
+                    return {
+                        moment,
+                        loggers: {{ loggers | json_encode | raw }}
+                    }
+                },
+                methods: {
+
+                }
+            });
+        </script>
+
+    </body>
+
+</html>

@@ -10,43 +10,67 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         if ($user['tenant_id'] > 0)
         {
-            $loggers = $this->db->query("SELECT
-                    logger.*,
-                    COALESCE(tenant.nama, '-') as nama_tenant
+            $loggers_stmt = $this->db->query("SELECT DISTINCT
+                    logger.sn
                 FROM
                     logger
-                    LEFT JOIN tenant ON (logger.tenant_id = tenant.id)
                 WHERE
-                    logger.tenant_id = {$user['tenant_id']}
-                ORDER BY
-                    tenant.nama,
-                    logger.sn
-                ")->fetchAll();
-
-	        return $this->view->render($response, 'logger/index.html', [
-	            'loggers' => $loggers,
-	        ]);
+                    logger.tenant_id = {$user['tenant_id']}");
         }
         else
         {
-            $loggers = $this->db->query("SELECT
-                    logger.*,
-                    COALESCE(tenant.nama, '-') as nama_tenant
-                FROM
-                    logger
-                    LEFT JOIN tenant ON (logger.tenant_id = tenant.id)
-                ORDER BY
-                    tenant.nama,
+            $loggers_stmt = $this->db->query("SELECT DISTINCT
                     logger.sn
-                ")->fetchAll();
-
-	        $total_data = date('H') * 12 + floor(date('i') / 5);
-
-	        return $this->view->render($response, 'logger/index.html', [
-	            'loggers' => $loggers,
-	            'total_data' => $total_data,
-	        ]);
+                FROM
+                    logger");
         }
+        $logger_id = $loggers_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $loggers = [];
+        foreach ($logger_id as $sn) {
+            // $today = date('Y-m-d 00:00:00');
+            $raw = $this->db->query("SELECT
+                    content
+                FROM
+                    raw
+                WHERE
+                    content->>'device' similar to '%({$sn})%'
+                ORDER BY
+                    content->>'sampling' DESC
+                LIMIT 1")
+            ->fetch(PDO::FETCH_COLUMN);
+            if ($raw) {
+                $raw = json_decode($raw);
+            }
+
+            $loggers[] = [
+                'sn' => substr($sn, 2),
+                'content' => $raw
+            ];
+        }
+
+        usort($loggers, function ($a, $b) {
+            if (!$a['content'] || !$b['content']) {
+                if ($a['content']) {
+                    return -1;
+                } else if ($b['content']) {
+                    return 1;
+                }
+
+                return $a['sn'] > $b['sn'] ? 1 :
+                    ($a['sn'] < $b['sn'] ? -1 : 0);
+            }
+
+            return $a['content']->sampling > $b['content']->sampling ? -1 :
+                ($a['content']->sampling < $b['content']->sampling ? 1 : 0);
+        });
+
+        // $total_data = date('H') * 12 + floor(date('i') / 5);
+
+        return $this->view->render($response, 'logger/index_mobile.html', [
+            'loggers' => $loggers,
+            // 'total_data' => $total_data,
+        ]);
 	});
 
     $this->get('/add', function (Request $request, Response $response, $args) {

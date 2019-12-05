@@ -10,7 +10,7 @@
 
 2. [ ] Latest record logger, distinct by SN, order by time received
 
-	a. [ ] /logger
+	a. [x] /logger
 
 	b. [ ] /logger/{SN}
 
