@@ -79,10 +79,10 @@
                                     </p>
                                     <div class="h6 mb-0 d-flex">
                                         <p class="mb-0">
-                                            <span v-if="logger.content.tick">
+                                            <span v-if="typeof logger.content.tick !== typeof undefined">
                                                 {[{ logger.content.tick }]} tick
                                             </span>
-                                            <span v-if="logger.content.distance">
+                                            <span v-if="typeof logger.content.distance !== typeof undefined">
                                                 {[{ logger.content.distance }]} mm
                                             </span>
                                         </p>
@@ -113,8 +113,8 @@
         <!-- End of Page Wrapper -->
 
         {% if user().tenant_id == 0 %}
-            <div class="py-3">&nbsp;</div>
-            <div class="fixed-bottom text-right p-3">
+            <div class="py-3 d-none d-sm-block">&nbsp;</div>
+            <div class="fixed-bottom text-right p-3 d-none d-sm-block">
                 <a class="btn btn-primary" href="/logger/add">
                     <i class="fas fa-plus"></i> Add Logger
                 </a>
