@@ -30,22 +30,24 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         foreach ($logger_id as $sn) {
             // $today = date('Y-m-d 00:00:00');
             $raw = $this->db->query("SELECT
-                    content
+                    *
                 FROM
                     raw
                 WHERE
-                    content->>'device' similar to '%({$sn})%'
+                    content->>'device' like '%{$sn}%'
                 ORDER BY
-                    content->>'sampling' DESC
+                    id DESC
                 LIMIT 1")
-            ->fetch(PDO::FETCH_COLUMN);
+            ->fetch();
             if ($raw) {
-                $raw = json_decode($raw);
+                $raw['content'] = json_decode($raw['content']);
             }
 
             $loggers[] = [
                 'sn' => substr($sn, 2),
-                'content' => $raw
+                'raw_id' => $raw['id'],
+                'content' => $raw['content'] ?: '',
+                'received' => $raw['received']
             ];
         }
 
