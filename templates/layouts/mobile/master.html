@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta content="IE=edge" http-equiv="X-UA-Compatible">
+        <meta content="width=device-width, initial-scale=1" name="viewport">
+
+        {% include 'layouts/title.html' %}
+
+        <!-- Custom fonts for this template-->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+
+        <!-- Custom styles for this template-->
+        <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet">
+        <link href="{{asset('css/app.css?v=3')}}" rel="stylesheet">
+        <style>
+            [v-cloak] {
+                display: none;
+            }
+        </style>
+
+        {% block css %}{% endblock %}
+    </head>
+
+    <body id="page-top" class="bg-dark text-white">
+
+        <!-- Page Wrapper -->
+        <div id="wrapper">
+
+            {% if user() %}
+                {% include 'layouts/mobile/navbar.html' %}
+            {% endif %}
+
+            <!-- Content Wrapper -->
+            <div class="" id="content-wrapper">
+
+                <!-- Main Content -->
+                <div class="" id="content">
+
+                    <!-- Begin Page Content -->
+                    {% block content %}{% endblock %}
+                    <!-- /.container-fluid -->
+
+                </div>
+                <!-- End of Main Content -->
+
+            </div>
+            <!-- End of Content Wrapper -->
+
+        </div>
+        <!-- End of Page Wrapper -->
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+        <script src="{{ asset('js/moment.min.js') }}"></script>
+        <script src="{{ asset('js/id.js') }}"></script>
+        {# <script src="{{asset('js/jquery.min.js')}}"></script> #}
+        {# <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script> #}
+
+        <script>
+            moment.locale('id');
+            Vue.options.delimiters = ['{[{', '}]}'];
+        </script>
+
+        {% block js %}{% endblock %}
+
+    </body>
+
+</html>

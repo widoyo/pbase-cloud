@@ -44,7 +44,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             }
 
             $loggers[] = [
-                'sn' => substr($sn, 2),
+                'sn' => $sn,
                 'raw_id' => $raw['id'],
                 'content' => $raw['content'] ?: '',
                 'received' => $raw['received']
@@ -111,7 +111,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         return $response->withRedirect('/logger');
     });
 
-    $this->group('/{id}', function () {
+    $this->group('/{id:[0-9]+}', function () {
 
         $this->get('', function (Request $request, Response $response) {
             return $response->withJson([
@@ -150,5 +150,44 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 	        
 	        return $response->withRedirect('/logger');
 	    });
+    })->add($getLoggerMiddleware);
+
+    $this->group('/{sn}', function () {
+
+        $this->get('', function (Request $request, Response $response, $args) {
+            $logger = $request->getAttribute('logger');
+            $raws = $this->db->query("SELECT
+                    *
+                FROM
+                    raw
+                WHERE
+                    content->>'device' like '%{$logger['sn']}%'
+                ORDER BY
+                    id DESC
+                LIMIT 10")
+            ->fetchAll();
+
+            $loggers = [];
+            foreach ($raws as $raw) {
+                $raw['content'] = json_decode($raw['content']);
+
+                $loggers[] = [
+                    'sn' => $logger['sn'],
+                    'raw_id' => $raw['id'],
+                    'content' => $raw['content'] ?: '',
+                    'received' => $raw['received']
+                ];
+            }
+
+            if (count($loggers) == 0) {
+                $logger['content'] = '';
+                $loggers[] = $logger;
+            }
+
+            return $this->view->render($response, 'logger/show_mobile.html', [
+                'loggers' => $loggers,
+                'logger' => $logger
+            ]);
+        });
     })->add($getLoggerMiddleware);
 })->add($loggedinMiddleware);

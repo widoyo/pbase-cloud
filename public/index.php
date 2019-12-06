@@ -223,9 +223,18 @@ $adminRoleMiddleware = function (Request $request, Response $response, $next) {
 
 $getLoggerMiddleware = function (Request $request, Response $response, $next) {
 	$args = $request->getAttribute('routeInfo')[2];
-    $logger_id = intval($args['id']);
-    $stmt = $this->db->prepare("SELECT * FROM logger WHERE id=:id");
-    $stmt->execute([':id' => $logger_id]);
+    if (!empty($args['id'])) {
+        $logger_id = intval($args['id']);
+        $stmt = $this->db->prepare("SELECT * FROM logger WHERE id=:id");
+        $stmt->execute([':id' => $logger_id]);
+    } else if (!empty($args['sn'])) {
+        $logger_sn = $args['sn'];
+        $stmt = $this->db->prepare("SELECT * FROM logger WHERE sn=:sn");
+        $stmt->execute([':sn' => $logger_sn]);
+    } else {
+        throw new \Slim\Exception\NotFoundException($request, $response);
+    }
+
     $logger = $stmt->fetch();
 
     $user = $this->user;
