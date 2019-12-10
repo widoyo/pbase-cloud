@@ -242,6 +242,14 @@ $getLoggerMiddleware = function (Request $request, Response $response, $next) {
         throw new \Slim\Exception\NotFoundException($request, $response);
     }
 
+    $logger['location_nama'] = null;
+    if (!empty($logger['location_id'])) {
+        $location = $this->db->query("SELECT * FROM location WHERE id={$logger['location_id']}")->fetch();
+        if ($location) {
+            $logger['location_nama'] = $location['nama'];
+        }
+    }
+
     $request = $request->withAttribute('logger', $logger);
 
     return $next($request, $response);

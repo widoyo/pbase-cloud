@@ -1,0 +1,41 @@
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+<script type="text/javascript">
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-center",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "300",
+        "timeOut": "3000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+</script>
+
+{% if flash('errors') %}
+    <script type="text/javascript">
+        setTimeout(function () {
+            {% for err in flash('errors') %}
+                toastr.error('{{ err }}')
+            {% endfor %}    
+        }, 1000)
+    </script>
+{% endif %}
+
+{% if flash('messages') %}
+    <script type="text/javascript">
+        setTimeout(function () {
+            {% for msg in flash('messages') %}
+                toastr.info('{{ msg }}')
+            {% endfor %}
+        }, 1000)
+    </script>
+{% endif %}

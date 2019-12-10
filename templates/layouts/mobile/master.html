@@ -19,12 +19,29 @@
             [v-cloak] {
                 display: none;
             }
+            .theme-dark .nav-link {
+                color: white;
+            }
+            .theme-dark .nav-link.active {
+                background-color: #343a40;
+            }
+            .theme-dark,
+            .theme-dark .modal-content,
+            .theme-dark .form-control,
+            .theme-dark .list-group-item-action,
+            .theme-dark .input-group-text {
+                background-color: #343a40;
+                color: white;
+            }
+            .theme-dark .list-group-item-action {
+                border-color: #6c757d;
+            }
         </style>
 
         {% block css %}{% endblock %}
     </head>
 
-    <body id="page-top" class="bg-dark text-white">
+    <body id="page-top" class="theme-dark">
 
         <!-- Page Wrapper -->
         <div id="wrapper">
@@ -56,13 +73,15 @@
         <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
         <script src="{{ asset('js/moment.min.js') }}"></script>
         <script src="{{ asset('js/id.js') }}"></script>
-        {# <script src="{{asset('js/jquery.min.js')}}"></script> #}
-        {# <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script> #}
+        <script src="{{asset('js/jquery.min.js')}}"></script>
+        <script src="{{asset('js/bootstrap.bundle.min.js')}}"></script>
 
         <script>
             moment.locale('id');
             Vue.options.delimiters = ['{[{', '}]}'];
         </script>
+
+        {% include 'includes/toastr.html' %}
 
         {% block js %}{% endblock %}
 

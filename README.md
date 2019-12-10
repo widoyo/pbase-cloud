@@ -10,16 +10,22 @@
 
 2. [ ] Latest record logger, distinct by SN, order by time received
 
-	a. [x] /logger
+	1. [x] /logger
 
-	b. [ ] /logger/{SN}
+	2. [x] /logger/{SN}
+
+	3. [ ] Ubah ukuran font
+
+	4. [ ] Ubah backlight theme (white / black)
 
 3. [ ] Configure
 
-	a. [ ] nilai constant tergantung tipe logger (ARR, Sonar)
+	1. [ ] nilai constant tergantung tipe logger (ARR, Sonar)
 
-	b. [ ] koreksi nilai logger
+	2. [ ] koreksi nilai logger
 
-	c. [ ] lokasi
+	3. [ ] lokasi (bisa tambah baru)
+
+	4. [ ] tipe logger (ARR, Sonar)
 
 4. [ ] Daftar lokasi
