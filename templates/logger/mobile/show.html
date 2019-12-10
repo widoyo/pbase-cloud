@@ -32,16 +32,6 @@
                                 <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).fromNow() }]}</span>
                                 <span v-else class="text-secondary">(no data)</span>
                             </p>
-                            <div class="ml-auto">
-                                <span v-if="logger.content.signal_quality">
-                                    <i class="fas fa-signal"></i>
-                                    {[{ logger.content.signal_quality }]}
-                                </span>
-                                <span v-if="logger.content.battery">
-                                    <i class="fas fa-battery-full"></i>
-                                    {[{ logger.content.battery }]}
-                                </span>
-                            </div>
                         </div>
                         <div class="h6 mb-0 d-flex">
                             <p class="mb-0 mr-2">
@@ -52,12 +42,22 @@
                                     {[{ logger.content.distance }]} mm
                                 </span>
                             </p>
-                            <p v-if="typeof logger.content.temperature !== typeof undefined" class="mb-0 mr-2">
+                            <!-- <p v-if="typeof logger.content.temperature !== typeof undefined" class="mb-0 mr-2">
                                 {[{ logger.content.temperature }]}℃
                             </p>
                             <p v-if="typeof logger.content.humidity !== typeof undefined" class="mb-0 mr-2">
                                 {[{ logger.content.humidity }]}%
-                            </p>
+                            </p> -->
+                            <div class="ml-auto">
+                                <span v-if="logger.content.signal_quality">
+                                    <i class="fas fa-signal"></i>
+                                    {[{ logger.content.signal_quality }]}
+                                </span>
+                                <span v-if="logger.content.battery">
+                                    <i class="fas fa-battery-full"></i>
+                                    {[{ logger.content.battery }]}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
