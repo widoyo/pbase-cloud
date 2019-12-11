@@ -5,25 +5,25 @@
 {% block content %}
 
     <div class="list-group list-group-flush" id="app" v-cloak>
-        <a v-for="logger in loggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0">
-            <div class="row align-items-center">
-                <div class="col-2 pl-1 pr-0">
-                    <div class="text-center bg-white text-dark font-weight-bold px-0 py-3" style="border-radius: 50%;">
-                        {[{ logger.sn.substr(2) }]}
-                    </div>
+        <a v-for="logger in loggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0 px-3">
+            <div class="d-flex align-items-center">
+                <div class="text-center bg-white text-dark font-weight-bold px-0 py-3" style="border-radius: 50%; width: 55px; height: 55px">
+                    {[{ logger.sn.substr(2) }]}
                 </div>
-                <div class="col-10">
+                <div class="flex-fill ml-3">
                     <p class="h5 mb-1">
-                        <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).fromNow() }]}</span>
+                        <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}</span>
                         <span v-else class="text-secondary">(no data)</span>
                     </p>
                     <div class="h6 mb-0 d-flex">
                         <p class="mb-0">
                             <span v-if="typeof logger.content.tick !== typeof undefined">
-                                {[{ logger.content.tick }]} tick
+                                <span class="badge badge-primary">ARR</span>
+                                {[{ logger.content.tick }]}
                             </span>
                             <span v-if="typeof logger.content.distance !== typeof undefined">
-                                {[{ logger.content.distance }]} mm
+                                <span class="badge badge-success">AWLR</span>
+                                {[{ logger.content.distance }]}
                             </span>
                         </p>
                         <div class="ml-auto">

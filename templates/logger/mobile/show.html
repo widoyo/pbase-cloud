@@ -29,17 +29,19 @@
                     <div class="col-12">
                         <div class="mb-1 d-flex">
                             <p class="h5 mb-0">
-                                <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).fromNow() }]}</span>
+                                <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}</span>
                                 <span v-else class="text-secondary">(no data)</span>
                             </p>
                         </div>
                         <div class="h6 mb-0 d-flex">
                             <p class="mb-0 mr-2">
                                 <span v-if="typeof logger.content.tick !== typeof undefined">
-                                    {[{ logger.content.tick }]} tick
+                                    <span class="badge badge-primary">ARR</span>
+                                    {[{ logger.content.tick }]}
                                 </span>
                                 <span v-if="typeof logger.content.distance !== typeof undefined">
-                                    {[{ logger.content.distance }]} mm
+                                    <span class="badge badge-success">AWLR</span>
+                                    {[{ logger.content.distance }]}
                                 </span>
                             </p>
                             <!-- <p v-if="typeof logger.content.temperature !== typeof undefined" class="mb-0 mr-2">
