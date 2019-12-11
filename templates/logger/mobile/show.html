@@ -6,9 +6,9 @@
 
     <div id="app">
         <div class="d-flex justify-content-between align-items-center">
-            <a class="btn btn-link text-white" href="/logger">
+            <button class="btn btn-link text-white" @click="back()">
                 <i class="fas fa-fw fa-chevron-left"></i>
-            </a>
+            </button>
             <div class="my-1 text-center">
                 <h1 class="h5 text-center mb-0">{{ logger.sn }}</h1>
                 <p class="mb-0">{{ logger.location_nama }}</p>
@@ -29,8 +29,7 @@
                     <div class="col-12">
                         <div class="mb-1 d-flex">
                             <p class="h5 mb-0">
-                                <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}</span>
-                                <span v-else class="text-secondary">(no data)</span>
+                                {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
                             </p>
                         </div>
                         <div class="h6 mb-0 d-flex">
@@ -64,6 +63,10 @@
                     </div>
                 </div>
             </a>
+            <div v-if="loggers.length == 0" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
+                <span v-if="fetching">fetching data...</span>
+                <span v-else>( no data )</span>
+            </div>
         </div>
 
         <!-- <div class="py-1">&nbsp;</div> -->
@@ -92,13 +95,38 @@
             data: function () {
                 return {
                     moment,
-                    loggers: {{ loggers | json_encode | raw }},
+                    fetching: false,
+                    loggers: [],
                     logger: {{ logger | json_encode | raw }}
                 }
             },
+            beforeMount: function () {
+                this.fetchRaw();
+            },
             methods: {
+                back: function () {
+                    if (window.history.length > 0) {
+                        window.history.back();
+                    } else {
+                        window.location = '/logger';
+                    }
+                },
                 showModalConfig: function () {
                     modalConfig.showModal(this.logger);
+                },
+                fetchRaw: function () {
+                    this.fetching = true;
+                    $.ajax({
+                        url: '/api/logger/{{ logger.sn }}/raw'
+                    })
+                    .then(res => {
+                        if (res.status === 200) {
+                            this.loggers = res.data.loggers;
+                        }
+                    })
+                    .always(() => {
+                        this.fetching = false;
+                    });
                 }
             }
         });

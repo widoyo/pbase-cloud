@@ -5,15 +5,15 @@
 {% block content %}
 
     <div class="list-group list-group-flush" id="app" v-cloak>
-        <a v-for="logger in loggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0 px-3">
+        <a v-for="logger in sortedLoggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0 px-3">
             <div class="d-flex align-items-center">
-                <div class="text-center bg-white text-dark font-weight-bold px-0 py-3" style="border-radius: 50%; width: 55px; height: 55px">
+                <div class="text-center bg-white text-dark font-weight-bold mr-3 px-0 py-3" style="border-radius: 50%; width: 55px; height: 55px">
                     {[{ logger.sn.substr(2) }]}
                 </div>
-                <div class="flex-fill ml-3">
+
+                <div v-if="logger.content" class="flex-fill">
                     <p class="h5 mb-1">
-                        <span v-if="logger.content.sampling">{[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}</span>
-                        <span v-else class="text-secondary">(no data)</span>
+                        {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
                     </p>
                     <div class="h6 mb-0 d-flex">
                         <p class="mb-0">
@@ -37,6 +37,10 @@
                             </span>
                         </div>
                     </div>
+                </div>
+                <div v-else class="text-muted">
+                    <span v-if="logger.fetching">fetching data...</span>
+                    <span v-else>( no data )</span>
                 </div>
             </div>
         </a>
@@ -64,8 +68,51 @@
                     loggers: {{ loggers | json_encode | raw }}
                 }
             },
-            methods: {
+            beforeMount: function () {
+                for (var index in this.loggers) {
+                    this.fetchRaw(index);
+                }
+            },
+            computed: {
+                sortedLoggers: function () {
+                    // magic sort
+                    return this.loggers.slice().sort((a, b) => {
+                        if (a.content !== '') {
+                            if (b.content === '') {
+                                return -1;
+                            }
 
+                            return a.content.sampling > b.content.sampling ? -1 :
+                                (a.content.sampling < b.content.sampling ? 1 : 0);
+                        }
+
+                        return a.sn > b.sn ? 1 :
+                            (a.sn < b.sn ? -1 : 0);
+                    })
+                }
+            },
+            methods: {
+                fetchRaw: function (index) {
+                    var logger = this.loggers[index];
+                    logger.fetching = true;
+
+                    $.ajax({
+                        url: '/api/logger/'+ logger.sn +'/raw',
+                        data: {
+                            limit: 1
+                        }
+                    })
+                    .then(res => {
+                        if (res.status === 200) {
+                            if (res.data.loggers.length > 0) {
+                                logger.content = res.data.loggers[0].content;
+                            }
+                        }
+                    })
+                    .always(() => {
+                        logger.fetching = false;
+                    });
+                }
             }
         });
     </script>

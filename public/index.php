@@ -403,7 +403,7 @@ $app->get('/test', function(Request $request, Response $response) {
     return $this->view->render($response, 'template.html');
 });
 
-$app->group('/api', function() {
+$app->group('/api', function() use ($getLoggerMiddleware) {
     $app = $this;
 
     require __DIR__ . '/../src/api/logger.php';

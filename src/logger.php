@@ -11,79 +11,85 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         if ($user['tenant_id'] > 0)
         {
             $loggers_stmt = $this->db->query("SELECT * FROM logger WHERE
-                logger.tenant_id = {$user['tenant_id']}");
+                logger.tenant_id = {$user['tenant_id']} ORDER BY sn");
         }
         else
         {
-            $loggers_stmt = $this->db->query("SELECT * FROM logger");
+            $loggers_stmt = $this->db->query("SELECT * FROM logger ORDER BY sn");
         }
         $logger_data = $loggers_stmt->fetchAll();
+        // dump($logger_data);
 
-        $loggers = [];
-        foreach ($logger_data as $logger) {
-            // $today = date('Y-m-d 00:00:00');
-            $raw = $this->db->query("SELECT
-                    *
-                FROM
-                    raw
-                WHERE
-                    content->>'device' like '%{$logger['sn']}%'
-                ORDER BY
-                    id DESC
-                LIMIT 1")
-            ->fetch();
-            if ($raw) {
-                $raw['content'] = json_decode($raw['content']);
+        // $loggers = [];
+        // foreach ($logger_data as $logger) {
+        //     // $today = date('Y-m-d 00:00:00');
+        //     $raw = $this->db->query("SELECT
+        //             *
+        //         FROM
+        //             raw
+        //         WHERE
+        //             content->>'device' like '%{$logger['sn']}%'
+        //         ORDER BY
+        //             id DESC
+        //         LIMIT 1")
+        //     ->fetch();
+        //     if ($raw) {
+        //         $raw['content'] = json_decode($raw['content']);
 
-                // if (isset($raw['content']->temperature) && !empty($logger['temp_cor'])) {
-                //     $raw['content']->temperature += $logger['temp_cor'];
-                // }
+        //         // if (isset($raw['content']->temperature) && !empty($logger['temp_cor'])) {
+        //         //     $raw['content']->temperature += $logger['temp_cor'];
+        //         // }
 
-                // if (isset($raw['content']->humidity) && !empty($logger['humi_cor'])) {
-                //     $raw['content']->humidity += $logger['humi_cor'];
-                // }
+        //         // if (isset($raw['content']->humidity) && !empty($logger['humi_cor'])) {
+        //         //     $raw['content']->humidity += $logger['humi_cor'];
+        //         // }
 
-                // if (isset($raw['content']->battery) && !empty($logger['batt_cor'])) {
-                //     $raw['content']->battery += $logger['batt_cor'];
-                // }
+        //         // if (isset($raw['content']->battery) && !empty($logger['batt_cor'])) {
+        //         //     $raw['content']->battery += $logger['batt_cor'];
+        //         // }
 
-                // if (isset($raw['content']->tick) && !empty($logger['tipp_fac'])) {
-                //     $raw['content']->tick += $logger['tipp_fac'];
-                // }
+        //         // if (isset($raw['content']->tick) && !empty($logger['tipp_fac'])) {
+        //         //     $raw['content']->tick += $logger['tipp_fac'];
+        //         // }
 
-                // if (isset($raw['content']->distance) && !empty($logger['ting_son'])) {
-                //     $raw['content']->distance += $logger['ting_son'];
-                // }
-            }
+        //         // if (isset($raw['content']->distance) && !empty($logger['ting_son'])) {
+        //         //     $raw['content']->distance += $logger['ting_son'];
+        //         // }
+        //     }
 
-            $loggers[] = [
-                'sn' => $logger['sn'],
-                'raw_id' => $raw['id'],
-                'content' => $raw['content'] ?: '',
-                'received' => $raw['received']
-            ];
+        //     $loggers[] = [
+        //         'sn' => $logger['sn'],
+        //         'raw_id' => $raw['id'],
+        //         'content' => $raw['content'] ?: '',
+        //         'received' => $raw['received']
+        //     ];
+        // }
+
+        // usort($loggers, function ($a, $b) {
+        //     if (!$a['content'] || !$b['content']) {
+        //         if ($a['content']) {
+        //             return -1;
+        //         } else if ($b['content']) {
+        //             return 1;
+        //         }
+
+        //         return $a['sn'] > $b['sn'] ? 1 :
+        //             ($a['sn'] < $b['sn'] ? -1 : 0);
+        //     }
+
+        //     return $a['content']->sampling > $b['content']->sampling ? -1 :
+        //         ($a['content']->sampling < $b['content']->sampling ? 1 : 0);
+        // });
+
+        // // $total_data = date('H') * 12 + floor(date('i') / 5);
+
+        foreach ($logger_data as &$logger) {
+            $logger['content'] = '';
+            $logger['fetching'] = false;
         }
 
-        usort($loggers, function ($a, $b) {
-            if (!$a['content'] || !$b['content']) {
-                if ($a['content']) {
-                    return -1;
-                } else if ($b['content']) {
-                    return 1;
-                }
-
-                return $a['sn'] > $b['sn'] ? 1 :
-                    ($a['sn'] < $b['sn'] ? -1 : 0);
-            }
-
-            return $a['content']->sampling > $b['content']->sampling ? -1 :
-                ($a['content']->sampling < $b['content']->sampling ? 1 : 0);
-        });
-
-        // $total_data = date('H') * 12 + floor(date('i') / 5);
-
         return $this->view->render($response, 'logger/mobile/index.html', [
-            'loggers' => $loggers,
+            'loggers' => $logger_data,
             // 'total_data' => $total_data,
         ]);
 	});
@@ -169,62 +175,62 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         $this->get('', function (Request $request, Response $response, $args) {
             $logger = $request->getAttribute('logger');
-            $raws = $this->db->query("SELECT * FROM raw
-                WHERE
-                    content->>'device' like '%{$logger['sn']}%'
-                ORDER BY
-                    id DESC
-                LIMIT 10")
-            ->fetchAll();
+            // $raws = $this->db->query("SELECT * FROM raw
+            //     WHERE
+            //         content->>'device' like '%{$logger['sn']}%'
+            //     ORDER BY
+            //         id DESC
+            //     LIMIT 10")
+            // ->fetchAll();
 
-            $loggers = [];
-            foreach ($raws as $raw) {
-                $raw['content'] = json_decode($raw['content']);
+            // $loggers = [];
+            // foreach ($raws as $raw) {
+            //     $raw['content'] = json_decode($raw['content']);
 
-                // if (isset($raw['content']->temperature) && !empty($logger['temp_cor'])) {
-                //     $raw['content']->temperature += $logger['temp_cor'];
-                // }
+            //     // if (isset($raw['content']->temperature) && !empty($logger['temp_cor'])) {
+            //     //     $raw['content']->temperature += $logger['temp_cor'];
+            //     // }
 
-                // if (isset($raw['content']->humidity) && !empty($logger['humi_cor'])) {
-                //     $raw['content']->humidity += $logger['humi_cor'];
-                // }
+            //     // if (isset($raw['content']->humidity) && !empty($logger['humi_cor'])) {
+            //     //     $raw['content']->humidity += $logger['humi_cor'];
+            //     // }
 
-                // if (isset($raw['content']->battery) && !empty($logger['batt_cor'])) {
-                //     $raw['content']->battery += $logger['batt_cor'];
-                // }
+            //     // if (isset($raw['content']->battery) && !empty($logger['batt_cor'])) {
+            //     //     $raw['content']->battery += $logger['batt_cor'];
+            //     // }
 
-                // if (isset($raw['content']->tick) && !empty($logger['tipp_fac'])) {
-                //     $raw['content']->tick += $logger['tipp_fac'];
-                // }
+            //     // if (isset($raw['content']->tick) && !empty($logger['tipp_fac'])) {
+            //     //     $raw['content']->tick += $logger['tipp_fac'];
+            //     // }
 
-                // if (isset($raw['content']->distance) && !empty($logger['ting_son'])) {
-                //     $raw['content']->distance += $logger['ting_son'];
-                // }
+            //     // if (isset($raw['content']->distance) && !empty($logger['ting_son'])) {
+            //     //     $raw['content']->distance += $logger['ting_son'];
+            //     // }
 
-                $loggers[] = [
-                    'sn' => $logger['sn'],
-                    'raw_id' => $raw['id'],
-                    'content' => $raw['content'] ?: '',
-                    'received' => $raw['received']
-                ];
-            }
+            //     $loggers[] = [
+            //         'sn' => $logger['sn'],
+            //         'raw_id' => $raw['id'],
+            //         'content' => $raw['content'] ?: '',
+            //         'received' => $raw['received']
+            //     ];
+            // }
 
-            if (count($loggers) == 0) {
-                $logger['content'] = '';
-                $loggers[] = $logger;
-            } else if (!$logger['tipe']) {
-                // set tipe logger jika masih null
-                if (isset($loggers[0]['content']->tick)) {
-                    $logger['tipe'] = 'arr';
-                } else if (isset($loggers[0]['content']->distance)) {
-                    $logger['tipe'] = 'awlr';
-                }
-            }
+            // if (count($loggers) == 0) {
+            //     $logger['content'] = '';
+            //     $loggers[] = $logger;
+            // } else if (!$logger['tipe']) {
+            //     // set tipe logger jika masih null
+            //     if (isset($loggers[0]['content']->tick)) {
+            //         $logger['tipe'] = 'arr';
+            //     } else if (isset($loggers[0]['content']->distance)) {
+            //         $logger['tipe'] = 'awlr';
+            //     }
+            // }
 
             $locations = $this->db->query("SELECT * FROM location ORDER BY nama")->fetchAll();
 
             return $this->view->render($response, 'logger/mobile/show.html', [
-                'loggers' => $loggers,
+                // 'loggers' => $loggers,
                 'logger' => $logger,
                 'locations' => $locations
             ]);

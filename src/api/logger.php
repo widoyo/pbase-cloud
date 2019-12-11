@@ -3,7 +3,7 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->group('/logger', function () {
+$app->group('/logger', function () use ($getLoggerMiddleware) {
 
     $this->group('/{sn}', function() {
 
@@ -100,5 +100,56 @@ $app->group('/logger', function () {
 	            'invalids' => $invalids,
 	        ]);
         });
-    });
+
+        $this->get('/raw', function (Request $request, Response $response, $args) {
+        	$limit = intval($request->getParam('limit', 10));
+        	$logger = $request->getAttribute('logger');
+
+        	$raws = $this->db->query("SELECT * FROM raw
+                WHERE
+                    content->>'device' like '%{$logger['sn']}%'
+                ORDER BY id DESC LIMIT {$limit}")
+            ->fetchAll();
+
+            $loggers = [];
+            foreach ($raws as $raw) {
+                $raw['content'] = json_decode($raw['content']);
+
+                // if (isset($raw['content']->temperature) && !empty($logger['temp_cor'])) {
+                //     $raw['content']->temperature += $logger['temp_cor'];
+                // }
+
+                // if (isset($raw['content']->humidity) && !empty($logger['humi_cor'])) {
+                //     $raw['content']->humidity += $logger['humi_cor'];
+                // }
+
+                // if (isset($raw['content']->battery) && !empty($logger['batt_cor'])) {
+                //     $raw['content']->battery += $logger['batt_cor'];
+                // }
+
+                // if (isset($raw['content']->tick) && !empty($logger['tipp_fac'])) {
+                //     $raw['content']->tick += $logger['tipp_fac'];
+                // }
+
+                // if (isset($raw['content']->distance) && !empty($logger['ting_son'])) {
+                //     $raw['content']->distance += $logger['ting_son'];
+                // }
+
+                $loggers[] = [
+                    'sn' => $logger['sn'],
+                    'raw_id' => $raw['id'],
+                    'content' => $raw['content'] ?: '',
+                    'received' => $raw['received']
+                ];
+            }
+
+        	return $response->withJson([
+        		'status' => 200,
+        		'message' => 'OK',
+        		'data' => [
+        			'loggers' => $loggers
+        		]
+        	]);
+        });
+    })->add($getLoggerMiddleware);
 });
