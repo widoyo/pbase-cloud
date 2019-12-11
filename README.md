@@ -18,14 +18,14 @@
 
 	4. [ ] Ubah backlight theme (white / black)
 
-3. [ ] Configure
+3. [x] Configure
 
-	1. [ ] nilai constant tergantung tipe logger (ARR, Sonar)
+	1. [x] nilai constant tergantung tipe logger (ARR, Sonar/AWLR)
 
-	2. [ ] koreksi nilai logger
+	2. [x] koreksi nilai logger
 
-	3. [ ] lokasi (bisa tambah baru)
+	3. [x] lokasi (bisa tambah baru)
 
-	4. [ ] tipe logger (ARR, Sonar)
+	4. [x] tipe logger (ARR, Sonar)
 
 4. [ ] Daftar lokasi
