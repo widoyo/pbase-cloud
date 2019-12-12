@@ -8,15 +8,15 @@
 
 1. [x] Auth (+ feature from prinus-admin)
 
-2. [ ] Latest record logger, distinct by SN, order by time received
+2. [x] Latest record logger, distinct by SN, order by time received
 
 	1. [x] /logger
 
 	2. [x] /logger/{SN}
 
-	3. [ ] Ubah ukuran font
+	3. [x] Ubah ukuran font
 
-	4. [ ] Ubah backlight theme (white / black)
+	4. [x] Ubah backlight theme (white / black)
 
 3. [x] Configure
 

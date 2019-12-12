@@ -19,11 +19,21 @@
             [v-cloak] {
                 display: none;
             }
-            .theme-dark .nav-link {
+
+            /*theme dark*/
+            .theme-dark .nav {
+                background-color: #6c757d;
+            }
+            .theme-dark .nav-link,
+            .theme-dark .btn-link {
                 color: white;
             }
             .theme-dark .nav-link.active {
                 background-color: #343a40;
+            }
+            .theme-dark .logger-sn-circle {
+                background-color: white;
+                color: #343a40;
             }
             .theme-dark,
             .theme-dark .modal-content,
@@ -35,7 +45,38 @@
             }
             .theme-dark .list-group-item-action {
                 border-color: #6c757d;
+            }            
+
+            /*theme light*/
+            .theme-light .nav {
+                background-color: #6c757d;
             }
+            .theme-light .nav-link {
+                color: white;
+            }
+            .theme-light .btn-link {
+                color: #343a40;
+            }
+            .theme-light .nav-link.active {
+                background-color: white;
+                color: #343a40;
+            }
+            .theme-light .logger-sn-circle {
+                background-color: #6c757d;
+                color: white;
+            }
+            .theme-light,
+            .theme-light .modal-content,
+            .theme-light .form-control,
+            .theme-light .list-group-item-action,
+            .theme-light .input-group-text {
+                background-color: white;
+                color: #343a40;
+            }
+            .theme-light .list-group-item-action {
+                border-color: #6c757d;
+            }
+            
             .dropdown-toggle.noicon::after {
                 content: unset;
             }
@@ -81,6 +122,10 @@
                             <span class="mx-3">Font size</span>
                             <button class="btn btn-sm btn-secondary font-size-plus">+</button>
                         </div>
+                        <div class="d-flex align-items-center px-4 py-2">
+                            <span>Theme</span>
+                            <button class="btn btn-sm bg-secondary border border-dark ml-auto px-3 theme-change">&nbsp;</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -100,6 +145,7 @@
             Vue.options.delimiters = ['{[{', '}]}'];
 
             $(function () {
+                initTheme();
                 initSizeText();
 
                 $('.font-size-min').on('click', function (e) {
@@ -117,7 +163,34 @@
 
                     resizeText(1);
                 });
+
+                $('.theme-change').on('click', function (e) {
+                    if (e) {
+                        e.stopPropagation();
+                    }
+
+                    var activeTheme = localStorage['activeTheme'] || 'dark';
+                    activeTheme = activeTheme === 'light' ? 'dark' : 'light';
+                    changeTheme(activeTheme);
+                });
             })
+
+            function initTheme() {
+                var activeTheme = localStorage['activeTheme'] || 'dark';
+                changeTheme(activeTheme);
+            }
+
+            function changeTheme(theme) {
+                if (theme === 'light') {
+                    $('.theme-dark').removeClass('theme-dark').addClass('theme-light');
+                    $('.theme-change').removeClass('bg-secondary').addClass('bg-white');
+                } else {
+                    $('.theme-light').removeClass('theme-light').addClass('theme-dark');
+                    $('.theme-change').removeClass('bg-white').addClass('bg-secondary');
+                }
+
+                localStorage['activeTheme'] = theme;
+            }
 
             function initSizeText() {
                 var resizeTextCounter = localStorage['resizeTextCounter'] || 1;
