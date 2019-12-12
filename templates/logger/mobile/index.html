@@ -12,10 +12,10 @@
                 </div>
 
                 <div v-if="logger.content" class="flex-fill">
-                    <p class="h5 mb-1">
+                    <p class="font-weight-bold mb-0">
                         {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
                     </p>
-                    <div class="h6 mb-0 d-flex">
+                    <div class="mb-0 d-flex">
                         <p class="mb-0">
                             <span v-if="typeof logger.content.tick !== typeof undefined">
                                 <span class="badge badge-primary">ARR</span>

@@ -10,7 +10,7 @@
                 <i class="fas fa-fw fa-chevron-left"></i>
             </button>
             <div class="my-1 text-center">
-                <h1 class="h5 text-center mb-0">{{ logger.sn }}</h1>
+                <p class="font-weight-bold text-center mb-0">{{ logger.sn }}</p>
                 <p class="mb-0">{{ logger.location_nama }}</p>
             </div>
             <button class="btn btn-link text-white" @click="showModalConfig()">
@@ -27,12 +27,12 @@
                         </div>
                     </div> -->
                     <div class="col-12">
-                        <div class="mb-1 d-flex">
-                            <p class="h5 mb-0">
+                        <div class="mb-0 d-flex">
+                            <p class="font-weight-bold mb-0">
                                 {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
                             </p>
                         </div>
-                        <div class="h6 mb-0 d-flex">
+                        <div class="mb-0 d-flex">
                             <p class="mb-0 mr-2">
                                 <span v-if="typeof logger.content.tick !== typeof undefined">
                                     <span class="badge badge-primary">ARR</span>
