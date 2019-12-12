@@ -12,9 +12,12 @@
                 </div>
 
                 <div v-if="logger.content" class="flex-fill">
-                    <p class="font-weight-bold mb-0">
-                        {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
-                    </p>
+                    <div class="mb-0 d-flex">
+                        <p class="font-weight-bold mb-0">
+                            {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
+                        </p>
+                        <i v-if="logger.fetching" class="fas fa-sync fa-spin ml-auto"></i>
+                    </div>
                     <div class="mb-0 d-flex">
                         <p class="mb-0">
                             <span v-if="typeof logger.content.tick !== typeof undefined">
@@ -69,6 +72,10 @@
                 }
             },
             beforeMount: function () {
+                if (typeof localStorage['raw'] === typeof undefined){
+                    localStorage['raw'] = [];
+                }
+
                 for (var index in this.loggers) {
                     this.fetchRaw(index);
                 }
@@ -96,6 +103,10 @@
                     var logger = this.loggers[index];
                     logger.fetching = true;
 
+                    if (typeof localStorage['content_'+ logger.sn] != typeof undefined) {
+                        logger.content = JSON.parse(localStorage['content_'+ logger.sn]);
+                    }
+
                     $.ajax({
                         url: '/api/logger/'+ logger.sn +'/raw',
                         data: {
@@ -106,6 +117,7 @@
                         if (res.status === 200) {
                             if (res.data.loggers.length > 0) {
                                 logger.content = res.data.loggers[0].content;
+                                localStorage['content_'+ logger.sn] = JSON.stringify(res.data.loggers[0].content);
                             }
                         }
                     })

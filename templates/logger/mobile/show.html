@@ -19,6 +19,9 @@
         </div>
 
         <div class="list-group list-group-flush" v-cloak>
+            <div v-if="fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
+                <i class="fas fa-sync fa-spin ml-auto"></i>
+            </div>
             <a v-for="logger in loggers" class="list-group-item list-group-item-action rounded-0">
                 <div class="row align-items-center">
                     <!-- <div class="col-2 pl-1 pr-0">
@@ -63,9 +66,9 @@
                     </div>
                 </div>
             </a>
-            <div v-if="loggers.length == 0" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
-                <span v-if="fetching">fetching data...</span>
-                <span v-else>( no data )</span>
+
+            <div v-if="loggers.length == 0 && !fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
+                ( no data )
             </div>
         </div>
 
@@ -116,12 +119,18 @@
                 },
                 fetchRaw: function () {
                     this.fetching = true;
+
+                    if (typeof localStorage['raw_{{ logger.sn }}'] != typeof undefined) {
+                        this.loggers = JSON.parse(localStorage['raw_{{ logger.sn }}']);
+                    }
+
                     $.ajax({
                         url: '/api/logger/{{ logger.sn }}/raw'
                     })
                     .then(res => {
                         if (res.status === 200) {
                             this.loggers = res.data.loggers;
+                            localStorage['raw_{{ logger.sn }}'] = JSON.stringify(res.data.loggers);
                         }
                     })
                     .always(() => {
