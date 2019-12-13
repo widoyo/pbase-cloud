@@ -1,0 +1,61 @@
+{% extends 'layouts/mobile/master.html' %}
+
+{% set title = 'Lokasi' %}
+
+{% block content %}
+
+    <div class="list-group list-group-flush" id="app" v-cloak>
+        <div v-for="location in sortedlocations" class="list-group-item rounded-0 px-3">
+            <div class="d-flex align-items-center">
+                <a class="location-sn-circle bg-secondary text-white text-center font-weight-bold mr-3 px-0 py-3"
+                    style="border-radius: 50%; width: 55px; height: 55px"
+                    target="_blank"
+                    href="#">
+                    <i class="fas fa-map-marker-alt"></i>
+                </a>
+
+                <div class="flex-fill">
+                    <div class="mb-0 d-flex">
+                        <p class="font-weight-bold mb-0">
+                            {[{ location.nama }]}
+                        </p>
+                        <!-- <div class="ml-auto">
+                            <button class="btn btn-link">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div> -->
+                    </div>
+                    <div class="mb-0 d-flex">
+                        <p class="mb-0">
+                            {[{ location.ll }]}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="sortedlocations.length == 0" class="list-group-item rounded-0 text-center text-muted">
+            ( no data )
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        var _app = new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    locations: {{ locations | json_encode | raw }}
+                }
+            },
+            computed: {
+                sortedlocations: function () {
+                    return this.locations
+                }
+            }
+        });
+    </script>
+{% endblock %}

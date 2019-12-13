@@ -29,3 +29,9 @@
 	4. [x] tipe logger (ARR, Sonar)
 
 4. [ ] Daftar lokasi
+
+	1. [x] /location
+
+	2. [ ] /location/{ID}
+
+	3. [ ] Config lokasi
