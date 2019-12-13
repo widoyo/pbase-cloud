@@ -5,15 +5,15 @@
 {% block content %}
 
     <div id="app">
-        <div class="d-flex justify-content-between align-items-center">
-            <button class="btn btn-link" @click="back()">
+        <div class="d-flex justify-content-between align-items-center text-white" :class="getBgSN()">
+            <button class="btn btn-link text-white" @click="back()">
                 <i class="fas fa-fw fa-chevron-left"></i>
             </button>
             <div class="my-1 text-center">
                 <p class="font-weight-bold text-center mb-0">{{ logger.sn }}</p>
                 <p class="mb-0">{{ logger.location_nama }}</p>
             </div>
-            <button class="btn btn-link" @click="showModalConfig()">
+            <button class="btn btn-link text-white" @click="showModalConfig()">
                 <i class="fas fa-fw fa-cog"></i>
             </button>
         </div>
@@ -38,11 +38,11 @@
                         <div class="mb-0 d-flex">
                             <p class="mb-0 mr-2">
                                 <span v-if="typeof logger.content.tick !== typeof undefined">
-                                    <span class="badge badge-primary">ARR</span>
+                                    <!-- <span class="badge badge-primary">ARR</span> -->
                                     {[{ logger.content.tick }]}
                                 </span>
                                 <span v-if="typeof logger.content.distance !== typeof undefined">
-                                    <span class="badge badge-success">AWLR</span>
+                                    <!-- <span class="badge badge-success">AWLR</span> -->
                                     {[{ logger.content.distance }]}
                                 </span>
                             </p>
@@ -136,6 +136,19 @@
                     .always(() => {
                         this.fetching = false;
                     });
+                },
+                getBgSN: function () {
+                    if (this.loggers.length === 0) {
+                        return 'bg-secondary';
+                    }
+
+                    var logger = this.loggers[0];
+                    if (typeof logger.content.tick !== typeof undefined) {
+                        return 'bg-primary';
+                    } else if (typeof logger.content.distance !== typeof undefined) {
+                        return 'bg-success';
+                    }
+                    return 'bg-secondary';
                 }
             }
         });

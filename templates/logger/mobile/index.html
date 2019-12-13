@@ -7,8 +7,8 @@
     <div class="list-group list-group-flush" id="app" v-cloak>
         <a v-for="logger in sortedLoggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0 px-3">
             <div class="d-flex align-items-center">
-                <div class="logger-sn-circle text-center font-weight-bold mr-3 px-0 py-3" style="border-radius: 50%; width: 55px; height: 55px">
-                    {[{ logger.sn.substr(2) }]}
+                <div class="logger-sn-circle text-white text-center font-weight-bold mr-3 px-0 py-3" :class="getBgSN(logger)" style="border-radius: 50%; width: 55px; height: 55px">
+                    {[{ logger.sn }]}
                 </div>
 
                 <div v-if="logger.content" class="flex-fill">
@@ -21,11 +21,11 @@
                     <div class="mb-0 d-flex">
                         <p class="mb-0">
                             <span v-if="typeof logger.content.tick !== typeof undefined">
-                                <span class="badge badge-primary">ARR</span>
+                                <!-- <span class="badge badge-primary">ARR</span> -->
                                 {[{ logger.content.tick }]}
                             </span>
                             <span v-if="typeof logger.content.distance !== typeof undefined">
-                                <span class="badge badge-success">AWLR</span>
+                                <!-- <span class="badge badge-success">AWLR</span> -->
                                 {[{ logger.content.distance }]}
                             </span>
                         </p>
@@ -124,6 +124,18 @@
                     .always(() => {
                         logger.fetching = false;
                     });
+                },
+                getBgSN: function (logger) {
+                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                        return 'bg-secondary';
+                    }
+
+                    if (typeof logger.content.tick !== typeof undefined) {
+                        return 'bg-primary';
+                    } else if (typeof logger.content.distance !== typeof undefined) {
+                        return 'bg-success';
+                    }
+                    return 'bg-secondary';
                 }
             }
         });
