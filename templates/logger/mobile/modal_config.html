@@ -4,7 +4,7 @@
 			<div class="modal-body">
 				<div class="d-flex align-items-start mb-3">
 					<div>
-						<p class="modal-title font-weight-bold mb-0" id="modal-config-title">Config : {[{ logger.sn }]}</p>
+						<p class="modal-title font-weight-bold mb-0" id="modal-config-title">Konfigurasi</p>
 					</div>
 					<button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
@@ -29,14 +29,12 @@
 						<label class="col-3 col-form-label text-nowrap">Tipe</label>
 						<div class="col-9">
 							<select class="form-control" name="tipe" v-model="logger.tipe">
-								<option value="null">&gt;&gt; Pilih tipe &lt;&lt;</option>
+								<option hidden value="null">&gt;&gt; Pilih tipe &lt;&lt;</option>
 								<option value="arr">arr</option>
 								<option value="awlr">awlr</option>
 							</select>
 						</div>
 					</div>
-
-					<p class="card-title font-weight-bold mt-4 mb-3">Correction</p>
 
 					<div v-if="logger.tipe == 'arr'" class="form-group row mb-3">
 						<label class="col-3 col-form-label text-nowrap">
@@ -55,6 +53,8 @@
 							<input class="form-control" name="ting_son" type="number" step="0.01" v-model="logger.ting_son">
 						</div>
 					</div>
+
+					<p class="card-title font-weight-bold mt-4 mb-3">Koreksi</p>
 
 					<div class="form-group row mb-3">
 						<label class="col-3 col-form-label text-nowrap">

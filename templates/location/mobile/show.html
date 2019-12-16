@@ -1,0 +1,111 @@
+{% extends 'layouts/mobile/master.html' %}
+
+{% set title = location.nama ~ ' | location' %}
+
+{% block content %}
+
+    <div id="app">
+        <!-- <div class="d-flex justify-content-between align-items-center bg-secondary text-white">
+            <button class="btn btn-link text-white" @click="back()">
+                <i class="fas fa-fw fa-chevron-left"></i>
+            </button>
+            <div class="my-1 text-center">
+                <p class="font-weight-bold text-center mb-0">{{ location.nama }}</p>
+                <p class="mb-0">{{ location.tenant_nama }}</p>
+            </div>
+            <button class="btn btn-link text-white" @click="showModalConfig()">
+                <i class="fas fa-fw fa-cog"></i>
+            </button>
+        </div> -->
+
+        <form method="post" action="/location/{{ location.id }}/config" v-cloak>
+            <div class="list-group">
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-3">Lokasi</div>
+                        <div class="col-9">
+                            <span v-if="!editMode">{[{ location.nama }]}</span>
+                            <input v-else class="form-control" name="nama" v-model="location.nama" required>
+                        </div>
+                    </div>
+                </div>
+                {% if user().tenant_id == 0 %}
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col-3">Tenant</div>
+                            <div class="col-9">
+                                <span v-if="!editMode" class="text-nowrap">{[{ location.tenant_nama }]}</span>
+                                <select v-else class="form-control" name="tenant_id" v-model="location.tenant_id" required>
+                                    <option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
+                                    <option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-3">ll</div>
+                        <div class="col-9">
+                            <span v-if="!editMode">{[{ location.ll }]}</span>
+                            <input v-else class="form-control" name="ll" v-model="location.ll">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex p-3">
+                <a class="btn btn-secondary mr-2" href="/location">
+                    Kembali
+                </a>
+
+                <div class="ml-auto" v-cloak>
+                    <button v-if="!editMode" class="btn btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
+                        Edit
+                    </button>
+                    <button v-if="editMode" class="btn btn-secondary mr-2" type="button" @click="toggleEdit()" key='btn-batal'>
+                        Batal
+                    </button>
+                    <button v-if="editMode" class="btn btn-warning" type="submit" key='btn-simpan'>
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    {# include 'location/mobile/modal_config.html' #}
+    
+    <script>
+        var _app = new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    moment,
+                    editMode: false,
+                    location: {{ location | json_encode | raw }},
+                    tenants: {{ tenants | json_encode | raw }}
+                }
+            },
+            methods: {
+                back: function () {
+                    if (window.history.length > 0) {
+                        window.history.back();
+                    } else {
+                        window.location = '/location';
+                    }
+                },
+                showModalConfig: function () {
+                    modalConfig.showModal(this.location);
+                },
+                toggleEdit: function () {
+                    this.editMode = !this.editMode;
+                }
+            }
+        });
+    </script>
+{% endblock %}

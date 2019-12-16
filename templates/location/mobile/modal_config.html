@@ -1,0 +1,78 @@
+<div class="modal fade show in" id="modal-config" tabindex="-1" role="dialog" aria-labelledby="modal-config-title" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-body">
+				<div class="d-flex align-items-start mb-3">
+					<div>
+						<p class="modal-title font-weight-bold mb-0" id="modal-config-title">Config : {[{ location.nama }]}</p>
+					</div>
+					<button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+
+				<form method="post" :action="'/location/'+ location.id +'/config'">
+					<div class="form-group row mb-3">
+						<label class="col-3 col-form-label">
+							Nama
+						</label>
+						<div class="col-9">
+							<input class="form-control" name="nama" v-model="location.nama" required>
+						</div>
+					</div>
+
+					{% if user().tenant_id == 0 %}
+						<div class="form-group row mb-3">
+							<label class="col-3 col-form-label">
+								Tenant
+							</label>
+							<div class="col-9">
+								<select class="form-control" name="tenant_id" v-model="location.tenant_id" required>
+									<option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
+									<option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
+								</select>
+							</div>
+						</div>
+					{% endif %}
+
+					<!-- <div class="form-group row mb-3">
+						<label class="col-3 col-form-label text-nowrap">Tipe</label>
+						<div class="col-9">
+							<select class="form-control" name="tipe" v-model="location.tipe">
+								<option value="null">&gt;&gt; Pilih tipe &lt;&lt;</option>
+								<option value="arr">arr</option>
+								<option value="awlr">awlr</option>
+							</select>
+						</div>
+					</div> -->
+
+					<div class="mt-3 text-right">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+						<button type="submit" class="btn btn-primary">Simpan</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var modalConfig = new Vue({
+		el: '#modal-config',
+		data: function () {
+			return {
+				location: {},
+				tenants: {{ tenants | json_encode |raw }}
+			}
+		},
+		methods: {
+			showModal: function (location) {
+				this.location = location;
+				$('#modal-config').modal('show');
+			},
+			hideModal: function () {
+				$('#modal-config').modal('hide');
+			}
+		}
+	})
+</script>

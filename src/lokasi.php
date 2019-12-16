@@ -3,7 +3,7 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$app->group('/location', function () {
+$app->group('/location', function () use ($getLocationMiddleware) {
 
     $this->get('', function (Request $request, Response $response, $args) {
 		$user = $this->user;
@@ -20,9 +20,58 @@ $app->group('/location', function () {
         $location_data = $locations_stmt->fetchAll();
         // dump($location_data);
 
+        $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
         return $this->view->render($response, 'location/mobile/index.html', [
             'locations' => $location_data,
             // 'total_data' => $total_data,
+            'tenants' => $tenants
         ]);
 	});
+
+	$this->group('/{id:[0-9]+}', function () {
+
+		$this->get('', function (Request $request, Response $response, $args) {
+			$location = $request->getAttribute('location');
+
+            $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
+			return $this->view->render($response, 'location/mobile/show.html', [
+				'location' => $location,
+				'tenants' => $tenants
+			]);
+		});
+
+        $this->post('/config', function (Request $request, Response $response, $args) {
+            $location = $request->getAttribute('location');
+
+            $form = $request->getParams();
+            $referer = $request->getHeader('HTTP_REFERER');
+            if ($referer && count($referer) > 0) {
+            	$referer = $referer[0];
+            } else {
+            	$referer = '/location';
+            }
+
+            if (count($form) > 0) {
+                $query = "UPDATE location SET ";
+                foreach ($form as $column => $value) {
+                    $query .= "{$column} = '{$value}',";
+                }
+                $query = rtrim($query, ",");
+
+                $query .= " WHERE id = {$location['id']}";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute();
+
+                if ($stmt->rowCount() > 0) {
+                    $this->flash->addMessage('messages', "Config lokasi {$location['nama']} berhasil diubah");
+                } else {
+                    $this->flash->addMessage('errors', "Gagal mengubah config lokasi {$location['nama']}");
+                }
+            }
+
+            return $response->withRedirect($referer);
+        });
+	})->add($getLocationMiddleware);
 })->add($loggedinMiddleware);

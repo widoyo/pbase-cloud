@@ -255,6 +255,36 @@ $getLoggerMiddleware = function (Request $request, Response $response, $next) {
     return $next($request, $response);
 };
 
+$getLocationMiddleware = function (Request $request, Response $response, $next) {
+    $args = $request->getAttribute('routeInfo')[2];
+    if (!empty($args['id'])) {
+        $location_id = intval($args['id']);
+        $stmt = $this->db->prepare("SELECT * FROM location WHERE id=:id");
+        $stmt->execute([':id' => $location_id]);
+    } else {
+        throw new \Slim\Exception\NotFoundException($request, $response);
+    }
+
+    $location = $stmt->fetch();
+
+    $user = $this->user;
+    if (!$location || ($user['tenant_id'] > 0 && $user['tenant_id'] != $location['tenant_id'])) {
+        throw new \Slim\Exception\NotFoundException($request, $response);
+    }
+
+    $location['tenant_nama'] = null;
+    if (!empty($location['tenant_id'])) {
+        $tenant = $this->db->query("SELECT * FROM tenant WHERE id={$location['tenant_id']}")->fetch();
+        if ($location) {
+            $location['tenant_nama'] = $tenant['nama'];
+        }
+    }
+
+    $request = $request->withAttribute('location', $location);
+
+    return $next($request, $response);
+};
+
 $getTenantMiddleware = function (Request $request, Response $response, $next) {
 	$args = $request->getAttribute('routeInfo')[2];
     $tenant_id = intval($args['id']);

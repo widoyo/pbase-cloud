@@ -26,7 +26,7 @@
             {% for err in flash('errors') %}
                 toastr.error('{{ err }}')
             {% endfor %}    
-        }, 1000)
+        }, 100)
     </script>
 {% endif %}
 

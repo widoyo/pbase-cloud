@@ -32,6 +32,8 @@
 
 	1. [x] /location
 
-	2. [ ] /location/{ID}
+	2. [x] /location/{ID}
 
-	3. [ ] Config lokasi
+	3. [x] Config lokasi (nama, tenant)
+
+	4. [ ] LL lokasi
