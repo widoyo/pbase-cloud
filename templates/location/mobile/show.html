@@ -19,8 +19,8 @@
         </div> -->
 
         <form method="post" action="/location/{{ location.id }}/config" v-cloak>
-            <div class="list-group">
-                <div class="list-group-item">
+            <div class="list-group list-group-flush">
+                <div class="list-group-item rounded-0 px-3">
                     <div class="row align-items-center">
                         <div class="col-3">Lokasi</div>
                         <div class="col-9">
@@ -30,7 +30,7 @@
                     </div>
                 </div>
                 {% if user().tenant_id == 0 %}
-                    <div class="list-group-item">
+                    <div class="list-group-item rounded-0 px-3">
                         <div class="row align-items-center">
                             <div class="col-3">Tenant</div>
                             <div class="col-9">
@@ -43,7 +43,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <div class="list-group-item">
+                <div class="list-group-item rounded-0 px-3">
                     <div class="row align-items-center">
                         <div class="col-3">ll</div>
                         <div class="col-9">
