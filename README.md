@@ -28,7 +28,7 @@
 
 	4. [x] tipe logger (ARR, Sonar)
 
-4. [ ] Daftar lokasi
+4. [x] Daftar lokasi
 
 	1. [x] /location
 
@@ -36,4 +36,4 @@
 
 	3. [x] Config lokasi (nama, tenant)
 
-	4. [ ] LL lokasi
+	4. [x] LL lokasi (set LL using leaflet / current location)

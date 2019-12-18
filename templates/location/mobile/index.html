@@ -9,8 +9,9 @@
             <div class="d-flex align-items-center">
                 <a class="location-sn-circle bg-secondary text-white text-center font-weight-bold mr-3 px-0 py-3"
                     style="border-radius: 50%; width: 55px; height: 55px"
-                    href="#">
-                    <i class="fas fa-map-marker-alt"></i>
+                    :href="'/location/'+ location.id">
+                    <i v-if="location.ll" class="fas fa-map-marker-alt"></i>
+                    <i v-else class="fas fa-question"></i>
                 </a>
 
                 <a class="btn-link flex-fill" :href="'/location/' + location.id">
@@ -58,6 +59,14 @@
                 showModalConfig: function (index) {
                     var location = this.sortedlocations[index];
                     modalConfig.showModal(location);
+                },
+                getLocationLink: function (location) {
+                    if (!location.ll || location.ll.length === 0) {
+                        return '#';
+                    }
+
+                    var ll = location.ll.split(',');
+                    return 'https://www.google.com/maps/search/?api=1&query='+ ll[0] +','+ ll[1];
                 }
             }
         });

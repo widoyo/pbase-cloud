@@ -5,7 +5,7 @@
 {% block content %}
 
     <div id="app">
-        <!-- <div class="d-flex justify-content-between align-items-center bg-secondary text-white">
+        <!-- <div class="d-flex justify-content-between  bg-secondary text-white">
             <button class="btn btn-link text-white" @click="back()">
                 <i class="fas fa-fw fa-chevron-left"></i>
             </button>
@@ -19,23 +19,27 @@
         </div> -->
 
         <form method="post" action="/location/{{ location.id }}/config" v-cloak>
+            <div>
+                <div id="mapid" style="height: 240px;"></div>
+            </div>
+
             <div class="list-group list-group-flush">
                 <div class="list-group-item rounded-0 px-3">
-                    <div class="row align-items-center">
+                    <div class="row ">
                         <div class="col-3">Lokasi</div>
                         <div class="col-9">
-                            <span v-if="!editMode">{[{ location.nama }]}</span>
-                            <input v-else class="form-control" name="nama" v-model="location.nama" required>
+                            <span v-show="!editMode">{[{ location.nama }]}</span>
+                            <input v-show="editMode" class="form-control" name="nama" v-model="location.nama" required>
                         </div>
                     </div>
                 </div>
                 {% if user().tenant_id == 0 %}
                     <div class="list-group-item rounded-0 px-3">
-                        <div class="row align-items-center">
+                        <div class="row ">
                             <div class="col-3">Tenant</div>
                             <div class="col-9">
-                                <span v-if="!editMode" class="text-nowrap">{[{ location.tenant_nama }]}</span>
-                                <select v-else class="form-control" name="tenant_id" v-model="location.tenant_id" required>
+                                <span v-show="!editMode" class="text-nowrap">{[{ location.tenant_nama }]}</span>
+                                <select v-show="editMode" class="form-control" name="tenant_id" v-model="location.tenant_id" required>
                                     <option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
                                     <option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
                                 </select>
@@ -44,11 +48,19 @@
                     </div>
                 {% endif %}
                 <div class="list-group-item rounded-0 px-3">
-                    <div class="row align-items-center">
-                        <div class="col-3">ll</div>
+                    <div class="row ">
+                        <div class="col-3">LL</div>
                         <div class="col-9">
-                            <span v-if="!editMode">{[{ location.ll }]}</span>
-                            <input v-else class="form-control" name="ll" v-model="location.ll">
+                            <span v-show="!editMode">{[{ location.ll }]}</span>
+                            <div v-show="editMode">
+                                <div class="input-group">
+                                    <input class="form-control" name="ll" v-model="location.ll">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-secondary" type="button" @click="getCurrentPosition()"><i class="fas fa-map-pin"></i></button>
+                                    </div>
+                                </div>
+                                <div class="small" style="line-height: 1">Klik pada MAP untuk mendapatkan nilai LL</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -60,13 +72,13 @@
                 </a>
 
                 <div class="ml-auto" v-cloak>
-                    <button v-if="!editMode" class="btn btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
+                    <button v-show="!editMode" class="btn btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
                         Edit
                     </button>
-                    <button v-if="editMode" class="btn btn-secondary mr-2" type="button" @click="toggleEdit()" key='btn-batal'>
+                    <button v-show="editMode" class="btn btn-secondary mr-2" type="button" @click="toggleEdit()" key='btn-batal'>
                         Batal
                     </button>
-                    <button v-if="editMode" class="btn btn-warning" type="submit" key='btn-simpan'>
+                    <button v-show="editMode" class="btn btn-warning" type="submit" key='btn-simpan'>
                         Simpan
                     </button>
                 </div>
@@ -77,10 +89,21 @@
 
 {% endblock %}
 
+{% block css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+        integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+        crossorigin=""/>
+{% endblock %}
+
 {% block js %}
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+        integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+        crossorigin=""></script>
+
     {# include 'location/mobile/modal_config.html' #}
     
     <script>
+
         var _app = new Vue({
             el: '#app',
             data: function () {
@@ -88,10 +111,43 @@
                     moment,
                     editMode: false,
                     location: {{ location | json_encode | raw }},
-                    tenants: {{ tenants | json_encode | raw }}
+                    tenants: {{ tenants | json_encode | raw }},
+                    map: null,
+                    tileLayer: null,
+                    marker: null,
+                    layers: []
                 }
             },
+            mounted() {
+                this.initMap();
+                this.initLayers();
+            },
             methods: {
+                initMap: function () {
+                    var ll = [-6.2088, 106.8456];
+                    if (this.location.ll) {
+                        ll = this.location.ll.split(',');
+                    }
+
+                    this.map = L.map('mapid').setView(ll, 13);
+                    this.map.on('click', this.onMapClick);
+
+                    this.tileLayer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoid2lkb3lvIiwiYSI6ImNqcTNmNGh5NjFlMGk0Mm9iamJxdXIxaHUifQ.hxfPpTyy8g60K9baKtbvRw', {
+                        maxZoom: 18,
+                        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                            '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                            'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                        id: 'mapbox/streets-v11'
+                    });
+                    this.tileLayer.addTo(this.map);
+
+                    if (this.location.ll) {
+                        this.addMarker(ll);
+                    }
+                },
+                initLayers: function () {
+
+                },
                 back: function () {
                     if (window.history.length > 0) {
                         window.history.back();
@@ -104,6 +160,38 @@
                 },
                 toggleEdit: function () {
                     this.editMode = !this.editMode;
+                },
+                onMapClick: function (e) {
+                    if (!this.editMode) {
+                        return;
+                    }
+
+                    this.location.ll = e.latlng.lat + "," + e.latlng.lng;
+                    this.addMarker(e.latlng);
+                },
+                addMarker: function (ll) {
+                    if (this.marker) {
+                        this.marker.remove();
+                    }
+
+                    this.marker = L.marker(ll);
+                    this.marker.addTo(this.map);
+                },
+                getCurrentPosition: function () {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            this.location.ll = position.coords.latitude + "," + position.coords.longitude;
+
+                            var ll = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            this.map.setView(ll, this.map.getZoom());
+                            this.addMarker(ll);
+                        })
+                    } else {
+                        toastr.error('Browser Anda tidak support Geolocation, gunakan map');
+                    }
                 }
             }
         });
