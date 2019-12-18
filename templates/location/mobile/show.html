@@ -36,9 +36,9 @@
                 {% if user().tenant_id == 0 %}
                     <div class="list-group-item rounded-0 px-3">
                         <div class="row ">
-                            <div class="col-3">Tenant</div>
+                            <div class="col-3">Pemilik</div>
                             <div class="col-9">
-                                <span v-show="!editMode" class="text-nowrap">{[{ location.tenant_nama }]}</span>
+                                <span v-show="!editMode" class="">{[{ location.tenant_nama }]}</span>
                                 <select v-show="editMode" class="form-control" name="tenant_id" v-model="location.tenant_id" required>
                                     <option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
                                     <option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
@@ -49,8 +49,8 @@
                 {% endif %}
                 <div class="list-group-item rounded-0 px-3">
                     <div class="row ">
-                        <div class="col-3">LL</div>
-                        <div class="col-9">
+                        <div class="col-3">LonLat</div>
+                        <div class="col-9 text-ellipsis">
                             <span v-show="!editMode">{[{ location.ll }]}</span>
                             <div v-show="editMode">
                                 <div class="input-group">
@@ -59,7 +59,7 @@
                                         <button class="btn btn-secondary" type="button" @click="getCurrentPosition()"><i class="fas fa-map-pin"></i></button>
                                     </div>
                                 </div>
-                                <div class="small" style="line-height: 1">Klik pada MAP untuk mendapatkan nilai LL</div>
+                                <div class="small" style="line-height: 1">Klik pada MAP untuk mendapatkan nilai LonLat</div>
                             </div>
                         </div>
                     </div>

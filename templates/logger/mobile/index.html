@@ -7,13 +7,13 @@
     <div class="list-group list-group-flush" id="app" v-cloak>
         <a v-for="logger in sortedLoggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0 px-3">
             <div class="d-flex align-items-center">
-                <div class="logger-sn-circle text-white text-center font-weight-bold mr-3 px-0 py-3" :class="getBgSN(logger)" style="border-radius: 50%; width: 55px; height: 55px">
+                <div class="logger-sn-circle text-white text-center mr-3 px-0 py-3" :class="getBgSN(logger)" style="border-radius: 50%; width: 55px; height: 55px">
                     {[{ logger.sn }]}
                 </div>
 
                 <div v-if="logger.content" class="flex-fill">
                     <div class="mb-0 d-flex">
-                        <p class="font-weight-bold mb-0">
+                        <p class="mb-0">
                             {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
                         </p>
                         <i v-if="logger.fetching" class="fas fa-sync fa-spin ml-auto"></i>

@@ -37,3 +37,9 @@
 	3. [x] Config lokasi (nama, tenant)
 
 	4. [x] LL lokasi (set LL using leaflet / current location)
+
+5. [ ] Kesehatan Logger
+
+	1. [ ] list kesehatan logger
+
+	2. [ ] detail kesehatan logger pada jam tertentu

@@ -9,3 +9,4 @@ raw/
 *.zip
 composer.lock
 /*.bat
+/commit_messages
