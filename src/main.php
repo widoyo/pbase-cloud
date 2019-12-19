@@ -47,7 +47,3 @@ $app->post('/logout', function (Request $request, Response $response, $args) {
     $this->session->destroy();
     return $response->withRedirect('/login');
 })->add($loggedinMiddleware);
-
-$app->get('/setting', function (Request $request, Response $response, $args) {
-	return $this->view->render($response, 'main/mobile/setting.html');
-})->add($loggedinMiddleware);
