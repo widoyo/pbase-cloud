@@ -1,6 +1,6 @@
 {% extends 'layouts/mobile/master.html' %}
 
-{% set title = location.nama ~ ' | Lokasi' %}
+{% set title = 'Tambah Baru | Lokasi' %}
 
 {% block content %}
 
@@ -18,7 +18,7 @@
             </button>
         </div> -->
 
-        <form method="post" action="/location/{{ location.id }}/config" v-cloak>
+        <form method="post" action="/location/add">
             <div>
                 <div id="mapid" style="height: 240px;"></div>
             </div>
@@ -28,8 +28,7 @@
                     <div class="row ">
                         <div class="col-3">Lokasi</div>
                         <div class="col-9">
-                            <span v-show="!editMode">{[{ location.nama }]}</span>
-                            <input v-show="editMode" class="form-control" name="nama" v-model="location.nama" required>
+                            <input class="form-control" name="nama" v-model="location.nama" required>
                         </div>
                     </div>
                 </div>
@@ -38,21 +37,21 @@
                         <div class="row ">
                             <div class="col-3">Pemilik</div>
                             <div class="col-9">
-                                <span v-show="!editMode" class="">{[{ location.tenant_nama }]}</span>
-                                <select v-show="editMode" class="form-control" name="tenant_id" v-model="location.tenant_id" required>
-                                    <option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
+                                <select class="form-control" name="tenant_id" v-model="location.tenant_id" required>
+                                    <option hidden value="">&gt;&gt; Pilih Tenant &lt;&lt;</option>
                                     <option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
                                 </select>
                             </div>
                         </div>
                     </div>
+                {% else %}
+                    <input type="hidden" name="tenant_id" value={{ user().tenant_id }} readonly>
                 {% endif %}
                 <div class="list-group-item rounded-0 px-3">
                     <div class="row ">
                         <div class="col-3">LonLat</div>
                         <div class="col-9 text-ellipsis">
-                            <span v-show="!editMode">{[{ location.ll }]}</span>
-                            <div v-show="editMode">
+                            <div>
                                 <div class="input-group">
                                     <input class="form-control" name="ll" v-model="location.ll">
                                     <div class="input-group-append">
@@ -72,14 +71,8 @@
                 </a>
 
                 <div class="ml-auto" v-cloak>
-                    <button v-show="!editMode" class="btn btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
-                        Edit
-                    </button>
-                    <button v-show="editMode" class="btn btn-secondary mr-2" type="button" @click="toggleEdit()" key='btn-batal'>
-                        Batal
-                    </button>
-                    <button v-show="editMode" class="btn btn-warning" type="submit" key='btn-simpan'>
-                        Simpan
+                    <button class="btn btn-primary" type="submit" key='btn-simpan'>
+                        Tambahkan
                     </button>
                 </div>
             </div>
@@ -99,8 +92,6 @@
     <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
         integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
         crossorigin=""></script>
-
-    {# include 'location/mobile/modal_config.html' #}
     
     <script>
 
@@ -109,8 +100,11 @@
             data: function () {
                 return {
                     moment,
-                    editMode: false,
-                    location: {{ location | json_encode | raw }},
+                    location: {
+                        nama: '',
+                        tenant_id: '',
+                        ll: ''
+                    },
                     tenants: {{ tenants | json_encode | raw }},
                     map: null,
                     tileLayer: null,
@@ -143,27 +137,7 @@
                         this.addMarker(ll);
                     }
                 },
-                initLayers: function () {
-
-                },
-                back: function () {
-                    if (window.history.length > 0) {
-                        window.history.back();
-                    } else {
-                        window.location = '/location';
-                    }
-                },
-                showModalConfig: function () {
-                    modalConfig.showModal(this.location);
-                },
-                toggleEdit: function () {
-                    this.editMode = !this.editMode;
-                },
                 onMapClick: function (e) {
-                    if (!this.editMode) {
-                        return;
-                    }
-
                     this.location.ll = e.latlng.lat + "," + e.latlng.lng;
                     this.addMarker(e.latlng);
                 },

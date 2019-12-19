@@ -34,8 +34,16 @@
         <div v-if="sortedlocations.length == 0" class="list-group-item rounded-0 text-center text-muted">
             ( no data )
         </div>
+
+        <div class="py-3">&nbsp;</div>
+        <div class="fixed-bottom text-right p-3">
+            <a class="btn btn-lg btn-primary" href="/location/add" style="border-radius: 50%">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
     </div>
     <!-- /.container-fluid -->
+
 
 {% endblock %}
 

@@ -29,6 +29,36 @@ $app->group('/location', function () use ($getLocationMiddleware) {
         ]);
 	});
 
+    $this->group('/add', function () {
+
+        $this->get('', function (Request $request, Response $response, $args) {
+            $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
+            return $this->view->render($response, 'location/mobile/add.html', [
+                'tenants' => $tenants
+            ]);
+        });
+
+        $this->post('', function (Request $request, Response $response, $args) {
+            $form = $request->getParams();
+
+            $stmt = $this->db->prepare("INSERT INTO location (nama, tenant_id, ll) VALUES (:nama, :tenant_id, :ll)");
+            $stmt->execute([
+                ":nama" => $form['nama'],
+                ":tenant_id" => $form['tenant_id'],
+                ":ll" => $form['ll']
+            ]);
+            
+            if ($stmt->rowCount() > 0) {
+                $this->flash->addMessage('messages', "Lokasi {$form['nama']} telah ditambahkan");
+            } else {
+                $this->flash->addMessage('errors', "Gagal menambahkan lokasi {$form['nama']}");
+            }
+
+            return $response->withRedirect('/location');
+        });
+    });
+
 	$this->group('/{id:[0-9]+}', function () {
 
 		$this->get('', function (Request $request, Response $response, $args) {
