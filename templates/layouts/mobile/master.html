@@ -212,6 +212,10 @@
                     activeTheme = activeTheme === 'light' ? 'dark' : 'light';
                     changeTheme(activeTheme);
                 });
+
+                $('#modal-setting').on('show.bs.modal', function (e) {
+                    $('#navbar-main').collapse('hide');
+                });
             })
 
             function initTheme() {
