@@ -206,7 +206,7 @@ $loggedinMiddleware = function (Request $request, Response $response, $next) {
         return $this->response->withRedirect('/login');
     }
 
-    $this->session->user_refresh_time = strtotime("+1hour");
+    $this->session->user_refresh_time = strtotime("+24hour");
 
     return $next($request, $response);
 };

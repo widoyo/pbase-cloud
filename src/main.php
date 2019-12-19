@@ -34,7 +34,7 @@ $app->group('/login', function () {
 	    }
 
 	    $this->session->user_id = $user['id'];
-	    $this->session->user_refresh_time = strtotime("+1hour");
+	    $this->session->user_refresh_time = strtotime("+24hour");
 	    $this->session->user_basic_auth = base64_encode("{$credentials['username']}:{$credentials['password']}");
 
 	    // $this->flash->addMessage('messages', 'Berhasil Login');
