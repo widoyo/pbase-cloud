@@ -56,6 +56,17 @@
                             </div>
                         </div>
 
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-2 col-form-label text-dark">Tipe <span class="text-danger">*</span></label>
+                            <div class="col-sm-10">
+                                <select class="form-control" name="tipe">
+                                    <option hidden value selected>&gt;&gt; Pilih tipe &lt;&lt;</option>
+                                    <option value="arr" {{ logger.tipe == 'arr' ? 'selected' : '' }}>arr</option>
+                                    <option value="awlr" {{ logger.tipe == 'arr' ? 'selected' : '' }}>awlr</option>
+                                </select>
+                            </div>
+                        </div>
+
                         {# <div class="form-group row">
                             <label class="col-sm-2 col-form-label text-dark" for="location_id">Loc. ID</label>
                             <div class="col-sm-10">

@@ -1,63 +1,61 @@
 <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
-    <div class="container">
-        <a href="/logger" class="navbar-brand">{{ env('APP_NAME', 'App') }}</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <a href="/logger" class="navbar-brand">{{ env('APP_NAME', 'App') }}</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-        <div class="collapse navbar-collapse" id="navbar-main">
-            <!-- Sidebar -->
-            <ul class="navbar-nav ml-auto">
+    <div class="collapse navbar-collapse" id="navbar-main">
+        <!-- Sidebar -->
+        <ul class="navbar-nav ml-auto">
 
-                {% if user().tenant_id == 0 %}
-                    <!-- Nav Item - Tenant -->
-                    <li class="nav-item">
-                            <a class="nav-link" href="/tenant">
-                                Tenant
-                            </a>
-                    </li>
-                {% endif %}
-
-                <!-- Nav Item - Logger -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/logger">
-                        Logger
-                    </a>
-                </li>
-
-                <!-- Nav Item - Lokasi -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/location">
-                        Lokasi
-                    </a>
-                </li>
-
-                {% if user().tenant_id == 0 %}
-                    <!-- Nav Item - User -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="/user">
-                            Users
+            {% if user().tenant_id == 0 %}
+                <!-- Nav Item - Tenant -->
+                <li class="nav-item {{ title is same as('Tenant') ? 'active' : '' }}">
+                        <a class="nav-link" href="/tenant">
+                            Tenant
                         </a>
-                    </li>
-                {% endif %}
+                </li>
+            {% endif %}
 
-                <!-- Nav Item - Lokasi -->
-                <li class="nav-item">
-                    <a class="nav-link" data-toggle="modal" href="#modal-setting">
-                        Setting
+            <!-- Nav Item - Logger -->
+            <li class="nav-item {{ title is same as('Logger') ? 'active' : '' }}">
+                <a class="nav-link" href="/logger">
+                    Logger
+                </a>
+            </li>
+
+            <!-- Nav Item - Lokasi -->
+            <li class="nav-item {{ title is same as('Lokasi') ? 'active' : '' }}">
+                <a class="nav-link" href="/location">
+                    Lokasi
+                </a>
+            </li>
+
+            {% if user().tenant_id == 0 %}
+                <!-- Nav Item - User -->
+                <li class="nav-item {{ title is same as('Users') ? 'active' : '' }}">
+                    <a class="nav-link" href="/user">
+                        Users
                     </a>
                 </li>
+            {% endif %}
 
-                <!-- Nav Item - Logout -->
-                <li class="nav-item">
-                    <form action="/logout" method="post" id="form-logout"></form>
-                    <a class="nav-link" href="#" onclick="$('#form-logout').submit()">
-                        Logout
-                    </a>
-                </li>
+            <!-- Nav Item - Lokasi -->
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="modal" href="#modal-setting">
+                    Setting
+                </a>
+            </li>
 
-            </ul>
-            <!-- End of Sidebar -->
-        </div>
+            <!-- Nav Item - Logout -->
+            <li class="nav-item">
+                <form action="/logout" method="post" id="form-logout"></form>
+                <a class="nav-link" href="#" onclick="$('#form-logout').submit()">
+                    Logout
+                </a>
+            </li>
+
+        </ul>
+        <!-- End of Sidebar -->
     </div>
 </nav>
