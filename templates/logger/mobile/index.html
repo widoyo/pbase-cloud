@@ -4,51 +4,68 @@
 
 {% block content %}
 
-    <div class="list-group list-group-flush" id="app" v-cloak>
-        <a v-for="logger in sortedLoggers" :href="'/logger/' + logger.sn" class="list-group-item list-group-item-action rounded-0 px-3">
-            <div class="d-flex align-items-center">
-                <div class="logger-sn-circle text-white text-center mr-3 px-0 py-3" :class="getBgSN(logger)" style="border-radius: 50%; width: 55px; height: 55px">
-                    {[{ logger.sn }]}
-                </div>
+    <div class="p-3" id="app" v-cloak>
+        <div class="row">
+            <div v-for="logger in sortedLoggers" class="col-12 col-sm-6 col-lg-4 mb-3">
+                <div class="card card-sm shadow-sm" :class="getBorderType(logger)">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center font-large mb-3">
+                            <div class="flex-fill font-weight-normal" :class="getColorType(logger)">
+                                <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
+                                <span v-else>(not set)</span>
+                            </div>
+                            <div v-if="logger.content.sampling && !logger.fetching" class="text-muted ml-auto">
+                                {[{ moment.unix(logger.content.sampling).format('kk:mm') }]}
+                            </div>
+                            <div v-else-if="logger.fetching" class="text-muted ml-auto">
+                                <i class="fas fa-spin fa-sync"></i>
+                            </div>
+                        </div>
 
-                <div v-if="logger.content" class="flex-fill">
-                    <div class="mb-0 d-flex">
-                        <p class="mb-0">
-                            {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
-                        </p>
-                        <i v-if="logger.fetching" class="fas fa-sync fa-spin ml-auto"></i>
-                    </div>
-                    <div class="mb-0 d-flex">
-                        <p class="mb-0">
-                            <span v-if="typeof logger.content.tick !== typeof undefined">
-                                <!-- <span class="badge badge-primary">ARR</span> -->
-                                {[{ logger.content.tick }]}
-                            </span>
-                            <span v-if="typeof logger.content.distance !== typeof undefined">
-                                <!-- <span class="badge badge-success">AWLR</span> -->
-                                {[{ logger.content.distance }]}
-                            </span>
-                        </p>
-                        <div class="ml-auto">
-                            <span v-if="logger.content.signal_quality">
-                                <i class="fas fa-signal"></i>
-                                {[{ logger.content.signal_quality }]}
-                            </span>
-                            <span v-if="logger.content.battery">
-                                <i class="fas fa-battery-full"></i>
-                                {[{ logger.content.battery }]}
-                            </span>
+                        <div class="d-flex align-items-center font-small text-muted">
+                            <div>
+                                {[{ logger.sn }]}
+                            </div>
+                            <div v-if="logger.content.up_since" class="ml-auto">
+                                On {[{ moment.unix(logger.content.sampling).fromNow() }]}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center font-small">
+                            <div>
+                                <!-- <span v-if="logger.content.tick">
+                                    {[{ logger.content.tick }]}
+                                </span>
+                                <span v-if="logger.content.distance">
+                                    {[{ logger.content.distance }]}
+                                </span> -->
+                                <span v-if="logger.content.temperature">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    {[{ logger.content.temperature.toFixed(0) }]}℃
+                                </span>
+                                <span v-if="logger.content.humidity">
+                                    • {[{ logger.content.humidity.toFixed(0) }]}%
+                                </span>
+                            </div>
+                            <div class="ml-auto">
+                                <span v-if="logger.content.altitude">
+                                    {[{ logger.content.altitude }]}mdpl
+                                </span>
+                                <span v-if="logger.content.signal_quality">
+                                    <i class="fas fa-signal"></i>
+                                    {[{ logger.content.signal_quality.toFixed(0) }]}
+                                </span>
+                                <span v-if="logger.content.battery">
+                                    <i class="fas fa-battery-three-quarters"></i>
+                                    {[{ logger.content.battery.toFixed(0) }]}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div v-else class="text-muted">
-                    <span v-if="logger.fetching">fetching data...</span>
-                    <span v-else>( no data )</span>
-                </div>
             </div>
-        </a>
+        </div>
     </div>
-    <!-- /.container-fluid -->
 
     {% if user().tenant_id == 0 %}
         <!-- <div class="py-3 d-none d-sm-block">&nbsp;</div> -->
@@ -136,6 +153,30 @@
                         return 'bg-danger';
                     }
                     return 'bg-secondary';
+                },
+                getColorType: function (logger) {
+                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                        return '';
+                    }
+
+                    if (typeof logger.content.tick !== typeof undefined) {
+                        return 'font-weight-bold text-primary';
+                    } else if (typeof logger.content.distance !== typeof undefined) {
+                        return 'font-weight-bold text-danger';
+                    }
+                    return '';
+                },
+                getBorderType: function (logger) {
+                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                        return '';
+                    }
+
+                    if (typeof logger.content.tick !== typeof undefined) {
+                        return 'border-arr';
+                    } else if (typeof logger.content.distance !== typeof undefined) {
+                        return 'border-awlr';
+                    }
+                    return '';
                 }
             }
         });

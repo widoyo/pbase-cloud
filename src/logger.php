@@ -10,12 +10,16 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         if ($user['tenant_id'] > 0)
         {
-            $loggers_stmt = $this->db->query("SELECT * FROM logger WHERE
-                logger.tenant_id = {$user['tenant_id']} ORDER BY sn");
+            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+                LEFT JOIN location ON logger.location_id = location.id
+                WHERE logger.tenant_id = {$user['tenant_id']}
+                ORDER BY sn");
         }
         else
         {
-            $loggers_stmt = $this->db->query("SELECT * FROM logger ORDER BY sn");
+            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+                LEFT JOIN location ON logger.location_id = location.id
+                ORDER BY sn");
         }
         $logger_data = $loggers_stmt->fetchAll();
         // dump($logger_data);
