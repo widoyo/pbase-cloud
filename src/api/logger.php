@@ -107,7 +107,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         	$raws = $this->db->query("SELECT * FROM raw
                 WHERE
-                    content->>'device' like '%{$logger['sn']}%'
+                    content->>'device' like '%/{$logger['sn']}/%'
                 ORDER BY id DESC LIMIT {$limit}")
             ->fetchAll();
 
