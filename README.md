@@ -43,3 +43,9 @@
 	1. [ ] list kesehatan logger
 
 	2. [ ] detail kesehatan logger pada jam tertentu
+
+6. [ ] Install
+
+	1. [ ] filter logger berdasarkan SN
+
+	2. [ ] menerima update logger (socket)

@@ -13,13 +13,13 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
                 LEFT JOIN location ON logger.location_id = location.id
                 WHERE logger.tenant_id = {$user['tenant_id']}
-                ORDER BY sn");
+                ORDER BY location.nama, logger.sn");
         }
         else
         {
             $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
                 LEFT JOIN location ON logger.location_id = location.id
-                ORDER BY sn");
+                ORDER BY location.nama, logger.sn");
         }
         $logger_data = $loggers_stmt->fetchAll();
         // dump($logger_data);

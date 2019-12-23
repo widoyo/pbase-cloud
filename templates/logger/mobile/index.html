@@ -97,29 +97,8 @@
             },
             computed: {
                 sortedLoggers: function () {
-                    // magic sort
-                    return this.loggers.slice().sort((a, b) => {
-                        if (a.content !== '') {
-                            if (b.content === '') {
-                                return -1;
-                            }
-
-                            return a.content.sampling > b.content.sampling ? -1 :
-                                (a.content.sampling < b.content.sampling ? 1 : 0);
-                        }
-
-                        if (a.location_nama) {
-                            if (!b.location_nama) {
-                                return -1;
-                            }
-
-                            return a.location_nama.toLowerCase() > b.location_nama.toLowerCase() ? 1 :
-                                (a.location_nama.toLowerCase() < b.location_nama.toLowerCase() ? -1 : 0);
-                        }
-
-                        return a.sn > b.sn ? 1 :
-                            (a.sn < b.sn ? -1 : 0);
-                    })
+                    // sort done on backend
+                    return this.loggers;
                 }
             },
             methods: {
