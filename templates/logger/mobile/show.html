@@ -5,15 +5,15 @@
 {% block content %}
 
     <div id="app">
-        <div class="d-flex justify-content-between align-items-center text-white" :class="getBgSN()">
-            <button class="btn btn-link text-white" @click="back()">
+        <div class="d-flex justify-content-between align-items-center" :class="getBorderType()" style="border-bottom-style: solid;border-bottom-width: 2px">
+            <button class="btn btn-link" @click="back()">
                 <i class="fas fa-fw fa-chevron-left"></i>
             </button>
             <div class="my-1 text-center">
-                <p class="text-center mb-0">{{ logger.sn }}</p>
+                <p class="text-center mb-0" :class="getColorType()">{{ logger.sn }}</p>
                 <p class="mb-0">{{ logger.location_nama }}</p>
             </div>
-            <button class="btn btn-link text-white" @click="showModalConfig()">
+            <button class="btn btn-link" @click="showModalConfig()">
                 <i class="fas fa-fw fa-cog"></i>
             </button>
         </div>
@@ -22,10 +22,10 @@
             <div v-if="fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
                 <i class="fas fa-sync fa-spin ml-auto"></i>
             </div>
-            <a v-for="logger in loggers" class="list-group-item list-group-item-action rounded-0">
+            <a v-for="logger, index in loggers" class="list-group-item list-group-item-action rounded-0 py-3">
                 <div class="row align-items-center">
                     <div class="col-12">
-                        <div class="mb-0 d-flex">
+                        <div class="mb-2 d-flex">
                             <p class="mb-0">
                                 {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
                             </p>
@@ -115,9 +115,9 @@
                 fetchRaw: function () {
                     this.fetching = true;
 
-                    if (typeof localStorage['raw_{{ logger.sn }}'] != typeof undefined) {
-                        this.loggers = JSON.parse(localStorage['raw_{{ logger.sn }}']);
-                    }
+                    // if (typeof localStorage['raw_{{ logger.sn }}'] != typeof undefined) {
+                    //     this.loggers = JSON.parse(localStorage['raw_{{ logger.sn }}']);
+                    // }
 
                     $.ajax({
                         url: '/api/logger/{{ logger.sn }}/raw'
@@ -125,7 +125,7 @@
                     .then(res => {
                         if (res.status === 200) {
                             this.loggers = res.data.loggers;
-                            localStorage['raw_{{ logger.sn }}'] = JSON.stringify(res.data.loggers);
+                            // localStorage['raw_{{ logger.sn }}'] = JSON.stringify(res.data.loggers);
                         }
                     })
                     .always(() => {
@@ -144,6 +144,40 @@
                         return 'bg-danger';
                     }
                     return 'bg-secondary';
+                },
+                getColorType: function () {
+                    if (this.loggers.length === 0) {
+                        return '';
+                    }
+
+                    var logger = this.loggers[0];
+                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                        return '';
+                    }
+
+                    if (typeof logger.content.tick !== typeof undefined) {
+                        return 'font-weight-bold text-primary';
+                    } else if (typeof logger.content.distance !== typeof undefined) {
+                        return 'font-weight-bold text-danger';
+                    }
+                    return '';
+                },
+                getBorderType: function () {
+                    if (this.loggers.length === 0) {
+                        return '';
+                    }
+
+                    var logger = this.loggers[0];
+                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                        return '';
+                    }
+
+                    if (typeof logger.content.tick !== typeof undefined) {
+                        return 'border-arr';
+                    } else if (typeof logger.content.distance !== typeof undefined) {
+                        return 'border-awlr';
+                    }
+                    return '';
                 }
             }
         });

@@ -7,62 +7,64 @@
     <div class="p-3" id="app" v-cloak>
         <div class="row">
             <div v-for="logger in sortedLoggers" class="col-12 col-sm-6 col-lg-4 mb-3">
-                <div class="card card-sm shadow-sm" :class="getBorderType(logger)">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center font-large mb-3">
-                            <div class="flex-fill font-weight-normal" :class="getColorType(logger)">
-                                <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
-                                <span v-else>(not set)</span>
+                <a class="btn-link text-decoration-none" :href="'/logger/' + logger.sn">
+                    <div class="card card-sm h-100 shadow-sm" :class="getBorderType(logger)">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center font-large mb-3">
+                                <div class="flex-fill font-weight-normal" :class="getColorType(logger)">
+                                    <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
+                                    <span v-else class="text-muted">(location not set)</span>
+                                </div>
+                                <div v-if="logger.content.sampling && !logger.fetching" class="text-muted ml-auto">
+                                    {[{ moment.unix(logger.content.sampling).format('kk:mm') }]}
+                                </div>
+                                <div v-else-if="logger.fetching" class="text-muted ml-auto">
+                                    <i class="fas fa-spin fa-sync"></i>
+                                </div>
                             </div>
-                            <div v-if="logger.content.sampling && !logger.fetching" class="text-muted ml-auto">
-                                {[{ moment.unix(logger.content.sampling).format('kk:mm') }]}
-                            </div>
-                            <div v-else-if="logger.fetching" class="text-muted ml-auto">
-                                <i class="fas fa-spin fa-sync"></i>
-                            </div>
-                        </div>
 
-                        <div class="d-flex align-items-center font-small text-muted">
-                            <div>
-                                {[{ logger.sn }]}
+                            <div class="d-flex align-items-center font-small text-muted">
+                                <div>
+                                    {[{ logger.sn }]}
+                                </div>
+                                <div v-if="logger.content.up_since" class="ml-auto">
+                                    On {[{ moment.unix(logger.content.sampling).fromNow() }]}
+                                </div>
                             </div>
-                            <div v-if="logger.content.up_since" class="ml-auto">
-                                On {[{ moment.unix(logger.content.sampling).fromNow() }]}
-                            </div>
-                        </div>
 
-                        <div class="d-flex align-items-center font-small">
-                            <div>
-                                <!-- <span v-if="logger.content.tick">
-                                    {[{ logger.content.tick }]}
-                                </span>
-                                <span v-if="logger.content.distance">
-                                    {[{ logger.content.distance }]}
-                                </span> -->
-                                <span v-if="logger.content.temperature">
-                                    <i class="fas fa-thermometer-half"></i>
-                                    {[{ logger.content.temperature.toFixed(0) }]}℃
-                                </span>
-                                <span v-if="logger.content.humidity">
-                                    • {[{ logger.content.humidity.toFixed(0) }]}%
-                                </span>
-                            </div>
-                            <div class="ml-auto">
-                                <span v-if="logger.content.altitude">
-                                    {[{ logger.content.altitude }]}mdpl
-                                </span>
-                                <span v-if="logger.content.signal_quality">
-                                    <i class="fas fa-signal"></i>
-                                    {[{ logger.content.signal_quality.toFixed(0) }]}
-                                </span>
-                                <span v-if="logger.content.battery">
-                                    <i class="fas fa-battery-three-quarters"></i>
-                                    {[{ logger.content.battery.toFixed(0) }]}
-                                </span>
+                            <div class="d-flex align-items-center font-small">
+                                <div>
+                                    <!-- <span v-if="logger.content.tick">
+                                        {[{ logger.content.tick }]}
+                                    </span>
+                                    <span v-if="logger.content.distance">
+                                        {[{ logger.content.distance }]}
+                                    </span> -->
+                                    <span v-if="logger.content.temperature">
+                                        <i class="fas fa-thermometer-half"></i>
+                                        {[{ logger.content.temperature.toFixed(0) }]}℃
+                                    </span>
+                                    <span v-if="logger.content.humidity">
+                                        • {[{ logger.content.humidity.toFixed(0) }]}%
+                                    </span>
+                                </div>
+                                <div class="ml-auto">
+                                    <span v-if="logger.content.altitude">
+                                        {[{ logger.content.altitude }]}mdpl
+                                    </span>
+                                    <span v-if="logger.content.signal_quality">
+                                        <i class="fas fa-signal"></i>
+                                        {[{ logger.content.signal_quality.toFixed(0) }]}
+                                    </span>
+                                    <span v-if="logger.content.battery">
+                                        <i class="fas fa-battery-three-quarters"></i>
+                                        {[{ logger.content.battery.toFixed(0) }]}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     </div>
@@ -89,10 +91,6 @@
                 }
             },
             beforeMount: function () {
-                if (typeof localStorage['raw'] === typeof undefined){
-                    localStorage['raw'] = [];
-                }
-
                 for (var index in this.loggers) {
                     this.fetchRaw(index);
                 }
@@ -110,6 +108,15 @@
                                 (a.content.sampling < b.content.sampling ? 1 : 0);
                         }
 
+                        if (a.location_nama) {
+                            if (!b.location_nama) {
+                                return -1;
+                            }
+
+                            return a.location_nama.toLowerCase() > b.location_nama.toLowerCase() ? 1 :
+                                (a.location_nama.toLowerCase() < b.location_nama.toLowerCase() ? -1 : 0);
+                        }
+
                         return a.sn > b.sn ? 1 :
                             (a.sn < b.sn ? -1 : 0);
                     })
@@ -120,9 +127,9 @@
                     var logger = this.loggers[index];
                     logger.fetching = true;
 
-                    if (typeof localStorage['content_'+ logger.sn] != typeof undefined) {
-                        logger.content = JSON.parse(localStorage['content_'+ logger.sn]);
-                    }
+                    // if (typeof localStorage['content_'+ logger.sn] != typeof undefined) {
+                    //     logger.content = JSON.parse(localStorage['content_'+ logger.sn]);
+                    // }
 
                     $.ajax({
                         url: '/api/logger/'+ logger.sn +'/raw',
@@ -134,7 +141,7 @@
                         if (res.status === 200) {
                             if (res.data.loggers.length > 0) {
                                 logger.content = res.data.loggers[0].content;
-                                localStorage['content_'+ logger.sn] = JSON.stringify(res.data.loggers[0].content);
+                                // localStorage['content_'+ logger.sn] = JSON.stringify(res.data.loggers[0].content);
                             }
                         }
                     })

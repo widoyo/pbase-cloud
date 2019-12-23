@@ -141,7 +141,7 @@
         {% block css %}{% endblock %}
     </head>
 
-    <body id="page-top" class="theme-dark">
+    <body id="page-top" class="theme-light">
 
         <!-- Page Wrapper -->
         <div id="wrapper">
@@ -244,7 +244,7 @@
                         e.stopPropagation();
                     }
 
-                    var activeTheme = localStorage['activeTheme'] || 'dark';
+                    var activeTheme = localStorage['activeTheme'] || 'light';
                     activeTheme = activeTheme === 'light' ? 'dark' : 'light';
                     changeTheme(activeTheme);
                 });
@@ -255,7 +255,7 @@
             })
 
             function initTheme() {
-                var activeTheme = localStorage['activeTheme'] || 'dark';
+                var activeTheme = localStorage['activeTheme'] || 'light';
                 changeTheme(activeTheme);
             }
 

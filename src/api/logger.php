@@ -105,9 +105,11 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         	$limit = intval($request->getParam('limit', 10));
         	$logger = $request->getAttribute('logger');
 
+        	$today_unix = strtotime(date('Y-m-d'));
         	$raws = $this->db->query("SELECT * FROM raw
                 WHERE
                     content->>'device' like '%/{$logger['sn']}/%'
+                    AND content->>'sampling' > '{$today_unix}'
                 ORDER BY id DESC LIMIT {$limit}")
             ->fetchAll();
 
