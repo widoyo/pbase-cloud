@@ -28,7 +28,7 @@
                                     {[{ logger.sn }]}
                                 </div>
                                 <div v-if="logger.content.up_since" class="ml-auto">
-                                    On {[{ moment.unix(logger.content.sampling).fromNow() }]}
+                                    On {[{ moment.unix(logger.content.up_since).fromNow() }]}
                                 </div>
                             </div>
 
