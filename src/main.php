@@ -47,3 +47,28 @@ $app->post('/logout', function (Request $request, Response $response, $args) {
     $this->session->destroy();
     return $response->withRedirect('/login');
 })->add($loggedinMiddleware);
+
+$app->redirect('/instal', '/install');
+$app->get('/install', function (Request $request, Response $response, $args) {
+	$user = $this->user;
+
+    if ($user['tenant_id'] > 0)
+    {
+        $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+            LEFT JOIN location ON logger.location_id = location.id
+            WHERE logger.tenant_id = {$user['tenant_id']}
+            ORDER BY location.nama, logger.sn");
+    }
+    else
+    {
+        $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+            LEFT JOIN location ON logger.location_id = location.id
+            ORDER BY location.nama, logger.sn");
+    }
+    $loggers = $loggers_stmt->fetchAll();
+    // dump($loggers);
+
+	return $this->view->render($response, 'main/mobile/install.html', [
+		'loggers' => $loggers
+	]);
+})->add($loggedinMiddleware);

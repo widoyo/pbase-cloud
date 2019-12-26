@@ -1,0 +1,243 @@
+{% extends 'layouts/mobile/master.html' %}
+
+{% set title = 'Install' %}
+
+{% block content %}
+
+    <div class="p-3" id="app" v-cloak>
+        <div class="card card-sm mb-2">
+            <div class="card-header">
+                <div class="input-group mb-0">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">SN</span>
+                    </div>
+                    <input class="form-control" type="text" v-model="sn" :placeholder="loggers.length ? loggers[0].sn : '1905-2'" autofocus>
+                    <div v-if="sn.length >= 2" class="input-group-append">
+                        <button class="btn btn-secondary" @click="sn = ''">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div v-if="logger.sn" class="collapse" id="config-panel">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 mb-3 mb-sm-0">
+                            <div class="d-flex align-items-center">
+                                <p class="font-weight-bold mb-0">
+                                    Konfigurasi
+                                </p>
+                                <button class="btn btn-sm btn-primary ml-auto" @click="showPickLocation()">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                                <div>Lokasi</div>
+                                <div class="ml-auto">
+                                    <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
+                                    <span v-else class="text-muted">(not set)</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                                <div>Tipe</div>
+                                <div class="ml-auto">
+                                    <span v-if="logger.tipe">{[{ logger.tipe }]}</span>
+                                    <span v-else class="text-muted">(tipe not set)</span>
+                                </div>
+                            </div>
+
+                            <div v-if="logger.tipe == 'arr'" class="d-flex align-items-center">
+                                <div>Tipping Factor</div>
+                                <div class="ml-auto">
+                                    {[{ logger.tipp_fac }]}
+                                </div>
+                            </div>
+                            <div v-else-if="logger.tipe == 'awlr'" class="d-flex align-items-center">
+                                <div>Tinggi Sonar</div>
+                                <div class="ml-auto">
+                                    {[{ logger.ting_son }]}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <p class="font-weight-bold mb-0">
+                                Koreksi
+                            </p>
+                            <div class="d-flex align-items-center font-small">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p v-if="sn.length < 6" class="text-center text-muted font-small">
+            Masukkan SN Logger
+        </p>
+        <p v-else-if="!logger.sn" class="text-center text-muted font-small">
+            Logger {[{ sn }]} tidak ditemukan
+        </p>
+        <a v-else class="d-block text-center text-muted font-small font-weight-bold" data-toggle="collapse" href="#config-panel">
+            <span v-if="logger.location_nama" :class="getColorType(logger)">
+                <i class="fas fa-map-marker-alt"></i>
+                {[{ logger.location_nama }]}
+            </span>
+            <span v-else>(location not set)</span>
+            | show config
+            <i class="fas fa-caret-down"></i>
+        </a>
+
+        <hr>
+
+        <div v-if="logger.sn">
+
+            <div v-if="raws.length" class="row">
+                <div v-for="raw in raws" class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <div class="card card-sm h-100 shadow-sm" :class="getBorderType(logger)">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center font-large mb-3" :class="getColorType(logger)">
+                                <div class="flex-fill">
+                                    <span v-if="typeof raw.tick !== typeof undefined">
+                                        {[{ raw.tick }]}
+                                    </span>
+                                    <span v-if="typeof raw.distance !== typeof undefined">
+                                        {[{ raw.distance }]}
+                                    </span>
+                                </div>
+
+                                <div v-if="raw.sampling" class="text-muted ml-auto">
+                                    {[{ moment.unix(raw.sampling).format('kk:mm') }]}
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center font-small text-muted">
+                                <!-- <div>
+                                    {[{ logger.sn }]}
+                                </div> -->
+                                <div v-if="raw.up_since" class="ml-auto">
+                                    On {[{ moment.unix(raw.up_since).fromNow() }]}
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center font-small">
+                                <div>
+                                    <!-- <span v-if="raw.tick">
+                                        {[{ raw.tick }]}
+                                    </span>
+                                    <span v-if="raw.distance">
+                                        {[{ raw.distance }]}
+                                    </span> -->
+                                    <span v-if="raw.temperature">
+                                        <i class="fas fa-thermometer-half"></i>
+                                        {[{ raw.temperature }]}℃
+                                    </span>
+                                    <span v-if="raw.humidity">
+                                        • {[{ raw.humidity }]}%
+                                    </span>
+                                </div>
+                                <div class="ml-auto">
+                                    <span v-if="raw.altitude">
+                                        {[{ raw.altitude }]}mdpl
+                                    </span>
+                                    <span v-if="raw.signal_quality">
+                                        <i class="fas fa-signal"></i>
+                                        {[{ raw.signal_quality }]}
+                                    </span>
+                                    <span v-if="raw.battery">
+                                        <i class="fas fa-battery-three-quarters"></i>
+                                        {[{ raw.battery }]}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else>
+                no records
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        var _app = new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    moment,
+                    sn: '1905-2',
+                    loggers: {{ loggers | json_encode | raw }},
+                    records: {}
+                }
+            },
+            beforeMount: function () {
+                this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
+                this.ws.onopen = this.wsOnOpen;
+                this.ws.onmessage = this.wsOnMessage;
+                this.ws.onclose = this.wsOnClose;
+            },
+            computed: {
+                logger: function () {
+                    // sort done on backend
+                    // var loggers = this.loggers.filter(logger => logger.sn.toLowerCase().indexOf(this.sn.toLowerCase()) >= 0);
+                    var loggers = this.loggers.filter(logger => logger.sn.toLowerCase() === this.sn.toLowerCase());
+                    return loggers.length > 0 ? loggers[0] : {};
+                },
+                raws: function () {
+                    var raws = this.records[this.sn];
+                    if (typeof raws === typeof undefined) {
+                        return [];
+                    }
+
+                    return raws.slice().sort((a, b) => {
+                        return a.sampling > b.sampling ? -1 :
+                            (a.sampling < b.sampling ? 1 : 0)
+                    });
+                }
+            },
+            methods: {
+                wsOnOpen: function (s) {
+                    console.log("connected")
+                },
+                wsOnMessage: function (e) {
+                    var t = JSON.parse(e.data);
+                    if (t.device){
+                        var sn = t.device.split('/')[1].toLowerCase();
+                        var logger = this.loggers.filter(logger => logger.sn.toLowerCase() === sn);
+                        if (!logger || logger.length === 0) {
+                            return;
+                        }
+
+                        if (typeof this.records[sn] === typeof undefined) {
+                            this.$set(this.records, sn, []);
+                        }
+
+                        this.records[sn].push(t);
+                    }
+                },
+                wsOnClose: function (s) {
+                    console.log(s);
+                },
+                getColorType: function (logger) {
+                    return logger.tipe == 'arr' ? 'font-weight-bold text-primary' :
+                        (logger.tipe == 'awlr' ? 'font-weight-bold text-danger' : '');
+                },
+                getBorderType: function (logger) {
+                    return logger.tipe == 'arr' ? 'border-arr' :
+                        (logger.tipe == 'awlr' ? 'border-awlr' : '');
+                }
+            },
+            destroy: function () {
+                this.ws.close();
+            }
+        });
+    </script>
+{% endblock %}
