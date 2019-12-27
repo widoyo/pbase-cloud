@@ -18,7 +18,12 @@
             {% endif %}
 
             <!-- Nav Item - Logger -->
-            <li class="nav-item dropdown {{ title in ['Install', 'Logger', 'Kesehatan Logger'] ? 'active' : '' }}">
+            <li class="nav-item {{ title is same as('Logger') ? 'active' : '' }}">
+                <a class="nav-link" href="/logger">
+                    Logger
+                </a>
+            </li>
+            <!-- <li class="nav-item dropdown {{ title in ['Install', 'Logger', 'Kesehatan Logger'] ? 'active' : '' }}">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
                     Logger
                 </a>
@@ -27,7 +32,7 @@
                     <a class="dropdown-item {{ title is same as('Logger') ? 'active' : '' }}" href="/logger">Semua</a>
                     <a class="dropdown-item {{ title is same as('Kesehatan Logger') ? 'active' : '' }}" href="/logger/sehat">Sehat</a>
                 </div>
-            </li>
+            </li> -->
 
             <!-- Nav Item - Lokasi -->
             <li class="nav-item {{ title is same as('Lokasi') ? 'active' : '' }}">

@@ -4,96 +4,157 @@
 
 {% block content %}
 
-    <div class="p-3" id="app" v-cloak>
-        <div class="card card-sm mb-2">
-            <div class="card-header">
-                <div class="input-group mb-0">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">SN</span>
-                    </div>
-                    <input class="form-control" type="text" v-model="sn" :placeholder="loggers.length ? loggers[0].sn : '1905-2'" autofocus>
-                    <div v-if="sn.length >= 2" class="input-group-append">
-                        <button class="btn btn-secondary" @click="sn = ''">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div v-if="logger.sn" class="collapse" id="config-panel">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12 col-sm-6 mb-3 mb-sm-0">
-                            <div class="d-flex align-items-center">
-                                <p class="font-weight-bold mb-0">
-                                    Konfigurasi
-                                </p>
-                                <button class="btn btn-sm btn-primary ml-auto" @click="showPickLocation()">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
-
-                            <div class="d-flex align-items-center">
-                                <div>Lokasi</div>
-                                <div class="ml-auto">
-                                    <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
-                                    <span v-else class="text-muted">(not set)</span>
-                                </div>
-                            </div>
-
-                            <div class="d-flex align-items-center">
-                                <div>Tipe</div>
-                                <div class="ml-auto">
-                                    <span v-if="logger.tipe">{[{ logger.tipe }]}</span>
-                                    <span v-else class="text-muted">(tipe not set)</span>
-                                </div>
-                            </div>
-
-                            <div v-if="logger.tipe == 'arr'" class="d-flex align-items-center">
-                                <div>Tipping Factor</div>
-                                <div class="ml-auto">
-                                    {[{ logger.tipp_fac }]}
-                                </div>
-                            </div>
-                            <div v-else-if="logger.tipe == 'awlr'" class="d-flex align-items-center">
-                                <div>Tinggi Sonar</div>
-                                <div class="ml-auto">
-                                    {[{ logger.ting_son }]}
-                                </div>
-                            </div>
+    <div class="" id="app" v-cloak>
+        <div class="">            
+            <div class="card card-sm rounded-0">
+                <div class="card-header">
+                    <div class="input-group mb-0">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">SN</span>
                         </div>
-
-                        <div class="col-12 col-sm-6">
-                            <p class="font-weight-bold mb-0">
-                                Koreksi
-                            </p>
-                            <div class="d-flex align-items-center font-small">
-
-                            </div>
+                        <input class="form-control" type="text" v-model="sn" :placeholder="loggers.length ? loggers[0].sn : '1905-2'" autofocus>
+                        <div v-if="sn.length >= 2" class="input-group-append">
+                            <button class="btn btn-secondary" @click="sn = ''">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
+                <div v-if="logger.sn" class="collapse" id="config-panel">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-sm-6 mb-3 mb-sm-0">
+                                <div class="d-flex align-items-center">
+                                    <p class="font-weight-bold mb-0">
+                                        Konfigurasi
+                                    </p>
+                                    <button class="btn btn-sm ml-auto px-1 py-0" :class="editConfig ? 'btn-warning' : 'btn-primary'" @click="toggleConfig()">
+                                        <i class="fas fa-fw" :class="editConfig ? 'fa-times' : 'fa-edit'"></i>
+                                    </button>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <div>Lokasi</div>
+                                    <div v-if="!editConfig" class="ml-auto">
+                                        <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
+                                        <span v-else class="text-muted">(not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        otw
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <div>Tipe</div>
+                                    <div v-if="!editConfig" class="ml-auto">
+                                        <span v-if="logger.tipe != null">{[{ logger.tipe }]}</span>
+                                        <span v-else class="text-muted">(tipe not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        <select class="form-control" name="tipe" v-model="logger.tipe" required>
+                                            <option hidden value='null'>&gt;&gt; Pilih Tipe &lt;&lt;</option>
+                                            <option value="arr">arr</option>
+                                            <option value="awlr">awlr</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div v-if="logger.tipe == 'arr'" class="d-flex align-items-center">
+                                    <div>Tipping Factor</div>
+                                    <div v-if="!editConfig" class="ml-auto">
+                                        <span v-if="logger.tipp_fac != null">{[{ logger.tipp_fac }]}</span>
+                                        <span v-else class="text-muted">(not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        <input class="form-control" type="number" step="0.01" name="tipp_fac" v-model="logger.tipp_fac | 0" required>
+                                    </div>
+                                </div>
+                                <div v-else-if="logger.tipe == 'awlr'" class="d-flex align-items-center">
+                                    <div>Tinggi Sonar</div>
+                                    <div v-if="!editConfig" class="ml-auto">
+                                        <span v-if="logger.ting_son != null">{[{ logger.ting_son }]}</span>
+                                        <span v-else class="text-muted">(not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        <input class="form-control" type="number" step="0.01" name="ting_son" v-model="logger.ting_son | 0" required>
+                                    </div>
+                                </div>
+
+                                <div v-if="editConfig" class="text-right mt-2">
+                                    <button class="btn btn-sm btn-primary" @click="saveConfig()">Simpan</button>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <p class="font-weight-bold mb-0">
+                                        Koreksi
+                                    </p>
+                                    <button class="btn btn-sm ml-auto px-1 py-0" :class="editCorrection ? 'btn-warning' : 'btn-primary'" @click="toggleCorrection()">
+                                        <i class="fas fa-fw" :class="editCorrection ? 'fa-times' : 'fa-edit'"></i>
+                                    </button>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <div>Temperature</div>
+                                    <div v-if="!editCorrection" class="ml-auto">
+                                        <span v-if="logger.temp_cor != null">{[{ logger.temp_cor }]}</span>
+                                        <span v-else class="text-muted">(not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        <input class="form-control" type="number" step="0.01" name="temp_cor" v-model="logger.temp_cor | 0" required>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <div>Humidity</div>
+                                    <div v-if="!editCorrection" class="ml-auto">
+                                        <span v-if="logger.humi_cor != null">{[{ logger.humi_cor }]}</span>
+                                        <span v-else class="text-muted">(not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        <input class="form-control" type="number" step="0.01" name="humi_cor" v-model="logger.humi_cor | 0" required>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <div>Battery</div>
+                                    <div v-if="!editCorrection" class="ml-auto">
+                                        <span v-if="logger.batt_cor != null">{[{ logger.batt_cor }]}</span>
+                                        <span v-else class="text-muted">(not set)</span>
+                                    </div>
+                                    <div v-else class="ml-auto">
+                                        <input class="form-control" type="number" step="0.01" name="batt_cor" v-model="logger.batt_cor | 0" required>
+                                    </div>
+                                </div>
+
+                                <div v-if="editCorrection" class="text-right mt-2">
+                                    <button class="btn btn-sm btn-primary" @click="saveCorrection()">Simpan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer py-1">
+                    <div class="text-center text-muted font-small">
+                        <span v-if="sn.length < 6">Masukkan SN Logger</span>
+                        <span v-else-if="!logger.sn">Logger {[{ sn }]} tidak ditemukan</span>
+                        <a v-else class="text-muted text-decoration-none font-weight-bold" data-toggle="collapse" href="#config-panel">
+                            <span v-if="logger.location_nama" :class="getColorType(logger)">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {[{ logger.location_nama }]}
+                            </span>
+                            <span v-else>(location not set)</span>
+                            | show config
+                            <i class="fas fa-caret-down"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
+
         </div>
 
-        <p v-if="sn.length < 6" class="text-center text-muted font-small">
-            Masukkan SN Logger
-        </p>
-        <p v-else-if="!logger.sn" class="text-center text-muted font-small">
-            Logger {[{ sn }]} tidak ditemukan
-        </p>
-        <a v-else class="d-block text-center text-muted font-small font-weight-bold" data-toggle="collapse" href="#config-panel">
-            <span v-if="logger.location_nama" :class="getColorType(logger)">
-                <i class="fas fa-map-marker-alt"></i>
-                {[{ logger.location_nama }]}
-            </span>
-            <span v-else>(location not set)</span>
-            | show config
-            <i class="fas fa-caret-down"></i>
-        </a>
-
-        <hr>
-
-        <div v-if="logger.sn">
+        <div v-if="logger.sn" class="p-3">
 
             <div v-if="raws.length" class="row">
                 <div v-for="raw in raws" class="col-12 col-sm-6 col-lg-4 mb-3">
@@ -167,6 +228,9 @@
 {% endblock %}
 
 {% block js %}
+    {% include 'main/mobile/modal_config.html' %}
+    {% include 'main/mobile/modal_correction.html' %}
+
     <script>
         var _app = new Vue({
             el: '#app',
@@ -175,14 +239,17 @@
                     moment,
                     sn: '1905-2',
                     loggers: {{ loggers | json_encode | raw }},
-                    records: {}
+                    records: {},
+
+                    editConfig: false,
+                    editCorrection: false
                 }
             },
             beforeMount: function () {
-                this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
-                this.ws.onopen = this.wsOnOpen;
-                this.ws.onmessage = this.wsOnMessage;
-                this.ws.onclose = this.wsOnClose;
+                // this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
+                // this.ws.onopen = this.wsOnOpen;
+                // this.ws.onmessage = this.wsOnMessage;
+                // this.ws.onclose = this.wsOnClose;
             },
             computed: {
                 logger: function () {
@@ -233,6 +300,18 @@
                 getBorderType: function (logger) {
                     return logger.tipe == 'arr' ? 'border-arr' :
                         (logger.tipe == 'awlr' ? 'border-awlr' : '');
+                },
+                toggleConfig: function () {
+                    this.editConfig = !this.editConfig;
+                },
+                toggleCorrection: function () {
+                    this.editCorrection = !this.editCorrection;
+                },
+                saveConfig: function () {
+
+                },
+                saveCorrection: function () {
+                    
                 }
             },
             destroy: function () {
