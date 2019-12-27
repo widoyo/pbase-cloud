@@ -246,10 +246,10 @@
                 }
             },
             beforeMount: function () {
-                // this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
-                // this.ws.onopen = this.wsOnOpen;
-                // this.ws.onmessage = this.wsOnMessage;
-                // this.ws.onclose = this.wsOnClose;
+                this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
+                this.ws.onopen = this.wsOnOpen;
+                this.ws.onmessage = this.wsOnMessage;
+                this.ws.onclose = this.wsOnClose;
             },
             computed: {
                 logger: function () {
