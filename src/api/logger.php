@@ -153,5 +153,70 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         		]
         	]);
         });
+
+        $this->post('/config', function (Request $request, Response $response, $args) {
+        	$logger = $request->getAttribute('logger');
+
+        	$form = $request->getParams();
+
+            // tipe
+            if (isset($form['tipe']) && empty($form['tipe'])) {
+                unset($form['tipe']);
+            }
+
+            // tipp_fac
+            if (isset($form['tipp_fac']) && empty($form['tipp_fac']) && $form['tipp_fac'] != '0') {
+                unset($form['tipp_fac']);
+            }
+
+            // ting_son
+            if (isset($form['ting_son']) && empty($form['ting_son']) && $form['ting_son'] != '0') {
+                unset($form['ting_son']);
+            }
+
+            // temp_cor
+            if (isset($form['temp_cor']) && empty($form['temp_cor']) && $form['temp_cor'] != '0') {
+                unset($form['temp_cor']);
+            }
+
+            // humi_cor
+            if (isset($form['humi_cor']) && empty($form['humi_cor']) && $form['humi_cor'] != '0') {
+                unset($form['humi_cor']);
+            }
+
+            // batt_cor
+            if (isset($form['batt_cor']) && empty($form['batt_cor']) && $form['batt_cor'] != '0') {
+                unset($form['batt_cor']);
+            }
+
+            if (count($form) > 0) {
+                $query = "UPDATE logger SET ";
+                foreach ($form as $column => $value) {
+                    $query .= "{$column} = '{$value}',";
+                }
+                $query = rtrim($query, ",");
+
+                $query .= " WHERE id = {$logger['id']}";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute();
+
+                if ($stmt->rowCount() > 0) {
+                	return $response->withJson([
+                		'status' => 200,
+                		'message' => 'success'
+                	]);
+                } else {
+                	return $response->withJson([
+                		'status' => 500,
+                		'message' => 'failed'
+                	]);
+                }
+            }
+
+            return $response->withJson([
+        		'status' => 400,
+        		'message' => 'empty parameter'
+        	]);
+        });
     })->add($getLoggerMiddleware);
 });

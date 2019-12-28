@@ -28,9 +28,12 @@
                                     <p class="font-weight-bold mb-0">
                                         Konfigurasi
                                     </p>
-                                    <button class="btn btn-sm ml-auto px-1 py-0" :class="editConfig ? 'btn-warning' : 'btn-primary'" @click="toggleConfig()">
+                                    <button v-if="!savingConfig" class="btn btn-sm ml-auto px-1 py-0" :class="editConfig ? 'btn-warning' : 'btn-primary'" @click="toggleConfig()">
                                         <i class="fas fa-fw" :class="editConfig ? 'fa-times' : 'fa-edit'"></i>
                                     </button>
+                                    <span v-else class="ml-auto">
+                                        <i class="fas fa-spin fa-sync"></i>
+                                    </span>
                                 </div>
 
                                 <div class="d-flex align-items-center">
@@ -66,7 +69,7 @@
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        <input class="form-control" type="number" step="0.01" name="tipp_fac" v-model="logger.tipp_fac | 0" required>
+                                        <input class="form-control" type="number" step="0.01" name="tipp_fac" v-model="logger.tipp_fac" required>
                                     </div>
                                 </div>
                                 <div v-else-if="logger.tipe == 'awlr'" class="d-flex align-items-center">
@@ -76,12 +79,12 @@
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        <input class="form-control" type="number" step="0.01" name="ting_son" v-model="logger.ting_son | 0" required>
+                                        <input class="form-control" type="number" step="0.01" name="ting_son" v-model="logger.ting_son" required>
                                     </div>
                                 </div>
 
                                 <div v-if="editConfig" class="text-right mt-2">
-                                    <button class="btn btn-sm btn-primary" @click="saveConfig()">Simpan</button>
+                                    <button class="btn btn-sm btn-primary" @click="saveConfig()" :disabled="savingConfig">Simpan</button>
                                 </div>
                             </div>
 
@@ -90,9 +93,12 @@
                                     <p class="font-weight-bold mb-0">
                                         Koreksi
                                     </p>
-                                    <button class="btn btn-sm ml-auto px-1 py-0" :class="editCorrection ? 'btn-warning' : 'btn-primary'" @click="toggleCorrection()">
+                                    <button v-if="!savingCorrection" class="btn btn-sm ml-auto px-1 py-0" :class="editCorrection ? 'btn-warning' : 'btn-primary'" @click="toggleCorrection()">
                                         <i class="fas fa-fw" :class="editCorrection ? 'fa-times' : 'fa-edit'"></i>
                                     </button>
+                                    <span v-else class="ml-auto">
+                                        <i class="fas fa-spin fa-sync"></i>
+                                    </span>
                                 </div>
 
                                 <div class="d-flex align-items-center">
@@ -102,7 +108,7 @@
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        <input class="form-control" type="number" step="0.01" name="temp_cor" v-model="logger.temp_cor | 0" required>
+                                        <input class="form-control" type="number" step="0.01" name="temp_cor" v-model="logger.temp_cor" required>
                                     </div>
                                 </div>
 
@@ -113,7 +119,7 @@
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        <input class="form-control" type="number" step="0.01" name="humi_cor" v-model="logger.humi_cor | 0" required>
+                                        <input class="form-control" type="number" step="0.01" name="humi_cor" v-model="logger.humi_cor" required>
                                     </div>
                                 </div>
 
@@ -124,12 +130,12 @@
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        <input class="form-control" type="number" step="0.01" name="batt_cor" v-model="logger.batt_cor | 0" required>
+                                        <input class="form-control" type="number" step="0.01" name="batt_cor" v-model="logger.batt_cor" required>
                                     </div>
                                 </div>
 
                                 <div v-if="editCorrection" class="text-right mt-2">
-                                    <button class="btn btn-sm btn-primary" @click="saveCorrection()">Simpan</button>
+                                    <button class="btn btn-sm btn-primary" @click="saveCorrection()" :disabled="savingCorrection">Simpan</button>
                                 </div>
                             </div>
                         </div>
@@ -242,17 +248,20 @@
                     records: {},
 
                     editConfig: false,
-                    editCorrection: false
+                    editCorrection: false,
+                    savingConfig: false,
+                    savingCorrection: false
                 }
             },
             beforeMount: function () {
-                this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
-                this.ws.onopen = this.wsOnOpen;
-                this.ws.onmessage = this.wsOnMessage;
-                this.ws.onclose = this.wsOnClose;
+                // this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
+                // this.ws.onopen = this.wsOnOpen;
+                // this.ws.onmessage = this.wsOnMessage;
+                // this.ws.onclose = this.wsOnClose;
             },
             computed: {
                 logger: function () {
+
                     // sort done on backend
                     // var loggers = this.loggers.filter(logger => logger.sn.toLowerCase().indexOf(this.sn.toLowerCase()) >= 0);
                     var loggers = this.loggers.filter(logger => logger.sn.toLowerCase() === this.sn.toLowerCase());
@@ -308,12 +317,66 @@
                     this.editCorrection = !this.editCorrection;
                 },
                 saveConfig: function () {
-
+                    this.savingConfig = true;
+                    
+                    $.ajax({
+                        url: '/api/logger/'+ this.logger.sn +'/config',
+                        method: 'post',
+                        data: {
+                            tipe: this.logger.tipe,
+                            tipp_fac: this.logger.tipp_fac,
+                            ting_son: this.logger.ting_son
+                        }
+                    })
+                    .then((res) => {
+                        if (res.status && res.status == 200) {
+                            this.editConfig = false;
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    })
+                    .fail((err) => {
+                        toastr.error('Failed, check log for more info');
+                        console.log(err);
+                    })
+                    .always(() => {
+                        this.savingConfig = false;
+                    })
                 },
                 saveCorrection: function () {
+                    this.savingCorrection = true;
                     
+                    $.ajax({
+                        url: '/api/logger/'+ this.logger.sn +'/config',
+                        method: 'post',
+                        data: {
+                            temp_cor: this.logger.temp_cor,
+                            humi_cor: this.logger.humi_cor,
+                            batt_cor: this.logger.batt_cor
+                        }
+                    })
+                    .then((res) => {
+                        if (res.status && res.status == 200) {
+                            this.editCorrection = false;
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    })
+                    .fail((err) => {
+                        toastr.error('Failed, check log for more info');
+                        console.log(err);
+                    })
+                    .always(() => {
+                        this.savingCorrection = false;
+                    })
                 }
             },
+            // watch: {
+            //     sn: function () {
+            //         var loggers = this.loggers.filter(logger => logger.sn.toLowerCase() === this.sn.toLowerCase());
+            //         this.logger = loggers.length > 0 ? loggers[0] : {};
+            //     }
+            // },
             destroy: function () {
                 this.ws.close();
             }
