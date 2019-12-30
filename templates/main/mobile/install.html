@@ -39,11 +39,15 @@
                                 <div class="d-flex align-items-center">
                                     <div>Lokasi</div>
                                     <div v-if="!editConfig" class="ml-auto">
-                                        <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
+                                        <span v-if="logger.location_nama">
+                                            {[{ logger.location_nama }]}
+                                        </span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        otw
+                                        <select class="form-control" v-model="logger.location_id">
+                                            <option v-for="l in locations" :value="l.id">{[{ l.nama }]}</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -243,8 +247,9 @@
             data: function () {
                 return {
                     moment,
-                    sn: '1905-2',
+                    sn: '1910-1',
                     loggers: {{ loggers | json_encode | raw }},
+                    locations: {{ locations | json_encode | raw }},
                     records: {},
 
                     editConfig: false,
@@ -261,11 +266,16 @@
             },
             computed: {
                 logger: function () {
-
-                    // sort done on backend
-                    // var loggers = this.loggers.filter(logger => logger.sn.toLowerCase().indexOf(this.sn.toLowerCase()) >= 0);
                     var loggers = this.loggers.filter(logger => logger.sn.toLowerCase() === this.sn.toLowerCase());
                     return loggers.length > 0 ? loggers[0] : {};
+                },
+                location: function () {
+                    if (!this.logger || !this.logger.location_id) {
+                        return {};
+                    }
+
+                    var locations = this.locations.filter(location => location.id === this.logger.location_id);
+                    return locations.length > 0 ? locations[0] : {};
                 },
                 raws: function () {
                     var raws = this.records[this.sn];
@@ -284,6 +294,7 @@
                     console.log("connected")
                 },
                 wsOnMessage: function (e) {
+                    console.log(e);
                     var t = JSON.parse(e.data);
                     if (t.device){
                         var sn = t.device.split('/')[1].toLowerCase();
@@ -323,6 +334,7 @@
                         url: '/api/logger/'+ this.logger.sn +'/config',
                         method: 'post',
                         data: {
+                            location_id: this.logger.location_id,
                             tipe: this.logger.tipe,
                             tipp_fac: this.logger.tipp_fac,
                             ting_son: this.logger.ting_son
@@ -330,6 +342,8 @@
                     })
                     .then((res) => {
                         if (res.status && res.status == 200) {
+                            this.logger.location_nama = this.location.nama;
+                            this.logger.location_ll = this.location_ll;
                             this.editConfig = false;
                         } else {
                             toastr.error(res.message);
