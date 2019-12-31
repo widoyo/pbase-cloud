@@ -45,8 +45,9 @@
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
                                     <div v-else class="ml-auto">
-                                        <select class="form-control" v-model="logger.location_id">
+                                        <select class="form-control" v-model="logger.location_id" @change="checkNewLocation()">
                                             <option v-for="l in locations" :value="l.id">{[{ l.nama }]}</option>
+                                            <option value="-1">&gt;&gt; Buat Baru &lt;&lt;</option>
                                         </select>
                                     </div>
                                 </div>
@@ -240,6 +241,7 @@
 {% block js %}
     {% include 'main/mobile/modal_config.html' %}
     {% include 'main/mobile/modal_correction.html' %}
+    {% include 'main/mobile/modal_location.html' %}
 
     <script>
         var _app = new Vue({
@@ -383,6 +385,14 @@
                     .always(() => {
                         this.savingCorrection = false;
                     })
+                },
+                checkNewLocation: function () {
+                    if (parseInt(this.logger.location_id) === -1) {
+                        this.showModalLocation();
+                    }
+                },
+                showModalLocation: function () {
+                    modalLocation.showModal();
                 }
             },
             // watch: {
