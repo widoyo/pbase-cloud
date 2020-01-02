@@ -159,6 +159,34 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         	$form = $request->getParams();
 
+            // location
+            if (empty($form['location_id']) || $form['location_id'] == '-1') {
+                unset($form['location_id']);
+            } else {
+                unset($form['location_nama']);
+                unset($form['location_ll']);
+            }
+
+            $newLocation = false;
+            if (!empty($form['location_nama'])) {
+                $location = $this->db->query("SELECT * FROM location WHERE nama = '{$form['location_nama']}'")->fetch();
+                if ($location) {
+                    $form['location_id'] = $location['id'];
+                } else {
+                    $stmt = $this->db->prepare("INSERT INTO location (nama, tenant_id, ll) VALUES (:nama, :tenant_id, :ll)");
+                    $stmt->execute([
+                        ':nama' => $form['location_nama'],
+                        ':tenant_id' => $logger['tenant_id'],
+                        ':ll' => $form['location_ll'],
+                    ]);
+
+                    $form['location_id'] = $this->db->lastInsertId();
+                    $newLocation = true;
+                }
+            }
+            unset($form['location_nama']);
+            unset($form['location_ll']);
+
             // tipe
             if (isset($form['tipe']) && empty($form['tipe'])) {
                 unset($form['tipe']);
@@ -201,10 +229,24 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $stmt->execute();
 
                 if ($stmt->rowCount() > 0) {
-                	return $response->withJson([
-                		'status' => 200,
-                		'message' => 'success'
-                	]);
+                    if ($newLocation) {
+                        return $response->withJson([
+                            'status' => 200,
+                            'message' => 'success',
+                            'data' => [
+                                'location' => [
+                                    'id' => $form['location_id'],
+                                    'nama' => $request->getParam('location_nama'),
+                                    'll' => $request->getParam('location_ll'),
+                                ]
+                            ]
+                        ]);
+                    } else {
+                        return $response->withJson([
+                            'status' => 200,
+                            'message' => 'success'
+                        ]);
+                    }
                 } else {
                 	return $response->withJson([
                 		'status' => 500,

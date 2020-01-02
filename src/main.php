@@ -54,27 +54,17 @@ $app->get('/install', function (Request $request, Response $response, $args) {
 
     if ($user['tenant_id'] > 0)
     {
-        $loggers_stmt = $this->db->query("SELECT
-        		logger.*,
-        		location.nama AS location_nama,
-        		location.ll AS location_ll
-    		FROM logger
-            	LEFT JOIN location ON logger.location_id = location.id
+        $loggers_stmt = $this->db->query("SELECT logger.* FROM logger
             WHERE logger.tenant_id = {$user['tenant_id']}
-            ORDER BY location.nama, logger.sn");
+            ORDER BY logger.sn");
         $locations_stmt = $this->db->query("SELECT * FROM location
         	WHERE tenant_id = {$user['tenant_id']}
         	ORDER BY nama");
     }
     else
     {
-        $loggers_stmt = $this->db->query("SELECT
-        		logger.*,
-        		location.nama AS location_nama,
-        		location.ll AS location_ll
-    		FROM logger
-            	LEFT JOIN location ON logger.location_id = location.id
-            ORDER BY location.nama, logger.sn");
+        $loggers_stmt = $this->db->query("SELECT logger.* FROM logger
+            ORDER BY logger.sn");
         $locations_stmt = $this->db->query("SELECT * FROM location
         	ORDER BY nama");
     }

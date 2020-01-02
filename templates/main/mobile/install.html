@@ -24,41 +24,57 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-12 col-sm-6 mb-3 mb-sm-0">
-                                <div class="d-flex align-items-center">
-                                    <p class="font-weight-bold mb-0">
+                                <div class="row align-items-center mb-2">
+                                    <p class="col-5 font-weight-bold mb-0">
                                         Konfigurasi
                                     </p>
-                                    <button v-if="!savingConfig" class="btn btn-sm ml-auto px-1 py-0" :class="editConfig ? 'btn-warning' : 'btn-primary'" @click="toggleConfig()">
-                                        <i class="fas fa-fw" :class="editConfig ? 'fa-times' : 'fa-edit'"></i>
-                                    </button>
-                                    <span v-else class="ml-auto">
-                                        <i class="fas fa-spin fa-sync"></i>
-                                    </span>
+                                    <div class="col-7 text-right">
+                                        <button v-if="!savingConfig" class="btn btn-sm px-1 py-0" :class="editConfig ? 'btn-warning' : 'btn-primary'" @click="toggleConfig()">
+                                            <i class="fas fa-fw" :class="editConfig ? 'fa-times' : 'fa-edit'"></i>
+                                        </button>
+                                        <span v-else>
+                                            <i class="fas fa-spin fa-sync"></i>
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div class="d-flex align-items-center">
-                                    <div>Lokasi</div>
-                                    <div v-if="!editConfig" class="ml-auto">
-                                        <span v-if="logger.location_nama">
-                                            {[{ logger.location_nama }]}
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-5">Lokasi</div>
+                                    <div v-if="!editConfig" class="col-7 text-right">
+                                        <span v-if="location.nama">
+                                            {[{ location.nama }]}
                                         </span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
-                                        <select class="form-control" v-model="logger.location_id" @change="checkNewLocation()">
+                                    <div v-else class="col-7">
+                                        <select class="form-control" v-model="logger.location_id">
                                             <option v-for="l in locations" :value="l.id">{[{ l.nama }]}</option>
                                             <option value="-1">&gt;&gt; Buat Baru &lt;&lt;</option>
                                         </select>
+
+                                        <input v-if="logger.location_id == -1" class="form-control" type="text" placeholder="Nama Lokasi" v-model="newLocation.nama">
                                     </div>
                                 </div>
 
-                                <div class="d-flex align-items-center">
-                                    <div>Tipe</div>
-                                    <div v-if="!editConfig" class="ml-auto">
+                                <div v-if="editConfig && logger.location_id == -1" class="row align-items-center mb-2">
+                                    <div class="col-5">LonLat</div>
+                                    <div class="col-7">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" v-model="newLocation.ll" readonly>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-secondary" @click="showModalLocation()"><i class="fas fa-map-pin"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-5">Tipe</div>
+                                    <div v-if="!editConfig" class="col-7 text-right">
                                         <span v-if="logger.tipe != null">{[{ logger.tipe }]}</span>
                                         <span v-else class="text-muted">(tipe not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
+                                    <div v-else class="col-7">
                                         <select class="form-control" name="tipe" v-model="logger.tipe" required>
                                             <option hidden value='null'>&gt;&gt; Pilih Tipe &lt;&lt;</option>
                                             <option value="arr">arr</option>
@@ -67,23 +83,23 @@
                                     </div>
                                 </div>
 
-                                <div v-if="logger.tipe == 'arr'" class="d-flex align-items-center">
-                                    <div>Tipping Factor</div>
-                                    <div v-if="!editConfig" class="ml-auto">
+                                <div v-if="logger.tipe == 'arr'" class="row align-items-center mb-2">
+                                    <div class="col-5">Tipping Factor</div>
+                                    <div v-if="!editConfig" class="col-7 text-right">
                                         <span v-if="logger.tipp_fac != null">{[{ logger.tipp_fac }]}</span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
+                                    <div v-else class="col-7">
                                         <input class="form-control" type="number" step="0.01" name="tipp_fac" v-model="logger.tipp_fac" required>
                                     </div>
                                 </div>
-                                <div v-else-if="logger.tipe == 'awlr'" class="d-flex align-items-center">
-                                    <div>Tinggi Sonar</div>
-                                    <div v-if="!editConfig" class="ml-auto">
+                                <div v-else-if="logger.tipe == 'awlr'" class="row align-items-center mb-2">
+                                    <div class="col-5">Tinggi Sonar</div>
+                                    <div v-if="!editConfig" class="col-7 text-right">
                                         <span v-if="logger.ting_son != null">{[{ logger.ting_son }]}</span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
+                                    <div v-else class="col-7">
                                         <input class="form-control" type="number" step="0.01" name="ting_son" v-model="logger.ting_son" required>
                                     </div>
                                 </div>
@@ -94,47 +110,49 @@
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <div class="d-flex align-items-center">
-                                    <p class="font-weight-bold mb-0">
+                                <div class="row align-items-center mb-2">
+                                    <p class="col-5 font-weight-bold mb-0">
                                         Koreksi
                                     </p>
-                                    <button v-if="!savingCorrection" class="btn btn-sm ml-auto px-1 py-0" :class="editCorrection ? 'btn-warning' : 'btn-primary'" @click="toggleCorrection()">
-                                        <i class="fas fa-fw" :class="editCorrection ? 'fa-times' : 'fa-edit'"></i>
-                                    </button>
-                                    <span v-else class="ml-auto">
-                                        <i class="fas fa-spin fa-sync"></i>
-                                    </span>
+                                    <div class="col-7 text-right">
+                                        <button v-if="!savingCorrection" class="btn btn-sm px-1 py-0" :class="editCorrection ? 'btn-warning' : 'btn-primary'" @click="toggleCorrection()">
+                                            <i class="fas fa-fw" :class="editCorrection ? 'fa-times' : 'fa-edit'"></i>
+                                        </button>
+                                        <span v-else>
+                                            <i class="fas fa-spin fa-sync"></i>
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div class="d-flex align-items-center">
-                                    <div>Temperature</div>
-                                    <div v-if="!editCorrection" class="ml-auto">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-5">Temperature</div>
+                                    <div v-if="!editCorrection" class="col-7 text-right">
                                         <span v-if="logger.temp_cor != null">{[{ logger.temp_cor }]}</span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
+                                    <div v-else class="col-7">
                                         <input class="form-control" type="number" step="0.01" name="temp_cor" v-model="logger.temp_cor" required>
                                     </div>
                                 </div>
 
-                                <div class="d-flex align-items-center">
-                                    <div>Humidity</div>
-                                    <div v-if="!editCorrection" class="ml-auto">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-5">Humidity</div>
+                                    <div v-if="!editCorrection" class="col-7 text-right">
                                         <span v-if="logger.humi_cor != null">{[{ logger.humi_cor }]}</span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
+                                    <div v-else class="col-7">
                                         <input class="form-control" type="number" step="0.01" name="humi_cor" v-model="logger.humi_cor" required>
                                     </div>
                                 </div>
 
-                                <div class="d-flex align-items-center">
-                                    <div>Battery</div>
-                                    <div v-if="!editCorrection" class="ml-auto">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-5">Battery</div>
+                                    <div v-if="!editCorrection" class="col-7 text-right">
                                         <span v-if="logger.batt_cor != null">{[{ logger.batt_cor }]}</span>
                                         <span v-else class="text-muted">(not set)</span>
                                     </div>
-                                    <div v-else class="ml-auto">
+                                    <div v-else class="col-7">
                                         <input class="form-control" type="number" step="0.01" name="batt_cor" v-model="logger.batt_cor" required>
                                     </div>
                                 </div>
@@ -151,13 +169,20 @@
                         <span v-if="sn.length < 6">Masukkan SN Logger</span>
                         <span v-else-if="!logger.sn">Logger {[{ sn }]} tidak ditemukan</span>
                         <a v-else class="text-muted text-decoration-none font-weight-bold" data-toggle="collapse" href="#config-panel">
-                            <span v-if="logger.location_nama" :class="getColorType(logger)">
+                            <span v-if="location.nama" :class="getColorType(logger)">
                                 <i class="fas fa-map-marker-alt"></i>
-                                {[{ logger.location_nama }]}
+                                {[{ location.nama }]}
                             </span>
                             <span v-else>(location not set)</span>
-                            | show config
-                            <i class="fas fa-caret-down"></i>
+                            |
+                            <span v-if="!configPanelShown">
+                                show config
+                                <i class="fas fa-caret-down"></i>
+                            </span>
+                            <span v-else>
+                                hide config
+                                <i class="fas fa-caret-up"></i>
+                            </span>
                         </a>
                     </div>
                 </div>
@@ -254,6 +279,12 @@
                     locations: {{ locations | json_encode | raw }},
                     records: {},
 
+                    newLocation: {
+                        nama: '',
+                        ll: ''
+                    },
+
+                    configPanelShown: false,
                     editConfig: false,
                     editCorrection: false,
                     savingConfig: false,
@@ -261,10 +292,10 @@
                 }
             },
             beforeMount: function () {
-                // this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
-                // this.ws.onopen = this.wsOnOpen;
-                // this.ws.onmessage = this.wsOnMessage;
-                // this.ws.onclose = this.wsOnClose;
+                this.ws = new WebSocket("ws://mqtt.bbws-bsolo.net:22286");
+                this.ws.onopen = this.wsOnOpen;
+                this.ws.onmessage = this.wsOnMessage;
+                this.ws.onclose = this.wsOnClose;
             },
             computed: {
                 logger: function () {
@@ -296,7 +327,7 @@
                     console.log("connected")
                 },
                 wsOnMessage: function (e) {
-                    console.log(e);
+                    // console.log(e);
                     var t = JSON.parse(e.data);
                     if (t.device){
                         var sn = t.device.split('/')[1].toLowerCase();
@@ -337,6 +368,8 @@
                         method: 'post',
                         data: {
                             location_id: this.logger.location_id,
+                            location_nama: this.newLocation.nama,
+                            location_ll: this.newLocation.ll,
                             tipe: this.logger.tipe,
                             tipp_fac: this.logger.tipp_fac,
                             ting_son: this.logger.ting_son
@@ -344,9 +377,11 @@
                     })
                     .then((res) => {
                         if (res.status && res.status == 200) {
-                            this.logger.location_nama = this.location.nama;
-                            this.logger.location_ll = this.location_ll;
                             this.editConfig = false;
+                            if (res.data && res.data.location) {
+                                this.locations.push(res.data.location);
+                                this.logger.location_id = res.data.location.id;
+                            }
                         } else {
                             toastr.error(res.message);
                         }
@@ -391,8 +426,14 @@
                         this.showModalLocation();
                     }
                 },
+
+                selectLocationCB: function(location) {
+                    if (location && location.ll) {
+                        this.newLocation.ll = location.ll;
+                    }
+                },
                 showModalLocation: function () {
-                    modalLocation.showModal();
+                    modalLocation.showModal(this.selectLocationCB);
                 }
             },
             // watch: {
@@ -405,5 +446,14 @@
                 this.ws.close();
             }
         });
+
+        $(function () {
+            $('#config-panel').on('show.bs.collapse', () => {
+                _app.configPanelShown = true;
+            })
+            $('#config-panel').on('hide.bs.collapse', () => {
+                _app.configPanelShown = false;
+            })
+        })
     </script>
 {% endblock %}

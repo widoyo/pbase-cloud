@@ -17,14 +17,14 @@
 		            </div>
 
 		            <div class="list-group list-group-flush">
-		                <div class="list-group-item rounded-0 px-3">
+		                <!-- <div class="list-group-item rounded-0 px-3">
 		                    <div class="row ">
 		                        <div class="col-3">Lokasi</div>
 		                        <div class="col-9">
 		                            <input class="form-control" name="nama" v-model="location.nama" required>
 		                        </div>
 		                    </div>
-		                </div>
+		                </div> -->
 		                <div class="list-group-item rounded-0 px-3">
 		                    <div class="row ">
 		                        <div class="col-3">LonLat</div>
@@ -44,13 +44,13 @@
 		            </div>
 
 		            <div class="d-flex p-3">
-		                <a class="btn btn-secondary mr-2" href="/location">
-		                    Kembali
+		                <a class="btn btn-secondary mr-2" data-dismiss="modal">
+		                    Batal
 		                </a>
 
 		                <div class="ml-auto" v-cloak>
-		                    <button class="btn btn-primary" type="submit" key='btn-simpan'>
-		                        Tambahkan
+		                    <button class="btn btn-primary" type="submit" key='btn-simpan' :disabled="!location.ll">
+		                        Pilih Lokasi
 		                    </button>
 		                </div>
 		            </div>
@@ -80,11 +80,16 @@
                 },
                 map: null,
                 tileLayer: null,
-                marker: null				
+                marker: null,
+
+                selectLocationCB: null			
 			}
 		},
         mounted() {
             this.initMap();
+            $('#modal-location').on('shown.bs.modal', () => {
+            	this.map.invalidateSize();
+            });
         },
 		methods: {
             initMap: function () {
@@ -137,14 +142,23 @@
                     toastr.error('Browser Anda tidak support Geolocation, gunakan map');
                 }
             },
-			showModal: function () {
+			showModal: function (selectLocationCB) {
+				this.selectLocationCB = selectLocationCB;
 				$('#modal-location').modal('show');
 			},
 			hideModal: function () {
 				$('#modal-location').modal('hide');
 			},
 			addLocation: function () {
+				if (!this.location.ll) {
+					toastr.error('Klik pada peta untuk mendapatkan LonLat');
+					return;
+				}
 
+				if (this.selectLocationCB) {
+					this.selectLocationCB(this.location);
+				}
+				this.hideModal();
 			}
 		}
 	})
