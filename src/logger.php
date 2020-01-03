@@ -71,6 +71,74 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         return $response->withRedirect('/logger');
     });
 
+    $this->get('/sehat', function (Request $request, Response $response, $args) {
+        $user = $this->user;
+        $sampling = $request->getParam('sampling', date('Y-m-d'));
+
+        if ($user['tenant_id'] > 0)
+        {
+            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+                LEFT JOIN location ON logger.location_id = location.id
+                WHERE logger.tenant_id = {$user['tenant_id']}
+                ORDER BY logger.sn");
+        }
+        else
+        {
+            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+                LEFT JOIN location ON logger.location_id = location.id
+                ORDER BY logger.sn");
+        }
+        $loggers = $loggers_stmt->fetchAll();
+        // dump($loggers);
+
+        foreach ($loggers as &$logger) {
+            // $stmt = $this->db->prepare("SELECT (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date) AS hour, COUNT(*)
+            //    FROM raw
+            //    WHERE (content->>'device')=:sn AND (content->>'sampling')::date=:sampling
+            //    GROUP BY (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date)
+            //    ORDER BY (content->>'sampling')");
+            $stmt = $this->db->prepare("SELECT sampling::date, date_part('hour', sampling) AS hour, COUNT(*)
+                FROM periodik
+                WHERE logger_sn=:sn AND sampling::date=:sampling
+                GROUP BY sampling::date, date_part('hour', sampling)
+                ORDER BY sampling");
+            $stmt->execute([
+                ':sn' => $logger['sn'],
+                ':sampling' => $sampling
+            ]);
+            $logger['periodik'] = $stmt->fetchAll();
+        }
+        unset($logger);
+        // dump($loggers);
+
+        foreach ($loggers as &$logger) {
+            $periodik = [
+                0,0,0,0,0,0,
+                0,0,0,0,0,0,
+                0,0,0,0,0,0,
+                0,0,0,0,0,0,
+            ];
+
+            if (isset($logger['periodik'])) {
+                foreach ($logger['periodik'] as $p) {
+                    $periodik[$p['hour']] = $p['count'];
+                }
+            }
+
+            $logger['periodik'] = $periodik;
+        }
+
+        $sampling_prev = date('Y-m-d', strtotime($sampling .' -1day'));
+        $sampling_next = date('Y-m-d', strtotime($sampling .' +1day'));
+
+        return $this->view->render($response, '/logger/sehat.html', [
+            'loggers' => $loggers,
+            'sampling' => $sampling,
+            'sampling_prev' => $sampling_prev,
+            'sampling_next' => $sampling_next,
+        ]);
+    });
+
     $this->group('/{id:[0-9]+}', function () {
 
         $this->get('', function (Request $request, Response $response) {

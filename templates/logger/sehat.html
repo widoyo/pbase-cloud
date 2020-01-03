@@ -1,0 +1,84 @@
+{% extends 'layouts/mobile/master.html' %}
+
+{% set title = 'Kesehatan Logger' %}
+
+{% block content %}
+
+    <div class="p-3" id="app">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th class="fit" rowspan="2" colspan="2">Logger</th>
+                        <th colspan="3">
+                            <a href="/logger/sehat?sampling={{ sampling_prev }}">
+                                <i class="fas fa-arrow-left"></i>
+                                {{ sampling_prev | date('d') }}
+                            </a>
+                        </th>
+                        <th colspan="3">
+                            {{ sampling | date('d-M') }}
+                        </th>
+                        <th colspan="3">
+                            <a href="/logger/sehat?sampling={{ sampling_next }}">
+                                {{ sampling_next | date('d') }}
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </th>
+                        <th colspan="15"></th>
+                    </tr>
+
+                    <tr>
+                        {% for i in 0..23 %}
+                            <th class="text-right">{{ i }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for logger in loggers %}
+                        <tr>
+                            <td class="text-nowrap">
+                                {{ logger.sn }}
+                            </td>
+                            <td class="text-nowrap">
+                                {% if logger.location_nama %}
+                                    <span>
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        {{ logger.location_nama }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        (location not set)
+                                    </span>
+                                {% endif %}
+                            </td>
+                            {% for periodik in logger.periodik %}
+                                <td class="text-right font-small">
+                                    {% if periodik >= 9 %}
+                                        <span class="text-success">{{ periodik }}</span>
+                                    {% elseif periodik >= 5%}
+                                        <span class="text-warning">{{ periodik }}</span>
+                                    {% else %}
+                                        <span class="text-danger">{{ periodik }}</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block css %}
+    <style type="text/css">
+        th.fit,
+        td.fit {
+            width: 1%;
+        }
+    </style>
+{% endblock %}

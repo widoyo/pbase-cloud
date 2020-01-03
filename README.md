@@ -40,12 +40,12 @@
 
 5. [ ] Kesehatan Logger
 
-	1. [ ] list kesehatan logger
+	1. [x] list kesehatan logger
 
 	2. [ ] detail kesehatan logger pada jam tertentu
 
 6. [ ] Install
 
-	1. [ ] filter logger berdasarkan SN
+	1. [x] filter logger berdasarkan SN
 
 	2. [ ] menerima update logger (socket)
