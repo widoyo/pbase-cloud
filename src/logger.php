@@ -91,13 +91,14 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         $loggers = $loggers_stmt->fetchAll();
         // dump($loggers);
 
+		$utc_offset =  date('Z') / 3600;
         foreach ($loggers as &$logger) {
             // $stmt = $this->db->prepare("SELECT (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date) AS hour, COUNT(*)
             //    FROM raw
             //    WHERE (content->>'device')=:sn AND (content->>'sampling')::date=:sampling
             //    GROUP BY (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date)
             //    ORDER BY (content->>'sampling')");
-            $stmt = $this->db->prepare("SELECT sampling::date, date_part('hour', sampling) AS hour, COUNT(*)
+            $stmt = $this->db->prepare("SELECT sampling::date, (date_part('hour', sampling) + {$utc_offset}) AS hour, COUNT(*)
                 FROM periodik
                 WHERE logger_sn=:sn AND sampling::date=:sampling
                 GROUP BY sampling::date, date_part('hour', sampling)
