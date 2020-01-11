@@ -51,3 +51,8 @@
 .datepicker {
     z-index: 10000 !important;
 }
+
+
+.bg-accent {
+    background-color: #d83939!important;
+}

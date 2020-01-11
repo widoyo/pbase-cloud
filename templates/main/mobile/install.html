@@ -8,6 +8,11 @@
         <div class="">            
             <div class="card card-sm rounded-0">
                 <div class="card-header">
+                    <!-- Page Heading -->
+                    <div class="mb-3">
+                        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+                    </div>
+
                     <div class="input-group mb-0">
                         <div class="input-group-prepend">
                             <span class="input-group-text">SN</span>
@@ -274,7 +279,7 @@
             data: function () {
                 return {
                     moment,
-                    sn: '1910-1',
+                    sn: '{{ (loggers | length > 0) ? loggers[0].sn : "1910-1" }}',
                     loggers: {{ loggers | json_encode | raw }},
                     locations: {{ locations | json_encode | raw }},
                     records: {},
