@@ -40,8 +40,15 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
         $this->post('', function (Request $request, Response $response) {
         	$tenant = $request->getParams();
 
-	        $stmt = $this->db->prepare("INSERT INTO tenant (id, nama, slug) VALUES (nextval('tenant_id_seq'), :nama, :slug)");
-	        $stmt->execute(["nama" => $tenant['nama'], "slug" => $tenant['slug']]);
+	        $stmt = $this->db->prepare("INSERT INTO tenant (id, nama, slug, telegram_info_id, telegram_info_group, telegram_alert_id, telegram_alert_group) VALUES (nextval('tenant_id_seq'), :nama, :slug, :telegram_info_id, :telegram_info_group, :telegram_alert_id, :telegram_alert_group)");
+	        $stmt->execute([
+	        	"nama" => $tenant['nama'],
+	        	"slug" => $tenant['slug'],
+	        	"telegram_info_id" => $tenant['telegram_info_id'] ?: null,
+	        	"telegram_info_group" => $tenant['telegram_info_group'] ?: null,
+	        	"telegram_alert_id" => $tenant['telegram_alert_id'] ?: null,
+	        	"telegram_alert_group" => $tenant['telegram_alert_group'] ?: null,
+	        ]);
 	        
 	        $this->flash->addMessage('messages', "Tenant {$tenant[nama]} telah ditambahkan");
 
@@ -82,15 +89,33 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 
         $this->post('/edit', function (Request $request, Response $response, $args) {
         	$tenant = $request->getAttribute('tenant');
-	        $tenant['nama'] = $request->getParam('nama', $tenant['nama']);
-	        $tenant['slug'] = $request->getParam('slug', $tenant['slug']);
+        	$form = $request->getParams();
+        	foreach ($form as $key => $value) {
+        		$tenant[$key] = $value;
+        	}
+        	unset($tenant['_referer']);
+	        // $tenant['nama'] = $request->getParam('nama', $tenant['nama']);
+	        // $tenant['slug'] = $request->getParam('slug', $tenant['slug']);
 
 	        $now = date('Y-m-d H:i:s');
 
-	        $stmt = $this->db->prepare("UPDATE tenant set nama=:nama, slug=:slug, modified_at='$now' WHERE id=:id");
+	        $stmt = $this->db->prepare("UPDATE tenant set
+		        	nama=:nama,
+		        	slug=:slug,
+		        	telegram_info_id=:telegram_info_id,
+		        	telegram_info_group=:telegram_info_group,
+		        	telegram_alert_id=:telegram_alert_id,
+		        	telegram_alert_group=:telegram_alert_group,
+		        	modified_at='$now'
+	        	WHERE id=:id");
 	        $stmt->bindValue(':nama', $tenant['nama']);
 	        $stmt->bindValue(':slug', $tenant['slug']);
 	        $stmt->bindValue(':id', $tenant['id']);
+	        $stmt->bindValue(':telegram_info_id', $tenant['telegram_info_id'] ?: null);
+	        $stmt->bindValue(':telegram_info_group', $tenant['telegram_info_group'] ?: null);
+	        $stmt->bindValue(':telegram_alert_id', $tenant['telegram_alert_id'] ?: null);
+	        $stmt->bindValue(':telegram_alert_group', $tenant['telegram_alert_group'] ?: null);
+	        // dump($tenant);
 	        $stmt->execute();
 	        
 	        $this->flash->addMessage('messages', "Perubahan Tenant {$tenant[nama]} telah disimpan");

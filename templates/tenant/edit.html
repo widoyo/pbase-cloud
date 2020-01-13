@@ -28,7 +28,7 @@
     </div>
 
     <div class="row">
-        <div class="col-12 col-lg-7">
+        <div class="col-12 col-lg-9">
             <div class="card">
                 <div class="card-body">
 
@@ -40,16 +40,34 @@
                         <input type="hidden" name="_referer" value="{{ referer }}">
 
                         <div class="form-group row">
-                            <label class="col-sm-2 col-form-label text-dark" for="nama">Nama <span class="text-danger">*</span></label>
-                            <div class="col-sm-10">
+                            <label class="col-sm-3 col-form-label" for="nama">Nama <span class="text-danger">*</span></label>
+                            <div class="col-sm-9">
                                 <input type="text" name="nama" id="nama" class="form-control" required="required" value="{{ tenant.nama }}" placeholder="Nama tenant">
                             </div>
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-sm-2 col-form-label text-dark" for="slug">Slug <span class="text-danger">*</span></label>
-                            <div class="col-sm-10">
+                            <label class="col-sm-3 col-form-label" for="slug">Slug <span class="text-danger">*</span></label>
+                            <div class="col-sm-9">
                                 <input type="text" name="slug" id="slug" class="form-control" required="required" value="{{ tenant.slug }}" placeholder="Slug tenant">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label" for="slug">Telegram Info</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="telegram_info_group" class="form-control" value="{{ tenant.telegram_info_group }}" placeholder="Telegram Info GROUP NAME">
+                                <input type="number" name="telegram_info_id" class="form-control" value="{{ tenant.telegram_info_id }}" placeholder="Telegram Info GROUP ID">
+                                <!-- <textarea class="form-control" name="telegram_info_id" placeholder="Telegram Info ID">{{ tenant.telegram_info_id }}</textarea> -->
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label" for="slug">Telegram Alert</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="telegram_alert_group" class="form-control" value="{{ tenant.telegram_alert_group }}" placeholder="Telegram Alert GROUP NAME">
+                                <input type="number" name="telegram_alert_id" class="form-control" value="{{ tenant.telegram_alert_id }}" placeholder="Telegram Alert GROUP ID">
+                                <!-- <textarea class="form-control" name="telegram_alert_id" placeholder="Telegram Alert ID">{{ tenant.telegram_alert_id }}</textarea> -->
                             </div>
                         </div>
 

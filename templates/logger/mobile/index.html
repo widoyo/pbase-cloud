@@ -25,7 +25,7 @@
                                     <span v-else class="text-muted">(location not set)</span>
                                 </div>
                                 <div v-if="logger.content.sampling && !logger.fetching" class="text-muted ml-auto">
-                                    {[{ moment.unix(logger.content.sampling).format('kk:mm') }]}
+                                    {[{ formatSampling(logger.content.sampling) }]}
                                 </div>
                                 <div v-else-if="logger.fetching" class="text-muted ml-auto">
                                     <i class="fas fa-spin fa-sync"></i>
@@ -87,10 +87,12 @@
             data: function () {
                 return {
                     moment,
+                    now: '',
                     loggers: {{ loggers | json_encode | raw }}
                 }
             },
             beforeMount: function () {
+                this.now = moment(new Date());
                 for (var index in this.loggers) {
                     this.fetchRaw(index);
                 }
@@ -184,6 +186,11 @@
                         return 'border-awlr';
                     }
                     return '';
+                },
+                formatSampling: function (sampling) {
+                    var diffDay = moment.duration(this.now.diff(moment.unix(sampling))).asDays().toFixed(0);
+                    var samplingTime = moment.unix(sampling).format('kk:mm');
+                    return  diffDay > 0 ? samplingTime +", "+ diffDay +"D" : samplingTime;
                 }
             }
         });
