@@ -124,7 +124,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 // }
             }
         } catch (\Exception $e) {
-            $this->flash->addMessage('errors', 'Tabel periodik belum tersedia');
+            // $this->flash->addMessage('errors', 'Tabel periodik belum tersedia');
         }
         unset($logger);
         // dump($loggers);
