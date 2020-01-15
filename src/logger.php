@@ -101,26 +101,30 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 		$sampling_from = date('Y-m-d H:i:s', strtotime($sampling ." {$sampling_offset}hour"));
 		$sampling_to = date('Y-m-d H:i:s', strtotime($sampling ." +23hour +59min {$sampling_offset}hour"));
         // dump($sampling_from);
-        foreach ($loggers as &$logger) {
-            // $stmt = $this->db->prepare("SELECT (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date) AS hour, COUNT(*)
-            //    FROM raw
-            //    WHERE (content->>'device')=:sn AND (content->>'sampling')::date=:sampling
-            //    GROUP BY (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date)
-            //    ORDER BY (content->>'sampling')");
-            $stmt = $this->db->prepare("SELECT sampling::date, (date_part('hour', sampling)) AS hour, COUNT(*)
-                FROM periodik
-                WHERE logger_sn=:sn AND sampling BETWEEN :sampling_from AND :sampling_to
-                GROUP BY sampling::date, date_part('hour', sampling)
-                ORDER BY sampling");
-            $stmt->execute([
-                ':sn' => $logger['sn'],
-                ':sampling_from' => $sampling_from,
-                ':sampling_to' => $sampling_to,
-            ]);
-            $logger['periodik'] = $stmt->fetchAll();
-            // if (count($logger['periodik']) > 0) {
-            //     dump($logger['periodik']);
-            // }
+        try {
+            foreach ($loggers as &$logger) {
+                // $stmt = $this->db->prepare("SELECT (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date) AS hour, COUNT(*)
+                //    FROM raw
+                //    WHERE (content->>'device')=:sn AND (content->>'sampling')::date=:sampling
+                //    GROUP BY (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date)
+                //    ORDER BY (content->>'sampling')");
+                $stmt = $this->db->prepare("SELECT sampling::date, (date_part('hour', sampling)) AS hour, COUNT(*)
+                    FROM periodik
+                    WHERE logger_sn=:sn AND sampling BETWEEN :sampling_from AND :sampling_to
+                    GROUP BY sampling::date, date_part('hour', sampling)
+                    ORDER BY sampling");
+                $stmt->execute([
+                    ':sn' => $logger['sn'],
+                    ':sampling_from' => $sampling_from,
+                    ':sampling_to' => $sampling_to,
+                ]);
+                $logger['periodik'] = $stmt->fetchAll();
+                // if (count($logger['periodik']) > 0) {
+                //     dump($logger['periodik']);
+                // }
+            }
+        } catch (\Exception $e) {
+            $this->flash->addMessage('errors', 'Tabel periodik belum tersedia');
         }
         unset($logger);
         // dump($loggers);
