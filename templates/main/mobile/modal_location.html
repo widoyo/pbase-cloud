@@ -142,7 +142,17 @@
                     toastr.error('Browser Anda tidak support Geolocation, gunakan map');
                 }
             },
-			showModal: function (selectLocationCB) {
+			showModal: function (selectLocationCB, center_map) {
+				if (center_map != undefined) {
+					var ll = center_map.split(',');
+					var zoom = this.map.getZoom();
+					var z = ll.splice(2,1);
+					if (z.length > 0) {
+						zoom = z[0];
+					}
+					this.map.setView(ll, zoom);
+				}
+
 				this.selectLocationCB = selectLocationCB;
 				$('#modal-location').modal('show');
 			},

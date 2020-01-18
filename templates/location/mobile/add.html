@@ -37,7 +37,7 @@
                         <div class="row ">
                             <div class="col-3">Pemilik</div>
                             <div class="col-9">
-                                <select class="form-control" name="tenant_id" v-model="location.tenant_id" required>
+                                <select class="form-control" name="tenant_id" v-model="location.tenant_id" @change="updateCenterMap()" required>
                                     <option hidden value="">&gt;&gt; Pilih Tenant &lt;&lt;</option>
                                     <option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
                                 </select>
@@ -45,7 +45,7 @@
                         </div>
                     </div>
                 {% else %}
-                    <input type="hidden" name="tenant_id" value={{ user().tenant_id }} readonly>
+                    <input type="hidden" name="tenant_id" v-model="location.tenant_id" readonly>
                 {% endif %}
                 <div class="list-group-item rounded-0 px-3">
                     <div class="row ">
@@ -102,7 +102,7 @@
                     moment,
                     location: {
                         nama: '',
-                        tenant_id: '',
+                        tenant_id: {{ user().tenant_id ?: "''" }},
                         ll: ''
                     },
                     tenants: {{ tenants | json_encode | raw }},
@@ -136,6 +136,8 @@
                     if (this.location.ll) {
                         this.addMarker(ll);
                     }
+
+                    this.updateCenterMap();
                 },
                 onMapClick: function (e) {
                     this.location.ll = e.latlng.lat + "," + e.latlng.lng;
@@ -163,6 +165,24 @@
                         })
                     } else {
                         toastr.error('Browser Anda tidak support Geolocation, gunakan map');
+                    }
+                },
+                updateCenterMap: function () {
+                    var tenant = this.tenants.filter(t => t.id == this.location.tenant_id);
+                    console.log(tenant);
+                    if (tenant.length) {
+                        tenant = tenant[0];
+                        if (tenant.center_map && tenant.center_map.indexOf(',') > 0) {
+                            var ll = tenant.center_map.split(',');
+                            var zoom = this.map.getZoom();
+
+                            var z = ll.splice(2,1);
+                            if (z.length) {
+                                zoom = z[0];
+                            }
+
+                            this.map.setView(ll, zoom);
+                        }
                     }
                 }
             }

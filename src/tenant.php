@@ -40,7 +40,7 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
         $this->post('', function (Request $request, Response $response) {
         	$tenant = $request->getParams();
 
-	        $stmt = $this->db->prepare("INSERT INTO tenant (id, nama, slug, telegram_info_id, telegram_info_group, telegram_alert_id, telegram_alert_group) VALUES (nextval('tenant_id_seq'), :nama, :slug, :telegram_info_id, :telegram_info_group, :telegram_alert_id, :telegram_alert_group)");
+	        $stmt = $this->db->prepare("INSERT INTO tenant (id, nama, slug, telegram_info_id, telegram_info_group, telegram_alert_id, telegram_alert_group, center_map) VALUES (nextval('tenant_id_seq'), :nama, :slug, :telegram_info_id, :telegram_info_group, :telegram_alert_id, :telegram_alert_group, :center_map)");
 	        $stmt->execute([
 	        	"nama" => $tenant['nama'],
 	        	"slug" => $tenant['slug'],
@@ -48,6 +48,7 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 	        	"telegram_info_group" => $tenant['telegram_info_group'] ?: null,
 	        	"telegram_alert_id" => $tenant['telegram_alert_id'] ?: null,
 	        	"telegram_alert_group" => $tenant['telegram_alert_group'] ?: null,
+	        	"center_map" => $tenant['center_map'] ?: null,
 	        ]);
 	        
 	        $this->flash->addMessage('messages', "Tenant {$tenant[nama]} telah ditambahkan");
@@ -106,6 +107,7 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 		        	telegram_info_group=:telegram_info_group,
 		        	telegram_alert_id=:telegram_alert_id,
 		        	telegram_alert_group=:telegram_alert_group,
+		        	center_map=:center_map,
 		        	modified_at='$now'
 	        	WHERE id=:id");
 	        $stmt->bindValue(':nama', $tenant['nama']);
@@ -115,6 +117,7 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 	        $stmt->bindValue(':telegram_info_group', $tenant['telegram_info_group'] ?: null);
 	        $stmt->bindValue(':telegram_alert_id', $tenant['telegram_alert_id'] ?: null);
 	        $stmt->bindValue(':telegram_alert_group', $tenant['telegram_alert_group'] ?: null);
+	        $stmt->bindValue(':center_map', $tenant['center_map'] ?: null);
 	        // dump($tenant);
 	        $stmt->execute();
 	        
