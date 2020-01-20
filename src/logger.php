@@ -10,15 +10,17 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         if ($user['tenant_id'] > 0)
         {
-            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama, tenant.nama AS tenant_nama FROM logger
                 LEFT JOIN location ON logger.location_id = location.id
+                LEFT JOIN tenant ON logger.tenant_id = tenant.id
                 WHERE logger.tenant_id = {$user['tenant_id']}
                 ORDER BY location.nama, logger.sn");
         }
         else
         {
-            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
+            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama, tenant.nama AS tenant_nama FROM logger
                 LEFT JOIN location ON logger.location_id = location.id
+                LEFT JOIN tenant ON logger.tenant_id = tenant.id
                 ORDER BY location.nama, logger.sn");
         }
         $logger_data = $loggers_stmt->fetchAll();

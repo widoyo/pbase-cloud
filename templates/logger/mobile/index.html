@@ -14,66 +14,71 @@
             </div>
         {% endif %}
 
-        <div class="row" v-cloak>
-            <div v-for="logger in sortedLoggers" class="col-12 col-sm-6 col-lg-4 mb-3">
-                <a class="btn-link text-decoration-none" :href="'/logger/' + logger.sn">
-                    <div class="card card-sm h-100 shadow-sm" :class="getBorderType(logger)">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center font-large mb-3">
-                                <div class="flex-fill font-weight-normal" :class="getColorType(logger)">
-                                    <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
-                                    <span v-else class="text-muted">(location not set)</span>
+        <div v-cloak>
+            <div v-for="loggers, tenant_nama in groupedSortedLoggers" class="mb-3">
+                <h4>{[{ tenant_nama }]}</h4>
+                <div class="row">
+                    <div v-for="logger in loggers" class="col-12 col-sm-6 col-lg-4 mb-3">
+                        <div class="card card-sm h-100 shadow-sm" :class="getBorderType(logger)">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center font-large mb-3">
+                                    <div class="flex-fill font-weight-normal" :class="getColorType(logger)">
+                                        <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
+                                        <span v-else class="text-muted">(location not set)</span>
+                                    </div>
+                                    <div v-if="logger.content.sampling && !logger.fetching" class="text-muted ml-auto">
+                                        {[{ formatSampling(logger.content.sampling) }]}
+                                    </div>
+                                    <div v-else-if="logger.fetching" class="text-muted ml-auto">
+                                        <i class="fas fa-spin fa-sync"></i>
+                                    </div>
                                 </div>
-                                <div v-if="logger.content.sampling && !logger.fetching" class="text-muted ml-auto">
-                                    {[{ formatSampling(logger.content.sampling) }]}
-                                </div>
-                                <div v-else-if="logger.fetching" class="text-muted ml-auto">
-                                    <i class="fas fa-spin fa-sync"></i>
-                                </div>
-                            </div>
 
-                            <div class="d-flex align-items-center font-small text-muted">
-                                <div>
-                                    {[{ logger.sn }]}
-                                </div>
-                                <div v-if="logger.content.up_since" class="ml-auto">
-                                    On {[{ moment.unix(logger.content.up_since).fromNow() }]}
-                                </div>
-                            </div>
+                                <a class="btn-link text-decoration-none" :href="'/logger/' + logger.sn">
+                                    <div class="d-flex align-items-center font-small text-muted">
+                                        <div>
+                                            {[{ logger.sn }]}
+                                        </div>
+                                        <div v-if="logger.content.up_since" class="ml-auto">
+                                            On {[{ moment.unix(logger.content.up_since).fromNow() }]}
+                                        </div>
+                                    </div>
 
-                            <div class="d-flex align-items-center font-small">
-                                <div>
-                                    <!-- <span v-if="logger.content.tick">
-                                        {[{ logger.content.tick }]}
-                                    </span>
-                                    <span v-if="logger.content.distance">
-                                        {[{ logger.content.distance }]}
-                                    </span> -->
-                                    <span v-if="logger.content.temperature">
-                                        <i class="fas fa-thermometer-half"></i>
-                                        {[{ logger.content.temperature.toFixed(0) }]}℃
-                                    </span>
-                                    <span v-if="logger.content.humidity">
-                                        • {[{ logger.content.humidity.toFixed(0) }]}%
-                                    </span>
-                                </div>
-                                <div class="ml-auto">
-                                    <span v-if="logger.content.altitude">
-                                        {[{ logger.content.altitude }]}mdpl
-                                    </span>
-                                    <span v-if="logger.content.signal_quality">
-                                        <i class="fas fa-signal"></i>
-                                        {[{ logger.content.signal_quality.toFixed(0) }]}
-                                    </span>
-                                    <span v-if="logger.content.battery">
-                                        <i class="fas fa-battery-three-quarters"></i>
-                                        {[{ logger.content.battery.toFixed(0) }]}
-                                    </span>
-                                </div>
+                                    <div class="d-flex align-items-center font-small">
+                                        <div>
+                                            <!-- <span v-if="logger.content.tick">
+                                                {[{ logger.content.tick }]}
+                                            </span>
+                                            <span v-if="logger.content.distance">
+                                                {[{ logger.content.distance }]}
+                                            </span> -->
+                                            <span v-if="logger.content.temperature">
+                                                <i class="fas fa-thermometer-half"></i>
+                                                {[{ logger.content.temperature.toFixed(0) }]}℃
+                                            </span>
+                                            <span v-if="logger.content.humidity">
+                                                • {[{ logger.content.humidity.toFixed(0) }]}%
+                                            </span>
+                                        </div>
+                                        <div class="ml-auto">
+                                            <span v-if="logger.content.altitude">
+                                                {[{ logger.content.altitude }]}mdpl
+                                            </span>
+                                            <span v-if="logger.content.signal_quality">
+                                                <i class="fas fa-signal"></i>
+                                                {[{ logger.content.signal_quality.toFixed(0) }]}
+                                            </span>
+                                            <span v-if="logger.content.battery">
+                                                <i class="fas fa-battery-three-quarters"></i>
+                                                {[{ logger.content.battery.toFixed(0) }]}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
@@ -82,6 +87,14 @@
 
 {% block js %}
     <script>
+        const groupBy = key => array =>
+          array.reduce((objectsByKeyValue, obj) => {
+            const value = obj[key];
+            objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
+            return objectsByKeyValue;
+          }, {});
+        const groupByTenantNama = groupBy('tenant_nama');
+
         var _app = new Vue({
             el: '#app',
             data: function () {
@@ -122,6 +135,14 @@
                     });
                     // sort done on backend
                     return loggers;
+                },
+                groupedSortedLoggers: function () {
+                    var gsl = groupByTenantNama(this.sortedLoggers);
+                    var gslOrdered = {};
+                    Object.keys(gsl).sort().forEach(function(key) {
+                      gslOrdered[key] = gsl[key];
+                    });
+                    return gslOrdered
                 }
             },
             methods: {
