@@ -10,26 +10,44 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         if ($user['tenant_id'] > 0)
         {
-            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama, tenant.nama AS tenant_nama FROM logger
-                LEFT JOIN location ON logger.location_id = location.id
-                LEFT JOIN tenant ON logger.tenant_id = tenant.id
+            $loggers_stmt = $this->db->query("SELECT
+                    logger.sn,
+                    location.nama AS location_nama,
+                    tenant.nama AS tenant_nama,
+                    p.*
+                FROM logger
+                    LEFT JOIN location ON logger.location_id = location.id
+                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
+                    LEFT JOIN (
+                        SELECT * FROM periodik
+                        ORDER BY periodik.sampling DESC
+                    ) as p ON p.logger_sn = logger.sn
                 WHERE logger.tenant_id = {$user['tenant_id']}
                 ORDER BY location.nama, logger.sn");
         }
         else
         {
-            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama, tenant.nama AS tenant_nama FROM logger
-                LEFT JOIN location ON logger.location_id = location.id
-                LEFT JOIN tenant ON logger.tenant_id = tenant.id
+            $loggers_stmt = $this->db->query("SELECT
+                    logger.sn,
+                    location.nama AS location_nama,
+                    tenant.nama AS tenant_nama,
+                    p.*
+                FROM logger
+                    LEFT JOIN location ON logger.location_id = location.id
+                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
+                    LEFT JOIN (
+                        SELECT * FROM periodik
+                        ORDER BY periodik.sampling DESC
+                    ) as p ON p.logger_sn = logger.sn
                 ORDER BY location.nama, logger.sn");
         }
         $logger_data = $loggers_stmt->fetchAll();
         // dump($logger_data);
 
-        foreach ($logger_data as &$logger) {
-            $logger['content'] = '';
-            $logger['fetching'] = false;
-        }
+        // foreach ($logger_data as &$logger) {
+        //     $logger['content'] = '';
+        //     $logger['fetching'] = false;
+        // }
 
         return $this->view->render($response, 'logger/mobile/index.html', [
             'loggers' => $logger_data,
