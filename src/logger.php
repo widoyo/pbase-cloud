@@ -14,16 +14,22 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     logger.sn,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
-                    p.*
+                    periodik.*
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
                     LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                    LEFT JOIN (
-                        SELECT * FROM periodik
+                    LEFT JOIN periodik ON periodik.id = (
+                        SELECT id from periodik
+                        WHERE periodik.logger_sn = logger.sn
                         ORDER BY periodik.sampling DESC
-                    ) as p ON p.logger_sn = logger.sn
+                        LIMIT 1
+                    )
                 WHERE logger.tenant_id = {$user['tenant_id']}
-                ORDER BY location.nama, logger.sn");
+                ORDER BY 
+                    periodik.mdpl DESC,
+                    periodik.sampling DESC,
+                    location.nama,
+                    logger.sn");
         }
         else
         {
@@ -31,15 +37,21 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     logger.sn,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
-                    p.*
+                    periodik.*
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
                     LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                    LEFT JOIN (
-                        SELECT * FROM periodik
+                    LEFT JOIN periodik ON periodik.id = (
+                        SELECT id from periodik
+                        WHERE periodik.logger_sn = logger.sn
                         ORDER BY periodik.sampling DESC
-                    ) as p ON p.logger_sn = logger.sn
-                ORDER BY location.nama, logger.sn");
+                        LIMIT 1
+                    )
+                ORDER BY 
+                    periodik.mdpl DESC,
+                    periodik.sampling DESC,
+                    location.nama,
+                    logger.sn");
         }
         $logger_data = $loggers_stmt->fetchAll();
         // dump($logger_data);

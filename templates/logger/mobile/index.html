@@ -114,26 +114,26 @@
                 sortedLoggers: function () {
                     var loggers = this.loggers.slice();
                     loggers.sort((a, b) => {
-                        if (!a.mdpl && !b.mdpl) {
+                        if (!a.sampling && !b.sampling) {
                             return 0;
                         }
 
-                        if (!a.mdpl) {
+                        if (!a.sampling) {
                             return 1;
                         }
 
-                        if (!b.mdpl) {
+                        if (!b.sampling) {
                             return -1;
                         }
 
-                        a.mdpl = parseInt(a.mdpl);
-                        b.mdpl = parseInt(b.mdpl);
+                        // a.mdpl = parseInt(a.mdpl);
+                        // b.mdpl = parseInt(b.mdpl);
 
-                        if (a.mdpl > b.mdpl) {
-                            return -1;
-                        } else if (a.mdpl < b.mdpl) {
-                            return 1;
-                        }
+                        // if (a.mdpl > b.mdpl) {
+                        //     return -1;
+                        // } else if (a.mdpl < b.mdpl) {
+                        //     return 1;
+                        // }
                         return 0;
                     });
                     // sort done on backend
