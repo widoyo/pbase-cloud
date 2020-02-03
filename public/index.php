@@ -91,7 +91,6 @@ $container['view'] = function ($c) {
     $router = $c->get('router');
     $uri = \Slim\Http\Uri::createFromEnvironment(new \Slim\Http\Environment($_SERVER));
     $view->addExtension(new \Slim\Views\TwigExtension($router, $uri));
-    $view->addExtension(new \Knlv\Slim\Views\TwigMessages(new Slim\Flash\Messages()));
 
     return $view;
 };
@@ -327,25 +326,31 @@ $getUserMiddleware = function (Request $request, Response $response, $next) {
  */
 
 // Menambahkan fungsi env() pada Twig
-$env = new Twig_SimpleFunction('env', function ($key, $default) {
+$env = new Twig\TwigFunction('env', function ($key, $default) {
 	return isset($_ENV[$key]) ? $_ENV[$key] : $default;
 });
 $container->get('view')->getEnvironment()->addFunction($env);
 
 // Menambahkan fungsi asset() pada Twig
-$asset = new Twig_SimpleFunction('asset', function ($path) {
+$asset = new Twig\TwigFunction('asset', function ($path) {
 	return $_ENV['APP_URL'] .'/'. $path;
 });
 $container->get('view')->getEnvironment()->addFunction($asset);
 
+// Menambahkan fungsi flash() pada Twig
+$flash = new Twig\TwigFunction('flash', function ($key) use ($container) {
+    return $container->get('flash')->getMessage($key);
+});
+$container->get('view')->getEnvironment()->addFunction($flash);
+
 // Menambahkan fungsi session() pada Twig
-$session = new Twig_SimpleFunction('session', function () {
+$session = new Twig\TwigFunction('session', function () {
 	return Session::getInstance();
 });
 $container->get('view')->getEnvironment()->addFunction($session);
 
 // Menambahkan fungsi user() pada Twig -> untuk mendapatkan current user
-$user = new Twig_SimpleFunction('user', function () use ($container) {
+$user = new Twig\TwigFunction('user', function () use ($container) {
 	return $container->get('user');
 });
 $container->get('view')->getEnvironment()->addFunction($user);
