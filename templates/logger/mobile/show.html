@@ -4,102 +4,106 @@
 
 {% block content %}
 
-    <div id="app">
-        <div class="d-flex justify-content-between align-items-center" :class="getBorderType()" style="border-bottom-style: solid;border-bottom-width: 2px">
-            <button class="btn btn-link" @click="back()">
-                <i class="fas fa-fw fa-chevron-left"></i>
-            </button>
-            <div class="my-1 text-center">
-                <p class="text-center mb-0" :class="getColorType()">{{ logger.sn }}</p>
-                <p class="mb-0">{{ logger.location_nama }}</p>
-            </div>
-            <button class="btn btn-link" @click="showModalConfig()">
-                <i class="fas fa-fw fa-cog"></i>
-            </button>
-        </div>
+	<div id="app">
+		<div class="d-flex justify-content-between align-items-center" :class="getBorderType()" style="border-bottom-style: solid;border-bottom-width: 2px">
+			<button class="btn btn-link" @click="back()">
+				<i class="fas fa-fw fa-chevron-left"></i>
+			</button>
+			<div class="my-1 text-center">
+				<p class="text-center mb-0" :class="getColorType()">{{ logger.sn }}</p>
+				<p class="mb-0">{{ logger.location_nama }}</p>
+			</div>
+			<button class="btn btn-link" @click="showModalConfig()">
+				<i class="fas fa-fw fa-cog"></i>
+			</button>
+		</div>
 
-        <div class="list-group list-group-flush" v-cloak>
-            <div v-if="fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
-                <i class="fas fa-sync fa-spin ml-auto"></i>
-            </div>
-            <a v-for="logger, index in loggers" class="list-group-item list-group-item-action rounded-0 py-3">
-                <div class="row align-items-center">
-                    <div class="col-12">
-                        <div class="mb-2 d-flex">
-                            <p class="mb-0">
-                                {[{ moment.unix(logger.content.sampling).format('D MMM YYYY, kk:mm') }]}
-                            </p>
-                        </div>
-                        <div class="mb-0 d-flex">
-                            <p class="mb-0 mr-2">
-                                <span v-if="typeof logger.content.tick !== typeof undefined">
-                                    <!-- <span class="badge badge-primary">ARR</span> -->
-                                    {[{ logger.content.tick }]}
-                                </span>
-                                <span v-if="typeof logger.content.distance !== typeof undefined">
-                                    <!-- <span class="badge badge-success">AWLR</span> -->
-                                    {[{ logger.content.distance }]}
-                                </span>
-                            </p>
-                            <!-- <p v-if="typeof logger.content.temperature !== typeof undefined" class="mb-0 mr-2">
-                                {[{ logger.content.temperature }]}℃
-                            </p>
-                            <p v-if="typeof logger.content.humidity !== typeof undefined" class="mb-0 mr-2">
-                                {[{ logger.content.humidity }]}%
-                            </p> -->
-                            <div class="ml-auto">
-                                <span v-if="logger.content.signal_quality">
-                                    <i class="fas fa-signal"></i>
-                                    {[{ logger.content.signal_quality }]}
-                                </span>
-                                <span v-if="logger.content.battery">
-                                    <i class="fas fa-battery-full"></i>
-                                    {[{ logger.content.battery }]}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </a>
+		<div class="list-group list-group-flush" v-cloak>
+			<div v-if="fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
+				<i class="fas fa-sync fa-spin ml-auto"></i>
+			</div>
+			<a v-for="logger, index in loggers" class="list-group-item list-group-item-action rounded-0 py-3">
+				<div class="row align-items-center">
+					<div class="col-12">
+						<div class="mb-2 d-flex">
+							<p class="mb-0">
+								{[{ moment(logger.sampling).format('D MMM YYYY, kk:mm') }]}
+							</p>
+						</div>
+						<div class="mb-0 d-flex">
+							<div>
+								<span v-if="logger.rain != null">
+									<i class="fas fa-tint"></i>
+									{[{ logger.rain }]}
+								</span>
+								<span v-if="logger.wlev != null">
+									<i class="fas fa-water"></i>
+									{[{ logger.wlev }]}
+								</span>
+								<span v-if="logger.temp != null">
+									<i class="fas fa-thermometer-half"></i>
+									{[{ logger.temp }]}℃
+								</span>
+								<span v-if="logger.humi != null">
+									• {[{ logger.humi }]}%
+								</span>
+							</div>
+							<div class="ml-auto">
+								<span v-if="logger.mdpl != null">
+									{[{ logger.mdpl }]}mdpl
+								</span>
+								<span v-if="logger.sq != null">
+									<i class="fas fa-signal"></i>
+									{[{ logger.sq }]}
+								</span>
+								<span v-if="logger.batt != null">
+									<i class="fas fa-battery-three-quarters"></i>
+									{[{ logger.batt }]}
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</a>
 
-            <div v-if="loggers.length == 0 && !fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
-                ( no data )
-            </div>
-        </div>
+			<div v-if="loggers.length == 0 && !fetching" class="list-group-item list-group-item-action rounded-0 text-center text-muted">
+				( no data )
+			</div>
+		</div>
 
-        <!-- <div class="py-1">&nbsp;</div> -->
-        <!-- <div class="d-flex justify-content-between align-items-center fixed-bottom">
-            <a class="btn btn-link text-white" href="/logger">
-                <i class="fas fa-fw fa-chevron-left"></i>
-            </a>
-            <div class="my-1 text-center">
-                <h1 class="h5 text-center mb-0">{{ logger.sn }}</h1>
-                <p class="mb-0">{{ logger.location_nama }}</p>
-            </div>
-            <button class="btn btn-link text-white" @click="showModalConfig()">
-                <i class="fas fa-fw fa-cog"></i>
-            </button>
-        </div> -->
-    </div>
+		<!-- <div class="py-1">&nbsp;</div> -->
+		<!-- <div class="d-flex justify-content-between align-items-center fixed-bottom">
+		            <a class="btn btn-link text-white" href="/logger">
+		                <i class="fas fa-fw fa-chevron-left"></i>
+		            </a>
+		            <div class="my-1 text-center">
+		                <h1 class="h5 text-center mb-0">{{ logger.sn }}</h1>
+		                <p class="mb-0">{{ logger.location_nama }}</p>
+		            </div>
+		            <button class="btn btn-link text-white" @click="showModalConfig()">
+		                <i class="fas fa-fw fa-cog"></i>
+		            </button>
+		        </div> -->
+	</div>
 
 {% endblock %}
 
 {% block js %}
-    {% include 'logger/mobile/modal_config.html' %}
-    
-    <script>
-        var _app = new Vue({
+	{% include 'logger/mobile/modal_config.html' %}
+
+	<script>
+		var _app = new Vue({
             el: '#app',
             data: function () {
                 return {
                     moment,
                     fetching: false,
-                    loggers: [],
+                    loggers: {{ loggers | json_encode | raw }},
                     logger: {{ logger | json_encode | raw }}
                 }
             },
             beforeMount: function () {
-                this.fetchRaw();
+                // this.fetchRaw();
             },
             methods: {
                 back: function () {
@@ -119,16 +123,12 @@
                     //     this.loggers = JSON.parse(localStorage['raw_{{ logger.sn }}']);
                     // }
 
-                    $.ajax({
-                        url: '/api/logger/{{ logger.sn }}/raw'
-                    })
-                    .then(res => {
+                    $.ajax({url: '/api/logger/ {{ logger.sn }}/raw'}).then(res => {
                         if (res.status === 200) {
                             this.loggers = res.data.loggers;
                             // localStorage['raw_{{ logger.sn }}'] = JSON.stringify(res.data.loggers);
                         }
-                    })
-                    .always(() => {
+                    }).always(() => {
                         this.fetching = false;
                     });
                 },
@@ -151,13 +151,13 @@
                     }
 
                     var logger = this.loggers[0];
-                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                    if (logger.rain === null && logger.wlev === null) {
                         return '';
                     }
 
-                    if (typeof logger.content.tick !== typeof undefined) {
+                    if (logger.rain !== null) {
                         return 'font-weight-bold text-primary';
-                    } else if (typeof logger.content.distance !== typeof undefined) {
+                    } else if (logger.wlev !== null) {
                         return 'font-weight-bold text-danger';
                     }
                     return '';
@@ -168,18 +168,18 @@
                     }
 
                     var logger = this.loggers[0];
-                    if (typeof logger.content === typeof undefined || logger.content.length === 0) {
+                    if (logger.rain === null && logger.wlev === null) {
                         return '';
                     }
 
-                    if (typeof logger.content.tick !== typeof undefined) {
+                    if (logger.rain !== null) {
                         return 'border-arr';
-                    } else if (typeof logger.content.distance !== typeof undefined) {
+                    } else if (logger.wlev !== null) {
                         return 'border-awlr';
                     }
                     return '';
                 }
             }
         });
-    </script>
+	</script>
 {% endblock %}

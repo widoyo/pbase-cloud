@@ -46,29 +46,29 @@
 
                                     <div class="d-flex align-items-center font-small">
                                         <div>
-                                            <!-- <span v-if="logger.rain">
+                                            <!-- <span v-if="logger.rain != null">
                                                 {[{ logger.rain }]}
                                             </span>
-                                            <span v-if="logger.wlev">
+                                            <span v-if="logger.wlev != null">
                                                 {[{ logger.wlev }]}
                                             </span> -->
-                                            <span v-if="logger.temp">
+                                            <span v-if="logger.temp != null">
                                                 <i class="fas fa-thermometer-half"></i>
                                                 {[{ logger.temp }]}℃
                                             </span>
-                                            <span v-if="logger.humi">
+                                            <span v-if="logger.humi != null">
                                                 • {[{ logger.humi }]}%
                                             </span>
                                         </div>
                                         <div class="ml-auto">
-                                            <span v-if="logger.mdpl">
+                                            <span v-if="logger.mdpl != null">
                                                 {[{ logger.mdpl }]}mdpl
                                             </span>
-                                            <span v-if="logger.sq">
+                                            <span v-if="logger.sq != null">
                                                 <i class="fas fa-signal"></i>
                                                 {[{ logger.sq }]}
                                             </span>
-                                            <span v-if="logger.batt">
+                                            <span v-if="logger.batt != null">
                                                 <i class="fas fa-battery-three-quarters"></i>
                                                 {[{ logger.batt }]}
                                             </span>

@@ -29,7 +29,7 @@ function env($key, $defaultValue='') {
 }
 
 // get timezone from ENV, default "Asia/Jakarta"
-date_default_timezone_set(env('APP_TIMEZONE', "Asia/Jakarta"));
+// date_default_timezone_set(env('APP_TIMEZONE', "Asia/Jakarta"));
 
 $settings = [
     'settings' => [
@@ -426,6 +426,20 @@ function tanggal_format($time, $usetime=false) {
         default: $month = 'Desember'; break;
     }
     return date('j', $time) .' '. $month .' '. date('Y', $time) . ($usetime ? ' '. date('H:i', $time) : '');
+}
+
+function timezone_default() {
+    return "Asia/Jakarta";
+}
+
+function timezone_format($date_str, $timezone="Asia/Jakarta") {
+    if (empty($timezone)) {
+        $timezone = timezone_default();
+    }
+
+    $datetime = new DateTime($date_str);
+    $datetime->setTimezone(new DateTimeZone($timezone));
+    return $datetime->format('Y-m-d H:i:s');
 }
 
 /**

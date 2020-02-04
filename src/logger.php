@@ -14,6 +14,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     logger.sn,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
+                    tenant.timezone AS timezone,
                     periodik.*
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
@@ -37,6 +38,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     logger.sn,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
+                    tenant.timezone AS timezone,
                     periodik.*
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
@@ -56,10 +58,19 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         $logger_data = $loggers_stmt->fetchAll();
         // dump($logger_data);
 
-        // foreach ($logger_data as &$logger) {
-        //     $logger['content'] = '';
-        //     $logger['fetching'] = false;
-        // }
+        foreach ($logger_data as &$logger) {
+            if (!$logger['sampling']) {
+                continue;
+            }
+
+            if (!$logger['timezone']) {
+                $logger['timezone'] = timezone_default();
+            }
+
+            $logger['sampling'] = $logger['sampling'] ? timezone_format($logger['sampling'], $logger['timezone']) : null;
+            $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
+            $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
+        }
 
         return $this->view->render($response, 'logger/mobile/index.html', [
             'loggers' => $logger_data,
@@ -235,6 +246,28 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         $this->get('', function (Request $request, Response $response, $args) {
             $logger = $request->getAttribute('logger');
+            $loggers = $this->db->query("SELECT * FROM periodik
+                WHERE logger_sn='{$logger['sn']}'
+                ORDER BY id DESC
+                LIMIT 10")->fetchAll();
+
+            $timezone = timezone_default();
+            if (!empty($logger['tenant_id'])) {
+                $tenant = $this->db->query("SELECT * FROM tenant
+                    WHERE id={$logger['tenant_id']}")->fetch();
+                if ($tenant && !empty($tenant['timezone'])) {
+                    $timezone = $tenant['timezone'];
+                }
+            }
+            foreach ($loggers as &$l) {
+                if (!$l['sampling']) {
+                    continue;
+                }
+
+                $l['sampling'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
+                $l['up_s'] = $l['up_s'] ? timezone_format($l['up_s'], $timezone) : null;
+                $l['ts_a'] = $l['ts_a'] ? timezone_format($l['ts_a'], $timezone) : null;
+            }
 
             $locations = $this->db->query("SELECT * FROM location
                 WHERE tenant_id = {$logger['tenant_id']}
@@ -242,7 +275,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             ->fetchAll();
 
             return $this->view->render($response, 'logger/mobile/show.html', [
-                // 'loggers' => $loggers,
+                'loggers' => $loggers,
                 'logger' => $logger,
                 'locations' => $locations
             ]);
