@@ -6,7 +6,8 @@ use Slim\Http\Response;
 $app->group('/logger', function () use ($getLoggerMiddleware) {
 
     $this->get('', function (Request $request, Response $response, $args) {
-		$user = $this->user;
+        $user = $this->user;
+        $timezone_default = timezone_default();
 
         if ($user['tenant_id'] > 0)
         {
@@ -14,7 +15,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     logger.sn,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
-                    tenant.timezone AS timezone,
+                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
                     periodik.*
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
@@ -38,7 +39,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     logger.sn,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
-                    tenant.timezone AS timezone,
+                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
                     periodik.*
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
@@ -61,10 +62,6 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         foreach ($logger_data as &$logger) {
             if (!$logger['sampling']) {
                 continue;
-            }
-
-            if (!$logger['timezone']) {
-                $logger['timezone'] = timezone_default();
             }
 
             $logger['sampling'] = $logger['sampling'] ? timezone_format($logger['sampling'], $logger['timezone']) : null;
@@ -115,80 +112,102 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
     });
 
     $this->get('/sehat', function (Request $request, Response $response, $args) {
+        date_default_timezone_set('UTC');
+
         $user = $this->user;
-        $sampling = $request->getParam('sampling', date('Y-m-d'));
+        $sampling = $request->getParam('sampling');
+        if (empty($sampling)) {
+            $sampling = date('Y-m-d');
+        }
+        $timezone_default = timezone_default();
 
         if ($user['tenant_id'] > 0)
         {
-            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
-                LEFT JOIN location ON logger.location_id = location.id
-                WHERE logger.tenant_id = {$user['tenant_id']}
+            $loggers_stmt = $this->db->query("SELECT
+                    logger.*,
+                    location.nama AS location_nama,
+                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone
+                FROM logger
+                    LEFT JOIN location ON logger.location_id = location.id
+                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
+                WHERE
+                    logger.tenant_id = {$user['tenant_id']}
                 ORDER BY logger.sn");
         }
         else
         {
-            $loggers_stmt = $this->db->query("SELECT logger.*, location.nama AS location_nama FROM logger
-                LEFT JOIN location ON logger.location_id = location.id
+            $loggers_stmt = $this->db->query("SELECT
+                    logger.*,
+                    location.nama AS location_nama,
+                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone
+                FROM logger
+                    LEFT JOIN location ON logger.location_id = location.id
+                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
                 ORDER BY logger.sn");
         }
         $loggers = $loggers_stmt->fetchAll();
         // dump($loggers);
 
-		$utc_offset =  date('Z') / 3600;
-		if ($utc_offset >= 0) {
-			$sampling_offset = "-{$utc_offset}";
-		} else {
-			$sampling_offset = "+". ($utc_offset * -1);
-		}
-        // $sampling_offset = '+0';
-		$sampling_from = date('Y-m-d H:i:s', strtotime($sampling ." {$sampling_offset}hour"));
-		$sampling_to = date('Y-m-d H:i:s', strtotime($sampling ." +23hour +59min {$sampling_offset}hour"));
-        // dump($sampling_from);
         try {
             foreach ($loggers as &$logger) {
+                // dapatkan selisih dengan UTC
+                date_default_timezone_set($logger['timezone']);
+                $utc_offset =  date('Z') / 3600;
+                if ($utc_offset >= 0) {
+                    $sampling_offset = "-{$utc_offset}";
+                } else {
+                    $sampling_offset = "+". ($utc_offset * -1);
+                }
+                
+                // hitung batas from & to untuk sampling
+                $sampling_from = date('Y-m-d H:i:s', strtotime($sampling ." {$sampling_offset}hour"));
+                $sampling_to = date('Y-m-d H:i:s', strtotime($sampling ." +23hour +59min {$sampling_offset}hour"));
+                // dump($sampling_from, false);
+                // dump($sampling_to);
+
                 // $stmt = $this->db->prepare("SELECT (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date) AS hour, COUNT(*)
                 //    FROM raw
                 //    WHERE (content->>'device')=:sn AND (content->>'sampling')::date=:sampling
                 //    GROUP BY (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date)
                 //    ORDER BY (content->>'sampling')");
-                $stmt = $this->db->prepare("SELECT sampling::date, (date_part('hour', sampling)) AS hour, COUNT(*)
-                    FROM periodik
-                    WHERE logger_sn=:sn AND sampling BETWEEN :sampling_from AND :sampling_to
-                    GROUP BY sampling::date, date_part('hour', sampling)
-                    ORDER BY sampling");
+                $stmt = $this->db->prepare("SELECT
+                            sampling::date,
+                            (date_part('hour', sampling)) AS hour,
+                            COUNT(*)
+                        FROM periodik
+                        WHERE logger_sn=:sn
+                            AND sampling BETWEEN :sampling_from AND :sampling_to
+                        GROUP BY
+                            sampling::date,
+                            date_part('hour', sampling)
+                        ORDER BY sampling");
                 $stmt->execute([
                     ':sn' => $logger['sn'],
                     ':sampling_from' => $sampling_from,
                     ':sampling_to' => $sampling_to,
                 ]);
                 $logger['periodik'] = $stmt->fetchAll();
-                // if (count($logger['periodik']) > 0) {
-                //     dump($logger['periodik']);
-                // }
+                
+                // normalize untuk jam-jam yang kosong
+                $periodik = [
+                    0,0,0,0,0,0,
+                    0,0,0,0,0,0,
+                    0,0,0,0,0,0,
+                    0,0,0,0,0,0,
+                ];
+
+                foreach ($logger['periodik'] as $p) {
+                    $hour = ($p['hour'] + $utc_offset) % 24;
+                    $periodik[$hour] = $p['count'];
+                }
+
+                $logger['periodik'] = $periodik;
             }
         } catch (\Exception $e) {
             // $this->flash->addMessage('errors', 'Tabel periodik belum tersedia');
         }
         unset($logger);
         // dump($loggers);
-
-        foreach ($loggers as &$logger) {
-            $periodik = [
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-            ];
-
-            if (isset($logger['periodik'])) {
-                foreach ($logger['periodik'] as $p) {
-                    $hour = ($p['hour'] + $utc_offset) % 24;
-                    $periodik[$hour] = $p['count'];
-                }
-            }
-
-            $logger['periodik'] = $periodik;
-        }
 
         $sampling_prev = date('Y-m-d', strtotime($sampling .' -1day'));
         $sampling_next = date('Y-m-d', strtotime($sampling .' +1day'));
