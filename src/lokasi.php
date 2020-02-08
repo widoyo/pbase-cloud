@@ -83,10 +83,17 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             	$referer = '/location';
             }
 
+            $form['elevasi'] = $form['elevasi'] ?: null;
+            // dump($form);
+
             if (count($form) > 0) {
                 $query = "UPDATE location SET ";
                 foreach ($form as $column => $value) {
-                    $query .= "{$column} = '{$value}',";
+                    if ($value === null) {
+                        $query .= "{$column} = NULL,";
+                    } else {
+                        $query .= "{$column} = '{$value}',";
+                    }
                 }
                 $query = rtrim($query, ",");
 
