@@ -62,13 +62,65 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 	$this->group('/{id:[0-9]+}', function () {
 
 		$this->get('', function (Request $request, Response $response, $args) {
-			$location = $request->getAttribute('location');
-
+            $location = $request->getAttribute('location');
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
+            $to = date("Y-m-d");
+            $from = date("Y-m-d", strtotime("{$to} -3 months"));
+            // $periodik_min = $this->db->query("SELECT sampling::date, rain FROM periodik
+            //     WHERE location_id={$location['id']}
+            //         AND sampling::date BETWEEN '{$from}' AND '{$to}'
+            //     ORDER BY sampling, rain DESC")->fetchAll(\PDO::FETCH_KEY_PAIR);
+            // $periodik_max = $this->db->query("SELECT sampling::date, rain FROM periodik
+            //     WHERE location_id={$location['id']}
+            //         AND sampling::date BETWEEN '{$from}' AND '{$to}'
+            //     ORDER BY sampling, rain")->fetchAll(\PDO::FETCH_KEY_PAIR);
+            // dump($periodik_max);
+            
+            // preparing initial datasets (0s) and labels (day)
+            $result = [
+                'datasets' => [
+                    'min' => [],
+                    'max' => []
+                ],
+                'labels' => [],
+                'colors' => [],
+                'title' => ['min', 'max']
+            ];
+            $result['colors'] = [
+                "0,0,255",
+                "0,255,0",
+                "255,0,0",
+                "255,0,255",
+                "0,255,255",
+                "255,255,0"
+            ];
+
+            while ($from != $to) {
+                $datasets['min'][$from] = 0;
+                $datasets['max'][$from] = 0;
+                $datasets['labels'][$from] = tanggal_format(strtotime($from));
+
+                $res = $this->db->query("SELECT sampling, rain FROM periodik WHERE location_id={$location['id']} AND sampling::date='{$from}' ORDER BY rain")->fetchAll();
+                if ($res && count($res) > 0) {
+                    $datasets['min'][$from] = doubleval($res[0]['rain']);
+                    $datasets['max'][$from] = doubleval($res[count($res)-1]['rain']);
+                }
+                // if (isset($periodik_max[$from])) {
+                //     $p['max'] = $periodik_max[$from];
+                // }
+                // if (isset($periodik_min[$from])) {
+                //     $p['min'] = $periodik_min[$from];
+                // }
+
+                $from = date("Y-m-d", strtotime("{$from} +1day"));
+            }
+            // dump($datasets);
 
 			return $this->view->render($response, 'location/mobile/show.html', [
 				'location' => $location,
-				'tenants' => $tenants
+				'tenants' => $tenants,
+				'result' => $result,
 			]);
 		});
 
