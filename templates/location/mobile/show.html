@@ -17,15 +17,83 @@
 		                <i class="fas fa-fw fa-cog"></i>
 		            </button>
 		        </div> -->
+		<h1 class="h2 font-weight-normal mb-3">{{ location.nama }}</h1>
 		
 		<div class="row">
 			<div class="col-12 col-lg-8 order-1 order-lg-0">
-				<div>
-					## INPUT DATE PLACEHOLDER ##
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<a href="?start_date={{ (start_date ~ ' -3months')|date('Y-m-d') }}&end_date={{ (end_date ~ ' -3months')|date('Y-m-d') }}" class="btn btn-primary">
+							<i class="fas fa-chevron-left"></i>
+						</a>
+					</div>
+					<p class="input-group-text">
+						{{ start_date|date('M Y') }} - {{ end_date|date('M Y') }}
+					</p>
+					<div class="input-group-append">
+						<a href="?start_date={{ (start_date ~ ' +3months')|date('Y-m-d') }}&end_date={{ (end_date ~ ' +3months')|date('Y-m-d') }}" class="btn btn-primary">
+							<i class="fas fa-chevron-right"></i>
+						</a>
+					</div>
 				</div>
 
 				<div>
 					<canvas id="chart" style="width: 100%; height: 400px; border: solid 1px #eee;" class="chartjs-render-monitor"></canvas>
+				</div>
+
+				<hr class="my-3">
+				
+				<h1 class="h3 font-weight-normal mb-3">Ringkasan Data</h1>
+				<div class="table-responsive">
+					<table class="table table-bordered table-hover">
+						<tbody>
+							<tr>
+								<th>Waktu Data Terakhir</th>
+								<td>{{ latest_periodik ? (latest_periodik['sampling'] | date('d M Y, H:i')) : '-' }}</td>
+							</tr>
+							<tr>
+								<th>Jumlah Data Diterima<br>(total / persen)</th>
+								<td>
+									{{ total_data_diterima | number_format }}
+									{% if persen_data_diterima >= 70 %}
+										<span class="badge badge-pill badge-success">{{ persen_data_diterima | number_format }}%</span>
+									{% elseif persen_data_diterima >= 40 %}
+										<span class="badge badge-pill badge-warning">{{ persen_data_diterima | number_format }}%</span>										
+									{% else %}
+										<span class="badge badge-pill badge-danger">{{ persen_data_diterima | number_format }}%</span>										
+									{% endif %}
+								</td>
+							</tr>
+							<tr>
+								<th>Jumlah Data Seharusnya</th>
+								<td>{{ total_data_seharusnya | number_format }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<hr class="my-3">
+
+				<h1 class="h3 font-weight-normal mb-3">Kontribusi Logger</h1>
+				<div class="table-responsive">
+					<table class="table table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>Logger</th>
+								<th>Jumlah</th>
+								<th>Persentase</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for logger in loggers %}
+								<tr>
+									<td>{{ logger.logger_sn }}</td>
+									<td>{{ logger.count }}</td>
+									<td>{{ (logger.count * 100 / total_data_diterima) | number_format }}%</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
 				</div>
 			</div>
 			<div class="col-12 col-lg-4 order-0 order-lg-1">
@@ -163,19 +231,23 @@
 	<script>
 
 		initChartTMA = function () {
-			alert('tma');
+			initChart('line', 'Tinggi Muka Air');
 		}
 
 		initChartCH = function () {
+			initChart('bar', 'Curah Hujan');
+		}
+
+		initChart = function (type, title) {
 			let ctx = document.getElementById('chart').getContext('2d');
 			let myChart = new Chart(ctx, {
-				type: 'bar',
+				type: type,
 				data: {
 					labels: {{ result.labels|json_encode|raw }},
 					datasets: [
 						{% for data in result.datasets %}
 						{
-							label: "Curah Hujan {{ result.title[loop.index0] }}",
+							label: title +" {{ result.title[loop.index0] }}",
 							data: {{ data|json_encode|raw }},
 							backgroundColor: 'rgba({{ result.colors[loop.index0] }},0.5)',
 							borderColor: 'rgba({{ result.colors[loop.index0] }},1)',
@@ -189,6 +261,15 @@
 						yAxes: [{
 							ticks: {
 								beginAtZero: true
+							},
+							scaleLabel: {
+								display: true,
+								labelString: 'mm'
+							}
+						}],
+						xAxes: [{
+							ticks: {
+								maxTicksLimit: 12
 							}
 						}]
 					},

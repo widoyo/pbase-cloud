@@ -65,8 +65,14 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             $location = $request->getAttribute('location');
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
-            $to = date("Y-m-d");
-            $from = date("Y-m-d", strtotime("{$to} -3 months"));
+            $end_date = $request->getParam('end_date', '');
+            if (empty($end_date)) {
+                $end_date = date("Y-m-d");
+            }
+            $start_date = $request->getParam('start_date', '');
+            if (empty($start_date)) {
+                $start_date = date("Y-m-d", strtotime("{$end_date} -3 months"));
+            }
             // $periodik_min = $this->db->query("SELECT sampling::date, rain FROM periodik
             //     WHERE location_id={$location['id']}
             //         AND sampling::date BETWEEN '{$from}' AND '{$to}'
@@ -96,15 +102,22 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 "255,255,0"
             ];
 
+            $from = $start_date;
+            $to = $end_date;
             while ($from != $to) {
-                $datasets['min'][$from] = 0;
-                $datasets['max'][$from] = 0;
-                $datasets['labels'][$from] = tanggal_format(strtotime($from));
+                $min = 0;
+                $max = 0;
+                $result['labels'][] = tanggal_format(strtotime($from));
 
-                $res = $this->db->query("SELECT sampling, rain FROM periodik WHERE location_id={$location['id']} AND sampling::date='{$from}' ORDER BY rain")->fetchAll();
+                $res = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
                 if ($res && count($res) > 0) {
-                    $datasets['min'][$from] = doubleval($res[0]['rain']);
-                    $datasets['max'][$from] = doubleval($res[count($res)-1]['rain']);
+                    if ($location['tipe'] == 2) {
+                        $min = doubleval($res[0]['wlev']);
+                        $max = doubleval($res[count($res)-1]['wlev']);
+                    } else {
+                        $min = doubleval($res[0]['rain']);
+                        $max = doubleval($res[count($res)-1]['rain']);
+                    }
                 }
                 // if (isset($periodik_max[$from])) {
                 //     $p['max'] = $periodik_max[$from];
@@ -113,14 +126,48 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 //     $p['min'] = $periodik_min[$from];
                 // }
 
+                $result['datasets']['min'][] = $min;
+                $result['datasets']['max'][] = $max;
                 $from = date("Y-m-d", strtotime("{$from} +1day"));
             }
-            // dump($datasets);
+            // dump($result);
+
+            // get ringkasan data
+            $first_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} ORDER BY id")->fetch();
+            $latest_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} ORDER BY id DESC")->fetch();
+            $total_data_diterima = $this->db->query("SELECT COUNT(*) FROM periodik WHERE location_id={$location['id']}")->fetch();
+            if ($total_data_diterima) {
+                $total_data_diterima = $total_data_diterima['count'];
+            }
+            $total_data_seharusnya = 0;
+            $persen_data_diterima = 0;
+            if ($first_periodik && $latest_periodik) {
+                $first = strtotime($first_periodik['sampling']);
+                $last = strtotime($latest_periodik['sampling']);
+                $total_data_seharusnya = ($last - $first) / (60 * 5);
+                if ($total_data_seharusnya > 0) {
+                    $persen_data_diterima = $total_data_diterima * 100 / $total_data_seharusnya;
+                }
+            }
+
+            // get total data logger
+            $loggers = $this->db->query("SELECT logger_sn, COUNT(*) FROM periodik
+                WHERE location_id={$location['id']}
+                GROUP BY logger_sn
+                ORDER BY logger_sn")->fetchAll();
+            // dump($loggers);
 
 			return $this->view->render($response, 'location/mobile/show.html', [
 				'location' => $location,
 				'tenants' => $tenants,
 				'result' => $result,
+				'start_date' => $start_date,
+				'end_date' => $end_date,
+				'latest_periodik' => $latest_periodik,
+				'total_data_diterima' => $total_data_diterima,
+				'total_data_seharusnya' => $total_data_seharusnya,
+				'persen_data_diterima' => $persen_data_diterima,
+				'loggers' => $loggers,
 			]);
 		});
 
