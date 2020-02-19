@@ -88,7 +88,7 @@
 							{% for logger in loggers %}
 								<tr>
 									<td>{{ logger.logger_sn }}</td>
-									<td>{{ logger.count }}</td>
+									<td>{{ logger.count | number_format }}</td>
 									<td>{{ (logger.count * 100 / total_data_diterima) | number_format }}%</td>
 								</tr>
 							{% endfor %}

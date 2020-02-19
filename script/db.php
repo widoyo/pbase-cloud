@@ -34,7 +34,8 @@ $options = [
 
 try {
     $db = new PDO($dsn, $username, $password, $options);
+    $pclient = new Predis\Client();
 } catch (PDOException $e) {
-    throw new PDOException($e->getMessage(), (int) $e->getCode());
+    echo "ERROR ({$e->getCode()}): {$e->getMessage()}\n";
     die();
 }
