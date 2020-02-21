@@ -62,8 +62,12 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 	$this->group('/{id:[0-9]+}', function () {
 
 		$this->get('', function (Request $request, Response $response, $args) {
-            $location = $request->getAttribute('location');
+            // $location = $request->getAttribute('location');
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
+            $pclient = new Predis\Client();
+            $location = $pclient->hgetall("location:{$args['id']}");
+            // dump($plocation);
 
             $end_date = $request->getParam('end_date', '');
             if (empty($end_date)) {
@@ -109,15 +113,36 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 $max = 0;
                 $result['labels'][] = tanggal_format(strtotime($from));
 
-                $res = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
-                if ($res && count($res) > 0) {
+                $res = $pclient->hgetall("location:{$location['id']}:periodik:harian:{$from}");
+                if (count($res) > 0) {
                     if ($location['tipe'] == 2) {
-                        $min = doubleval($res[0]['wlev']);
-                        $max = doubleval($res[count($res)-1]['wlev']);
+                        $min = doubleval($res['wlev_min']);
+                        $max = doubleval($res['wlev_max']);
                     } else {
-                        $min = doubleval($res[0]['rain']);
-                        $max = doubleval($res[count($res)-1]['rain']);
+                        $min = doubleval($res['rain_min']);
+                        $max = doubleval($res['rain_max']);
                     }
+                } else {
+                    $res = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
+                    if ($res && count($res) > 0) {
+                        if ($location['tipe'] == 2) {
+                            $min = doubleval($res[0]['wlev']);
+                            $max = doubleval($res[count($res)-1]['wlev']);
+                        } else {
+                            $min = doubleval($res[0]['rain']);
+                            $max = doubleval($res[count($res)-1]['rain']);
+                        }
+                    }
+
+                    if ($location['tipe'] == 2) {
+                        $rdc_data['wlev_min'] = $min;
+                        $rdc_data['wlev_max'] = $max;
+                    } else {
+                        $rdc_data['rain_min'] = $min;
+                        $rdc_data['rain_max'] = $max;
+                    }
+                    $rdc_data['tanggal'] = date('d', strtotime($from));
+                    $pclient->hmset("location:{$location['id']}:periodik:harian:{$from}", $rdc_data);
                 }
                 // if (isset($periodik_max[$from])) {
                 //     $p['max'] = $periodik_max[$from];

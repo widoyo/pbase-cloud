@@ -25,7 +25,7 @@ foreach ($locations as $location) {
     $rdc_data = [
         'id' => $location['id'],
         'nama' => $location['nama'],
-        'lonlat' => $location['ll'],
+        'll' => $location['ll'],
         'tenant_id' => $location['tenant_id'],
         'tenant_nama' => $location['tenant_nama'],
         'elevasi' => ''
@@ -77,11 +77,12 @@ foreach ($location_to_cache_periodics as $location_id) {
             continue;
         }
 
-        $from = $old_periodik['sampling'];
+        $from = date('Y-m-d', strtotime($old_periodik['sampling']));
     }
     $to = $today;
 
-    while ($from != $to) {
+    while ($from <= $to) {
+        echo "{$location_id}:{$from}:{$to}\n";
         $min = 0;
         $max = 0;
         $rdc_data = [
@@ -91,25 +92,25 @@ foreach ($location_to_cache_periodics as $location_id) {
         $res = $db->query("SELECT * FROM periodik WHERE location_id={$location_id} AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
         if ($res && count($res) > 0) {
             if ($location['tipe'] == 2) {
-                $rdc_data['wlev_min'] = doubleval($res[0]['wlev']);
-                $rdc_data['wlev_max'] = doubleval($res[count($res)-1]['wlev']);
+                $min = doubleval($res[0]['wlev']);
+                $max = doubleval($res[count($res)-1]['wlev']);
             } else {
-                $rdc_data['rain_min'] = doubleval($res[0]['rain']);
-                $rdc_data['rain_max'] = doubleval($res[count($res)-1]['rain']);
-            }
-        } else {
-            if ($location['tipe'] == 2) {
-                $rdc_data['wlev_min'] = 0;
-                $rdc_data['wlev_max'] = 0;
-            } else {
-                $rdc_data['rain_min'] = 0;
-                $rdc_data['rain_max'] = 0;
+                $min = doubleval($res[0]['rain']);
+                $max = doubleval($res[count($res)-1]['rain']);
             }
         }
+        
+        if ($location['tipe'] == 2) {
+            $rdc_data['wlev_min'] = $min;
+            $rdc_data['wlev_max'] = $max;
+        } else {
+            $rdc_data['rain_min'] = $min;
+            $rdc_data['rain_max'] = $max;
+        }
 
-        $bulan = date('Y-m', strtotime($from));
-        $rdc_data = json_encode($rdc_data);
-        $pclient->rpush("location:{$location_id}:periodik:harian:{$bulan}", $rdc_data);
+        // $bulan = date('Y-m', strtotime($from));
+        // $rdc_data = json_encode($rdc_data);
+        $pclient->hmset("location:{$location_id}:periodik:harian:{$from}", $rdc_data);
         // var_dump($rdc_data);
         // die();
 
