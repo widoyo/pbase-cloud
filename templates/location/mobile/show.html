@@ -238,6 +238,8 @@
 			initChart('bar', 'Curah Hujan');
 		}
 
+		console.log({{result|json_encode|raw}})
+
 		initChart = function (type, title) {
 			let ctx = document.getElementById('chart').getContext('2d');
 			let myChart = new Chart(ctx, {
@@ -251,7 +253,8 @@
 							data: {{ data|json_encode|raw }},
 							backgroundColor: 'rgba({{ result.colors[loop.index0] }},0.5)',
 							borderColor: 'rgba({{ result.colors[loop.index0] }},1)',
-							borderWidth: 1
+							borderWidth: 1,
+							fill: type == 'bar',
 						},
 						{% endfor %}
 					]
@@ -260,11 +263,11 @@
 					scales: {
 						yAxes: [{
 							ticks: {
-								beginAtZero: true
+								beginAtZero: false
 							},
 							scaleLabel: {
 								display: true,
-								labelString: 'mm'
+								labelString: (type == 'bar' ? 'mm' : 'M')
 							}
 						}],
 						xAxes: [{

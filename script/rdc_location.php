@@ -50,7 +50,7 @@ foreach ($locations as $location) {
     $pclient->hmset("location:{$location['id']}", $rdc_data);
 
     // cek kapan terakhir periodik
-    if ($pclient->hget("location:{$location['id']}", "last_cache") < $today) {
+    if ($pclient->hget("location:{$location['id']}", "last_cache") <= $today) {
         $location_to_cache_periodics[] = $location['id'];
     }
 }
@@ -65,11 +65,21 @@ foreach ($locations as $location) {
 
 // cache periodik
 foreach ($location_to_cache_periodics as $location_id) {
+    $location = $pclient->hgetall("location:{$location_id}");
+    
+    $loggers = $db->query("SELECT * FROM logger WHERE location_id={$location_id}");
+    $logger_sn = [];
+    foreach ($loggers as $logger) {
+        $logger_sn[] = "'{$logger['sn']}'";
+    }
+    $logger_sn = implode(",", $logger_sn);
+
+
     $from = $pclient->hget("location:{$location_id}", "last_cache");
     if (empty($from)) {
         // get oldest
         $old_periodik = $db->query("SELECT * FROM periodik
-            WHERE location_id = '{$location_id}'
+            WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
             ORDER BY sampling
             LIMIT 1")->fetch();
         if (!$old_periodik) {
@@ -89,7 +99,7 @@ foreach ($location_to_cache_periodics as $location_id) {
             'tanggal' => date('d', strtotime($from))
         ];
 
-        $res = $db->query("SELECT * FROM periodik WHERE location_id={$location_id} AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
+        $res = $db->query("SELECT * FROM periodik WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn})) AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
         if ($res && count($res) > 0) {
             if ($location['tipe'] == 2) {
                 $min = doubleval($res[0]['wlev']);
