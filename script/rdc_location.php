@@ -18,10 +18,12 @@ $locations = $db->query("SELECT
         LEFT JOIN tenant ON (logger.tenant_id = tenant.id)
     WHERE
         logger.tipe IS NOT NULL")->fetchAll();
-            
+
 $today = date('Y-m-d');
 $location_to_cache_periodics = [];
 foreach ($locations as $location) {
+    $location_id = $location['id'];
+
     $rdc_data = [
         'id' => $location['id'],
         'nama' => $location['nama'],
@@ -37,14 +39,62 @@ foreach ($locations as $location) {
     } else {
         $rdc_data['tipe'] = '1';
     }
+
     
-    $periodik = $db->query("SELECT * FROM periodik
-        WHERE location_id = '{$location['id']}'
+
+    // get all logger
+    $loggers = $db->query("SELECT * FROM logger
+        WHERE location_id = '{$location_id}'");
+    $logger_sn = [];
+    foreach ($loggers as $logger) {
+        $logger_sn[] = "'{$logger['sn']}'";
+    }
+    $logger_sn = implode(",", $logger_sn);
+
+    $periodik_mdpl = $db->query("SELECT * FROM periodik
+        WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
             AND mdpl IS NOT NULL
         ORDER BY sampling DESC
         LIMIT 1")->fetch();
-    if ($periodik) {
-        $rdc_data['elevasi'] = $periodik['mdpl'];
+    if ($periodik_mdpl) {
+        $rdc_data['elevasi'] = $periodik_mdpl['mdpl'];
+    }
+
+    $first_periodik = $db->query("SELECT * FROM periodik
+        WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
+        ORDER BY sampling ASC
+        LIMIT 1")->fetch();
+    if ($first_periodik) {
+        $rdc_data['first_sampling'] = $first_periodik['sampling'];
+    }
+
+    $latest_periodik = $db->query("SELECT * FROM periodik
+        WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
+        ORDER BY sampling DESC
+        LIMIT 1")->fetch();
+    if ($latest_periodik) {
+        $rdc_data['latest_sampling'] = $latest_periodik['sampling'];
+    }
+
+    $total_data_diterima = $db->query("SELECT COUNT(*) FROM periodik
+        WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))")->fetch();
+    if ($total_data_diterima) {
+        $total_data_diterima = $total_data_diterima['count'];
+
+        $total_data_seharusnya = 0;
+        $persen_data_diterima = 0;
+        if ($first_periodik && $latest_periodik) {
+            $first = strtotime($first_periodik['sampling']);
+            $last = strtotime($latest_periodik['sampling']);
+            $total_data_seharusnya = ($last - $first) / (60 * 5);
+            if ($total_data_seharusnya > 0) {
+                $persen_data_diterima = $total_data_diterima * 100 / $total_data_seharusnya;
+            }
+        }
+
+        $rdc_data['total_data_diterima'] = $total_data_diterima;
+        $rdc_data['total_data_seharusnya'] = $total_data_seharusnya;
+        $rdc_data['persen_data_diterima'] = $persen_data_diterima;
     }
 
     $pclient->hmset("location:{$location['id']}", $rdc_data);
@@ -66,7 +116,7 @@ foreach ($locations as $location) {
 // cache periodik
 foreach ($location_to_cache_periodics as $location_id) {
     $location = $pclient->hgetall("location:{$location_id}");
-    
+
     $loggers = $db->query("SELECT * FROM logger WHERE location_id={$location_id}");
     $logger_sn = [];
     foreach ($loggers as $logger) {
@@ -103,13 +153,13 @@ foreach ($location_to_cache_periodics as $location_id) {
         if ($res && count($res) > 0) {
             if ($location['tipe'] == 2) {
                 $min = doubleval($res[0]['wlev']);
-                $max = doubleval($res[count($res)-1]['wlev']);
+                $max = doubleval($res[count($res) - 1]['wlev']);
             } else {
                 $min = doubleval($res[0]['rain']);
-                $max = doubleval($res[count($res)-1]['rain']);
+                $max = doubleval($res[count($res) - 1]['rain']);
             }
         }
-        
+
         if ($location['tipe'] == 2) {
             $rdc_data['wlev_min'] = $min;
             $rdc_data['wlev_max'] = $max;

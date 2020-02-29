@@ -158,21 +158,46 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             // dump($result);
 
             // get ringkasan data
-            $first_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} ORDER BY id")->fetch();
-            $latest_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} ORDER BY id DESC")->fetch();
-            $total_data_diterima = $this->db->query("SELECT COUNT(*) FROM periodik WHERE location_id={$location['id']}")->fetch();
-            if ($total_data_diterima) {
-                $total_data_diterima = $total_data_diterima['count'];
-            }
-            $total_data_seharusnya = 0;
-            $persen_data_diterima = 0;
-            if ($first_periodik && $latest_periodik) {
-                $first = strtotime($first_periodik['sampling']);
-                $last = strtotime($latest_periodik['sampling']);
-                $total_data_seharusnya = ($last - $first) / (60 * 5);
-                if ($total_data_seharusnya > 0) {
-                    $persen_data_diterima = $total_data_diterima * 100 / $total_data_seharusnya;
+            if (
+                !isset($location['latest_sampling'])
+                || !isset($location['total_data_diterima'])
+                || !isset($location['total_data_seharusnya'])
+                || !isset($location['persen_data_diterima'])
+            ) {
+                $first_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} ORDER BY id")->fetch();
+                $latest_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} ORDER BY id DESC")->fetch();
+                $total_data_diterima = $this->db->query("SELECT COUNT(*) FROM periodik WHERE location_id={$location['id']}")->fetch();
+                if ($total_data_diterima) {
+                    $total_data_diterima = $total_data_diterima['count'];
                 }
+
+                $first_sampling = null;
+                $latest_sampling = null;
+                $total_data_seharusnya = 0;
+                $persen_data_diterima = 0;
+                if ($first_periodik && $latest_periodik) {
+                    $latest_sampling = $latest_periodik['sampling'];
+
+                    $first = strtotime($first_periodik['sampling']);
+                    $last = strtotime($latest_periodik['sampling']);
+                    $total_data_seharusnya = ($last - $first) / (60 * 5);
+                    if ($total_data_seharusnya > 0) {
+                        $persen_data_diterima = $total_data_diterima * 100 / $total_data_seharusnya;
+                    }
+
+                    $rdc_data = [];
+                    $rdc_data['first_sampling'] = $first_sampling;
+                    $rdc_data['latest_sampling'] = $latest_sampling;
+                    $rdc_data['total_data_diterima'] = $total_data_diterima;
+                    $rdc_data['total_data_seharusnya'] = $total_data_seharusnya;
+                    $rdc_data['persen_data_diterima'] = $persen_data_diterima;
+                    $pclient->hmset("location:{$location['id']}", $rdc_data);
+                }
+            } else {
+                $latest_sampling = $location['latest_sampling'];
+                $total_data_diterima = $location['total_data_diterima'];
+                $total_data_seharusnya = $location['total_data_seharusnya'];
+                $persen_data_diterima = $location['persen_data_diterima'];
             }
 
             // get total data logger
@@ -188,7 +213,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 				'result' => $result,
 				'start_date' => $start_date,
 				'end_date' => $end_date,
-				'latest_periodik' => $latest_periodik,
+				'latest_sampling' => $latest_sampling,
 				'total_data_diterima' => $total_data_diterima,
 				'total_data_seharusnya' => $total_data_seharusnya,
 				'persen_data_diterima' => $persen_data_diterima,

@@ -49,7 +49,7 @@
 						<tbody>
 							<tr>
 								<th>Waktu Data Terakhir</th>
-								<td>{{ latest_periodik ? (latest_periodik['sampling'] | date('d M Y, H:i')) : '-' }}</td>
+								<td>{{ latest_sampling ? (latest_sampling | date('d M Y, H:i')) : '-' }}</td>
 							</tr>
 							<tr>
 								<th>Jumlah Data Diterima<br>(total / persen)</th>
@@ -263,7 +263,7 @@
 					scales: {
 						yAxes: [{
 							ticks: {
-								beginAtZero: false
+								beginAtZero: true
 							},
 							scaleLabel: {
 								display: true,
