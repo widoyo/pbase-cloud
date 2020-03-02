@@ -67,7 +67,10 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 
             $pclient = new Predis\Client();
             $location = $pclient->hgetall("location:{$args['id']}");
-            // dump($plocation);
+            if (count($location) == 0) {
+                $location = $request->getAttribute('location');
+            }
+            // dump($location);
 
             $end_date = $request->getParam('end_date', '');
             if (empty($end_date)) {
