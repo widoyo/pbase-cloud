@@ -204,11 +204,19 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             }
 
             // get total data logger
-            $loggers = $this->db->query("SELECT logger_sn, COUNT(*) FROM periodik
-                WHERE location_id={$location['id']}
-                GROUP BY logger_sn
-                ORDER BY logger_sn")->fetchAll();
-            // dump($loggers);
+            $logger_keys = $pclient->keys("location:{$args['id']}:logger:*");
+            if (count($logger_keys) > 0) {
+                $loggers = [];
+                foreach ($logger_keys as $key) {
+                    $logger[] = $pclient->hgetall($key);
+                }
+            } else {
+                $loggers = $this->db->query("SELECT logger_sn as sn, COUNT(*) FROM periodik
+                    WHERE location_id={$location['id']}
+                    GROUP BY logger_sn
+                    ORDER BY logger_sn")->fetchAll();
+                // dump($loggers);
+            }
 
 			return $this->view->render($response, 'location/mobile/show.html', [
 				'location' => $location,

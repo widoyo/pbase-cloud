@@ -48,6 +48,17 @@ foreach ($locations as $location) {
     $logger_sn = [];
     foreach ($loggers as $logger) {
         $logger_sn[] = "'{$logger['sn']}'";
+
+        $logger_data = $db->query("SELECT COUNT(*) FROM periodik
+            WHERE logger_sn='{$logger['sn']}'
+            GROUP BY logger_sn")->fetch();
+
+        // cache logger count
+        $rdc_logger_data = [
+            'sn' => $logger['sn'],
+            'count' => $logger_data ? $logger_data['count'] : 0
+        ];
+        $pclient->hmset("location:{$location['id']}:logger:{$logger['sn']}", $rdc_logger_data);
     }
     $logger_sn = implode(",", $logger_sn);
 
