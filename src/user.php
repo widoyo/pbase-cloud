@@ -83,7 +83,7 @@ $app->group('/user', function() use ($getUserMiddleware) {
             $stmt->execute();
         }
         
-        $this->flash->addMessage('messages', "User {$user[username]} telah ditambahkan");
+        $this->flash->addMessage('messages', "User {$user['username']} telah ditambahkan");
 
         return $response->withRedirect('/user');
     });
@@ -147,7 +147,7 @@ $app->group('/user', function() use ($getUserMiddleware) {
 	            $stmt->execute();
 	        }
 
-	        $this->flash->addMessage('messages', "Perubahan User {$user[username]} telah disimpan");
+	        $this->flash->addMessage('messages', "Perubahan User {$user['username']} telah disimpan");
 	        
 	        return $response->withRedirect('/user');
 	    });
@@ -163,7 +163,7 @@ $app->group('/user', function() use ($getUserMiddleware) {
 	        $stmt->bindValue(':id', $user['id']);
 	        $stmt->execute();
 
-	        $this->flash->addMessage('messages', "Users {$user[username]} ". ($user['is_active'] == 0 ? 'DISABLED' : 'ENABLED'));
+	        $this->flash->addMessage('messages', "Users {$user['username']} ". ($user['is_active'] == 0 ? 'DISABLED' : 'ENABLED'));
 	        
 	        return $response->withRedirect('/user');
 	    });

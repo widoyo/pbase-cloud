@@ -28,19 +28,43 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
         $this->get('', function (Request $request, Response $response) {
         	$tenant = [
 	            'nama' => '',
-	            'slug' => ''
-	        ];
+	            'slug' => '',
+				'timezone' => 'Asia/Jakarta'
+			];
+			
+			$timezones = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, 'ID');
 
 	        return $this->view->render($response, 'tenant/edit.html', [
 	            'mode' => 'Add',
 	            'tenant' => $tenant,
+	            'timezones' => $timezones,
 	        ]);
         });
 
         $this->post('', function (Request $request, Response $response) {
         	$tenant = $request->getParams();
 
-	        $stmt = $this->db->prepare("INSERT INTO tenant (id, nama, slug, telegram_info_id, telegram_info_group, telegram_alert_id, telegram_alert_group, center_map) VALUES (nextval('tenant_id_seq'), :nama, :slug, :telegram_info_id, :telegram_info_group, :telegram_alert_id, :telegram_alert_group, :center_map)");
+	        $stmt = $this->db->prepare("INSERT INTO tenant (
+				id,
+				nama,
+				slug,
+				telegram_info_id,
+				telegram_info_group,
+				telegram_alert_id,
+				telegram_alert_group,
+				center_map,
+				timezone
+			) VALUES (
+				nextval('tenant_id_seq'),
+				:nama,
+				:slug,
+				:telegram_info_id,
+				:telegram_info_group,
+				:telegram_alert_id,
+				:telegram_alert_group,
+				:center_map,
+				:timezone
+			)");
 	        $stmt->execute([
 	        	"nama" => $tenant['nama'],
 	        	"slug" => $tenant['slug'],
@@ -49,9 +73,10 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 	        	"telegram_alert_id" => $tenant['telegram_alert_id'] ?: null,
 	        	"telegram_alert_group" => $tenant['telegram_alert_group'] ?: null,
 	        	"center_map" => $tenant['center_map'] ?: null,
+	        	"timezone" => $tenant['timezone'] ?: 'Asia/Jakarta',
 	        ]);
 	        
-	        $this->flash->addMessage('messages', "Tenant {$tenant[nama]} telah ditambahkan");
+	        $this->flash->addMessage('messages', "Tenant {$tenant['nama']} telah ditambahkan");
 
 	        return $response->withRedirect('/tenant');
         });
@@ -81,10 +106,12 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 
         $this->get('/edit', function (Request $request, Response $response, $args) {
         	$tenant = $request->getAttribute('tenant');
+	        $timezones = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, 'ID');
 
 	        return $this->view->render($response, 'tenant/edit.html', [
 	            'mode' => 'Edit',
-	            'tenant' => $tenant
+	            'tenant' => $tenant,
+	            'timezones' => $timezones,
 	        ]);
         });
 
@@ -108,6 +135,7 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 		        	telegram_alert_id=:telegram_alert_id,
 		        	telegram_alert_group=:telegram_alert_group,
 		        	center_map=:center_map,
+		        	timezone=:timezone,
 		        	modified_at='$now'
 	        	WHERE id=:id");
 	        $stmt->bindValue(':nama', $tenant['nama']);
@@ -118,10 +146,11 @@ $app->group('/tenant', function () use ($getTenantMiddleware, $adminRoleMiddlewa
 	        $stmt->bindValue(':telegram_alert_id', $tenant['telegram_alert_id'] ?: null);
 	        $stmt->bindValue(':telegram_alert_group', $tenant['telegram_alert_group'] ?: null);
 	        $stmt->bindValue(':center_map', $tenant['center_map'] ?: null);
+	        $stmt->bindValue(':timezone', $tenant['timezone'] ?: 'Asia/Jakarta');
 	        // dump($tenant);
 	        $stmt->execute();
 	        
-	        $this->flash->addMessage('messages', "Perubahan Tenant {$tenant[nama]} telah disimpan");
+	        $this->flash->addMessage('messages', "Perubahan Tenant {$tenant['nama']} telah disimpan");
 
 	        return $response->withRedirect("/tenant/{$tenant['id']}");
         });
