@@ -1,0 +1,133 @@
+{% extends 'layouts/master.html' %}
+
+{% set title = 'Lokasi' %}
+
+{% block content %}
+
+    <!-- Page Heading -->
+    <div class="d-flex align-items-center mb-4">
+        <input class="form-control" type="text" placeholder="filter">
+        <a href="/location/add" class="btn btn-primary text-nowrap ml-3" id="btn-create">Tambah Lokasi</a>
+    </div>
+    
+    <div class="table-responsive shadow-sm rounded-lg" id="app">
+        <table class="table table-hover border mb-0">
+            <thead>
+                <tr class="small bg-white">
+                    <th class="text-left" colspan="4">
+                        <div class="d-flex align-items-center">
+                            <h6 class="mb-0 mr-auto">
+                                10 Lokasi
+                            </h6>
+
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Wilayah
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <button class="dropdown-item">Hulu</button>
+                                    <button class="dropdown-item">Tengah</button>
+                                    <button class="dropdown-item">Hilir</button>
+                                </div>
+                            </div>
+                            
+                            <div class="dropdown ml-3">
+                                <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Tipe
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <button class="dropdown-item">Pos Curah Hujan</button>
+                                    <button class="dropdown-item">Pos Duga Air</button>
+                                    <button class="dropdown-item">Klimat</button>
+                                </div>
+                            </div>
+                            
+                            <div class="dropdown ml-3">
+                                <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Sort
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <button class="dropdown-item">Usia data terbaru</button>
+                                    <button class="dropdown-item">Usia data terlama</button>
+                                    <button class="dropdown-item">Jumlah data <i class="fas fa-sort-numeric-down"></i></button>
+                                    <button class="dropdown-item">Jumlah data <i class="fas fa-sort-numeric-up"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>%Harian</th>
+                    <th>%Bulanan</th>
+                    <th>%Tahun</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white" v-cloak>
+                <tr v-for="location, index in sortedlocations">
+                    <td :href="'/location/'+ location.id" class="text-dark font-weight-bold mr-auto">
+                        <h6 class="font-weight-bold text-dark mb-1">{[{ location.nama }]}</h6>
+                        <p class="mb-0 font-weight-normal text-muted">
+                            Data terakhir {{ 'now'|date('d M Y, H:i') }}
+                        </p>
+                    </td>
+
+                    <td class="fit text-center">10%</td>
+                    <td class="fit text-center">10%</td>
+                    <td class="fit text-center">10%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+{% endblock %}
+
+{% block css %}
+    <style>
+        th.fit, td.fit {
+            width: 1%;
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+    <script src="{{ asset('js/moment.min.js') }}"></script>
+    <script src="{{ asset('js/id.js') }}"></script>
+    {# include 'location/modal_config.html' #}
+    
+    <script>
+        moment.locale('id');
+        Vue.options.delimiters = ['{[{', '}]}'];
+        
+        var _app = new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    locations: {{ locations | json_encode | raw }}
+                }
+            },
+            computed: {
+                sortedlocations: function () {
+                    return this.locations
+                }
+            },
+            methods: {
+                showModalConfig: function (index) {
+                    var location = this.sortedlocations[index];
+                    modalConfig.showModal(location);
+                },
+                getLocationLink: function (location) {
+                    if (!location.ll || location.ll.length === 0) {
+                        return '#';
+                    }
+
+                    var ll = location.ll.split(',');
+                    return 'https://www.google.com/maps/search/?api=1&query='+ ll[0] +','+ ll[1];
+                }
+            }
+        });
+    </script>
+{% endblock %}

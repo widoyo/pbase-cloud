@@ -22,7 +22,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 
         $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
-        return $this->view->render($response, 'location/mobile/index.html', [
+        return $this->view->render($response, 'location/index.html', [
             'locations' => $location_data,
             // 'total_data' => $total_data,
             'tenants' => $tenants
@@ -34,7 +34,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
         $this->get('', function (Request $request, Response $response, $args) {
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
-            return $this->view->render($response, 'location/mobile/add.html', [
+            return $this->view->render($response, 'location/add.html', [
                 'tenants' => $tenants
             ]);
         });
@@ -218,7 +218,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 // dump($loggers);
             }
 
-			return $this->view->render($response, 'location/mobile/show.html', [
+			return $this->view->render($response, 'location/show.html', [
 				'location' => $location,
 				'tenants' => $tenants,
 				'result' => $result,
