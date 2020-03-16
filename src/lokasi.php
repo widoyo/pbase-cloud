@@ -8,16 +8,30 @@ $app->group('/location', function () use ($getLocationMiddleware) {
     $this->get('', function (Request $request, Response $response, $args) {
 		$user = $this->user;
 
+        $pclient = new Predis\Client();
+        $location_data = [];
         if ($user['tenant_id'] > 0)
         {
-            $locations_stmt = $this->db->query("SELECT * FROM location WHERE
-                location.tenant_id = {$user['tenant_id']} ORDER BY nama");
+            $keys = $pclient->smembers("tenant:{$user['tenant_id']}:location");
+            foreach ($keys as $key) {
+                $location_data[] = $pclient->hgetall($key);
+            }
+            // $location_data = $this->db->query("SELECT * FROM location
+            //     WHERE
+            //         location.tenant_id = {$user['tenant_id']}
+            //     ORDER BY nama"
+            //     )->fetchAll();
         }
         else
         {
-            $locations_stmt = $this->db->query("SELECT * FROM location ORDER BY nama");
+            $keys = $pclient->smembers("location");
+            foreach ($keys as $key) {
+                $location_data[] = $pclient->hgetall($key);
+            }
+            // $location_data = $this->db->query("SELECT * FROM location
+            //     ORDER BY nama"
+            //     )->fetchAll();
         }
-        $location_data = $locations_stmt->fetchAll();
         // dump($location_data);
 
         $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
@@ -204,7 +218,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             }
 
             // get total data logger
-            $logger_keys = $pclient->keys("location:{$args['id']}:logger:*");
+            $logger_keys = $pclient->smembers("location:{$args['id']}:logger");
             if (count($logger_keys) > 0) {
                 $loggers = [];
                 foreach ($logger_keys as $key) {

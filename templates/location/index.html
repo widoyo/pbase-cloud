@@ -5,29 +5,28 @@
 {% block content %}
 
     <!-- Page Heading -->
-    <div class="d-flex align-items-center mb-4">
-        <input class="form-control" type="text" placeholder="filter">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Daftar Lokasi</h1>
         <a href="/location/add" class="btn btn-primary text-nowrap ml-3" id="btn-create">Tambah Lokasi</a>
     </div>
     
-    <div class="table-responsive shadow-sm rounded-lg" id="app">
-        <table class="table table-hover border mb-0">
+    <div class="table-responsive shadow-sm border rounded-lg" id="app">
+        <table class="table table-hover mb-0">
             <thead>
                 <tr class="small bg-white">
-                    <th class="text-left" colspan="4">
+                    <th class="text-left" colspan="999">
                         <div class="d-flex align-items-center">
-                            <h6 class="mb-0 mr-auto">
-                                10 Lokasi
-                            </h6>
-
+                            <input class="form-control mr-3" type="text" placeholder="filter" v-model="filters">
+                            
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     Wilayah
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <button class="dropdown-item">Hulu</button>
-                                    <button class="dropdown-item">Tengah</button>
-                                    <button class="dropdown-item">Hilir</button>
+                                    <button class="dropdown-item" @click="removeFilter('wilayah')">Semua</button>
+                                    <button class="dropdown-item" @click="addFilter('wilayah', 'hulu')">Hulu</button>
+                                    <button class="dropdown-item" @click="addFilter('wilayah', 'tengah')">Tengah</button>
+                                    <button class="dropdown-item" @click="addFilter('wilayah', 'hilir')">Hilir</button>
                                 </div>
                             </div>
                             
@@ -36,9 +35,10 @@
                                     Tipe
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <button class="dropdown-item">Pos Curah Hujan</button>
-                                    <button class="dropdown-item">Pos Duga Air</button>
-                                    <button class="dropdown-item">Klimat</button>
+                                    <button class="dropdown-item" @click="removeFilter('tipe')">Semua</button>
+                                    <button class="dropdown-item" @click="addFilter('tipe', 'pch')">Pos Curah Hujan</button>
+                                    <button class="dropdown-item" @click="addFilter('tipe', 'pda')">Pos Duga Air</button>
+                                    <button class="dropdown-item" @click="addFilter('tipe', 'klimat')">Klimat</button>
                                 </div>
                             </div>
                             
@@ -47,17 +47,26 @@
                                     Sort
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <button class="dropdown-item">Usia data terbaru</button>
-                                    <button class="dropdown-item">Usia data terlama</button>
-                                    <button class="dropdown-item">Jumlah data <i class="fas fa-sort-numeric-down"></i></button>
-                                    <button class="dropdown-item">Jumlah data <i class="fas fa-sort-numeric-up"></i></button>
+                                    <button class="dropdown-item" @click="addFilter('sort', 'data_terbaru')">Usia data terbaru</button>
+                                    <button class="dropdown-item" @click="addFilter('sort', 'data_terlama')">Usia data terlama</button>
+                                    <button class="dropdown-item" @click="addFilter('sort', 'jml_banyak')">Jumlah data <i class="fas fa-sort-numeric-down-alt"></i></button>
+                                    <button class="dropdown-item" @click="addFilter('sort', 'jml_sedikit')">Jumlah data <i class="fas fa-sort-numeric-down"></i></button>
                                 </div>
                             </div>
                         </div>
                     </th>
                 </tr>
-                <tr>
-                    <th></th>
+                <tr class="small">
+                    <th class="text-left" colspan="4">
+                        <span>
+                            {# <i class="fas fa-check"></i> #}
+                            10 Lokasi
+                        </span>
+                        {# <span class="text-muted ml-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            2 tidak aktif
+                        </span> #}
+                    </th>
                     <th>%Harian</th>
                     <th>%Bulanan</th>
                     <th>%Tahun</th>
@@ -65,16 +74,64 @@
             </thead>
             <tbody class="bg-white" v-cloak>
                 <tr v-for="location, index in sortedlocations">
-                    <td :href="'/location/'+ location.id" class="text-dark font-weight-bold mr-auto">
-                        <h6 class="font-weight-bold text-dark mb-1">{[{ location.nama }]}</h6>
-                        <p class="mb-0 font-weight-normal text-muted">
-                            Data terakhir {{ 'now'|date('d M Y, H:i') }}
+                    <td class="fit pr-0" style="vertical-align: top">
+                        <i v-if="location.ll" class="fas fa-map-marker-alt text-success"></i>
+                        <i v-else class="fas fa-question text-warning"></i>
+                    </td>
+                    <td>
+                        <a :href="'/location/'+ location.id" class="text-dark font-weight-bold">
+                            <h6 class="font-weight-bold text-dark mb-1">{[{ location.nama }]}</h6>
+                        </a>
+                        <p class="mb-0 font-weight-normal small text-muted">
+                            Data terakhir {[{ location.latest_sampling ? moment(location.latest_sampling).format('D MMM YYYY, kk:mm') : '-' }]}
                         </p>
                     </td>
 
-                    <td class="fit text-center">10%</td>
-                    <td class="fit text-center">10%</td>
-                    <td class="fit text-center">10%</td>
+                    <td class="fit text-center">
+                        {[{ location.elevasi ? location.elevasi +'mdpl' : '' }]}
+                    </td>
+                    <td class="text-center">
+                        <span v-if="location.tipe == 1" class="badge badge-primary">PCH</span>
+                        <span v-else-if="location.tipe == 2" class="badge badge-danger">PDA</span>
+                        <span v-else-if="location.tipe == 4" class="badge badge-warning">KLIMAT</span>
+                        <span v-else class="badge text-secondary">no logger</span>
+                    </td>
+
+                    <td class="fit text-center">
+                        <span v-if="!location.persen_data_diterima_today || location.persen_data_diterima_today <= 30" class="text-danger">
+                            {[{ location.persen_data_diterima_today ? location.persen_data_diterima_today : '0.0' }]}%
+                        </span>
+                        <span v-else-if="location.persen_data_diterima_today <= 60" class="text-warning">
+                            {[{ location.persen_data_diterima_today }]}%
+                        </span>
+                        <span v-else class="text-success">
+                            {[{ location.persen_data_diterima_today }]}%
+                        </span>
+                    </td>
+
+                    <td class="fit text-center">
+                        <span v-if="!location.persen_data_diterima_month || location.persen_data_diterima_month <= 30" class="text-danger">
+                            {[{ location.persen_data_diterima_month ? location.persen_data_diterima_month : '0.0' }]}%
+                        </span>
+                        <span v-else-if="location.persen_data_diterima_month <= 60" class="text-warning">
+                            {[{ location.persen_data_diterima_month }]}%
+                        </span>
+                        <span v-else class="text-success">
+                            {[{ location.persen_data_diterima_month }]}%
+                        </span>
+                    </td>
+
+                    <td class="fit text-center">
+                        <span v-if="!location.persen_data_diterima_year || location.persen_data_diterima_year <= 30" class="text-danger">
+                            {[{ location.persen_data_diterima_year ? location.persen_data_diterima_year : '0.0' }]}%
+                        </span>
+                        <span v-else-if="location.persen_data_diterima_year <= 60" class="text-warning">
+                            {[{ location.persen_data_diterima_year }]}%
+                        </span>
+                        <span v-else class="text-success">
+                            {[{ location.persen_data_diterima_year }]}%
+                        </span>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -106,12 +163,110 @@
             el: '#app',
             data: function () {
                 return {
+                    moment,
+                    filters: "",
                     locations: {{ locations | json_encode | raw }}
                 }
             },
             computed: {
                 sortedlocations: function () {
-                    return this.locations
+                    // duplikat dulu biar nggak pengaruh ke data asli
+                    var locations = this.locations.slice()
+
+                    // get filter as array
+                    var filters = this.filters.split(' ')
+                    var filtersArr = {}
+                    for (var filter of filters) {
+                        var f = filter.split(':')
+                        filtersArr[f[0]] = f[1] ? f[1] : ''
+                    }
+
+                    // filter wilayah
+                    if (filtersArr.wilayah) {
+                        locations = locations.filter(l => l.wilayah == filtersArr.wilayah)
+                    }
+
+                    // filter tipe
+                    if (filtersArr.tipe) {
+                        var tipe = ''
+                        switch (filtersArr.tipe) {
+                            case 'pch':
+                                tipe = '1'
+                                break;
+
+                            case 'pda':
+                                tipe = '2'
+                                break;
+
+                            case 'klimat':
+                                tipe = '4'
+                                break;
+                        
+                            default:
+                                break;
+                        }
+
+                        if (tipe) {
+                            locations = locations.filter(l => l.tipe == tipe)
+                        }
+                    }
+
+                    // sort
+                    if (filtersArr.sort) {
+                        if (filtersArr.sort == 'data_terbaru' || filtersArr.sort == 'data_terlama') {
+                            if (filtersArr.sort == 'data_terbaru') {
+                                locations = locations.sort((a,b) => {
+                                    if (a.latest_sampling == undefined) {
+                                        return 1
+                                    }
+                                    if (b.latest_sampling == undefined) {
+                                        return -1
+                                    }
+
+                                    return a.latest_sampling > b.latest_sampling ? -1 :
+                                        (a.latest_sampling < b.latest_sampling ? 1 : 0)
+                                })
+                            } else {
+                                locations = locations.sort((a,b) => {
+                                    if (a.latest_sampling == undefined) {
+                                        return 1
+                                    }
+                                    if (b.latest_sampling == undefined) {
+                                        return -1
+                                    }
+                                    
+                                    return a.latest_sampling > b.latest_sampling ? 1 :
+                                        (a.latest_sampling < b.latest_sampling ? -1 : 0)
+                                })
+                            }
+                        } else if (filtersArr.sort == 'jml_banyak' || filtersArr.sort == 'jml_sedikit') {
+                            if (filtersArr.sort == 'jml_banyak') {
+                                locations = locations.sort((a,b) => {
+                                    a.total_data_diterima = parseInt(a.total_data_diterima)
+                                    b.total_data_diterima = parseInt(b.total_data_diterima)
+
+                                    if (isNaN(a.total_data_diterima)) { a.total_data_diterima = 0 }
+                                    if (isNaN(b.total_data_diterima)) { b.total_data_diterima = 0 }
+                                    
+                                    return a.total_data_diterima > b.total_data_diterima ? -1 :
+                                        (a.total_data_diterima < b.total_data_diterima ? 1 : 0)
+                                })
+                            } else {
+                                locations = locations.sort((a,b) => {
+                                    a.total_data_diterima = parseInt(a.total_data_diterima)
+                                    b.total_data_diterima = parseInt(b.total_data_diterima)
+
+                                    if (isNaN(a.total_data_diterima)) { a.total_data_diterima = 0 }
+                                    if (isNaN(b.total_data_diterima)) { b.total_data_diterima = 0 }
+
+                                    return a.total_data_diterima > b.total_data_diterima ? 1 :
+                                        (a.total_data_diterima < b.total_data_diterima ? -1 : 0)
+                                })
+                            }
+                        }
+                    }
+
+                    return locations
                 }
             },
             methods: {
@@ -126,6 +281,46 @@
 
                     var ll = location.ll.split(',');
                     return 'https://www.google.com/maps/search/?api=1&query='+ ll[0] +','+ ll[1];
+                },
+                addFilter: function (key, value) {
+                    var filters = this.filters.split(' ')
+                    var filtersArr = {}
+                    for (var filter of filters) {
+                        var f = filter.split(':')
+                        filtersArr[f[0]] = f[1] ? f[1] : ''
+                    }
+
+                    filtersArr[key] = value
+                    filters = []
+                    for (var key in filtersArr) {
+                        var value = filtersArr[key].toLowerCase()
+                        if (value) {
+                            filters.push(`${key}:${value}`)
+                        } else {
+                            filters.push(`${key}`)
+                        }
+                    }
+                    this.filters = filters.join(' ')
+                },
+                removeFilter: function (key) {
+                    var filters = this.filters.split(' ')
+                    var filtersArr = {}
+                    for (var filter of filters) {
+                        var f = filter.split(':')
+                        filtersArr[f[0]] = f[1] ? f[1] : ''
+                    }
+
+                    delete filtersArr[key]
+                    filters = []
+                    for (var key in filtersArr) {
+                        var value = filtersArr[key].toLowerCase()
+                        if (value) {
+                            filters.push(`${key}:${value}`)
+                        } else {
+                            filters.push(`${key}`)
+                        }
+                    }
+                    this.filters = filters.join(' ')
                 }
             }
         });
