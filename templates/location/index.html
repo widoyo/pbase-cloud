@@ -58,9 +58,9 @@
                 </tr>
                 <tr class="small">
                     <th class="text-left" colspan="4">
-                        <span>
+                        <span :class="sortedlocations.length == 0 ? 'text-danger' : ''">
                             {# <i class="fas fa-check"></i> #}
-                            10 Lokasi
+                            {[{ sortedlocations.length }]} Lokasi
                         </span>
                         {# <span class="text-muted ml-3">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -144,6 +144,10 @@
     <style>
         th.fit, td.fit {
             width: 1%;
+        }
+
+        [v-cloak] {
+            display: none;
         }
     </style>
 {% endblock %}
