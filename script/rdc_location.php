@@ -63,26 +63,30 @@ foreach ($locations as $location) {
         'll' => $location['ll'],
         'tenant_id' => $location['tenant_id'],
         'tenant_nama' => $location['tenant_nama'],
-        'elevasi' => ''
+        'elevasi' => '',
+        'tipe' => $location['tipe'],
+        'wilayah' => $location['wilayah'],
     ];
 
-    $logger_tipe = strtolower($location['logger_tipe']);
-    switch ($logger_tipe) {
-        case 'arr':
-            $rdc_data['tipe'] = '1';
-            break;
-
-        case 'awlr':
-            $rdc_data['tipe'] = '2';
-            break;
-
-        case 'klimat':
-            $rdc_data['tipe'] = '4';
-            break;
-
-        default:
-            $rdc_data['tipe'] = '0';
-            break;
+    if (empty($location['tipe'])) {
+        $logger_tipe = strtolower($location['logger_tipe']);
+        switch ($logger_tipe) {
+            case 'arr':
+                $rdc_data['tipe'] = '1';
+                break;
+    
+            case 'awlr':
+                $rdc_data['tipe'] = '2';
+                break;
+    
+            case 'klimat':
+                $rdc_data['tipe'] = '4';
+                break;
+    
+            default:
+                $rdc_data['tipe'] = '0';
+                break;
+        }
     }
 
 
