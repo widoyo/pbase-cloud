@@ -6,12 +6,11 @@ use Slim\Http\Response;
 $app->group('/location', function () use ($getLocationMiddleware) {
 
     $this->get('', function (Request $request, Response $response, $args) {
-		$user = $this->user;
+        $user = $this->user;
 
         $pclient = new Predis\Client();
         $location_data = [];
-        if ($user['tenant_id'] > 0)
-        {
+        if ($user['tenant_id'] > 0) {
             $keys = $pclient->smembers("tenant:{$user['tenant_id']}:location");
             foreach ($keys as $key) {
                 $location_data[] = $pclient->hgetall($key);
@@ -21,9 +20,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             //         location.tenant_id = {$user['tenant_id']}
             //     ORDER BY nama"
             //     )->fetchAll();
-        }
-        else
-        {
+        } else {
             $keys = $pclient->smembers("location");
             foreach ($keys as $key) {
                 $location_data[] = $pclient->hgetall($key);
@@ -41,7 +38,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             // 'total_data' => $total_data,
             'tenants' => $tenants
         ]);
-	});
+    });
 
     $this->group('/add', function () {
 
@@ -62,7 +59,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 ":tenant_id" => $form['tenant_id'],
                 ":ll" => $form['ll']
             ]);
-            
+
             if ($stmt->rowCount() > 0) {
                 $this->flash->addMessage('messages', "Lokasi {$form['nama']} telah ditambahkan");
             } else {
@@ -73,9 +70,9 @@ $app->group('/location', function () use ($getLocationMiddleware) {
         });
     });
 
-	$this->group('/{id:[0-9]+}', function () {
+    $this->group('/{id:[0-9]+}', function () {
 
-		$this->get('', function (Request $request, Response $response, $args) {
+        $this->get('', function (Request $request, Response $response, $args) {
             // $location = $request->getAttribute('location');
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
@@ -103,7 +100,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             //         AND sampling::date BETWEEN '{$from}' AND '{$to}'
             //     ORDER BY sampling, rain")->fetchAll(\PDO::FETCH_KEY_PAIR);
             // dump($periodik_max);
-            
+
             // preparing initial datasets (0s) and labels (day)
             $result = [
                 'datasets' => [
@@ -144,10 +141,10 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                     if ($res && count($res) > 0) {
                         if ($location['tipe'] == 2) {
                             $min = doubleval($res[0]['wlev']);
-                            $max = doubleval($res[count($res)-1]['wlev']);
+                            $max = doubleval($res[count($res) - 1]['wlev']);
                         } else {
                             $min = doubleval($res[0]['rain']);
-                            $max = doubleval($res[count($res)-1]['rain']);
+                            $max = doubleval($res[count($res) - 1]['rain']);
                         }
                     }
 
@@ -232,19 +229,19 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 // dump($loggers);
             }
 
-			return $this->view->render($response, 'location/show.html', [
-				'location' => $location,
-				'tenants' => $tenants,
-				'result' => $result,
-				'start_date' => $start_date,
-				'end_date' => $end_date,
-				'latest_sampling' => $latest_sampling,
-				'total_data_diterima' => $total_data_diterima,
-				'total_data_seharusnya' => $total_data_seharusnya,
-				'persen_data_diterima' => $persen_data_diterima,
-				'loggers' => $loggers,
-			]);
-		});
+            return $this->view->render($response, 'location/show.html', [
+                'location' => $location,
+                'tenants' => $tenants,
+                'result' => $result,
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'latest_sampling' => $latest_sampling,
+                'total_data_diterima' => $total_data_diterima,
+                'total_data_seharusnya' => $total_data_seharusnya,
+                'persen_data_diterima' => $persen_data_diterima,
+                'loggers' => $loggers,
+            ]);
+        });
 
         $this->post('/config', function (Request $request, Response $response, $args) {
             $location = $request->getAttribute('location');
@@ -252,9 +249,9 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             $form = $request->getParams();
             $referer = $request->getHeader('HTTP_REFERER');
             if ($referer && count($referer) > 0) {
-            	$referer = $referer[0];
+                $referer = $referer[0];
             } else {
-            	$referer = '/location';
+                $referer = '/location';
             }
 
             $form['elevasi'] = $form['elevasi'] ?: null;
@@ -284,5 +281,82 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 
             return $response->withRedirect($referer);
         });
-	})->add($getLocationMiddleware);
+
+        $this->get('/download', function (Request $request, Response $response, $args) {
+            $location = $request->getAttribute('location');
+            $date_format = "Y-m-d\TH:i";
+            $delimiter = ";";
+
+            $month = $request->getParam('month', '');
+            if (empty($month)) {
+                $month = date('Y-m');
+            }
+
+            // cek apakah date valid
+            $d = DateTime::createFromFormat('Y-m', $month);
+            if (!$d || $d->format('Y-m') !== $month) {
+                $this->flash->addMessage('errors', "Invalid format for month");
+                return $response->withRedirect("/location/{$location['id']}");
+            }
+
+            $from = date('Y-m-01', strtotime($month));
+            $to = date('Y-m-t', strtotime($month));
+
+            // set no value
+            $data = [];
+            // cek $date_format
+            $start = "{$from}T00:00";
+            $finish = "{$to}T23:55";
+            $counter = $start;
+            while ($counter <= $finish) {
+                $data[$counter] = "{$counter}{$delimiter}{$delimiter}{$delimiter}";
+                $counter = date($date_format, strtotime("{$counter} +5minute"));
+            }
+            
+            // insert periodik to data
+            $periodik = $this->db->query("SELECT * FROM periodik
+                WHERE
+                    location_id={$location['id']} AND
+                    sampling BETWEEN '{$from}' AND '{$to}'
+                ORDER BY sampling")->fetchAll();
+            foreach ($periodik as $p) {
+                $current = date($date_format, strtotime($p['sampling']));
+                $dt = [$current];
+                if ($location['tipe'] == 2) {
+                    // 2 = awlr / PDA
+                    $dt[] = $p['wlev'];
+                } else {
+                    // 1,4 = arr / PCH, Klimat
+                    $dt[] = $p['rain'];
+                }
+                $dt[] = $p['sq'];
+                $dt[] = $p['batt'];
+
+                // format to csv
+                $data[$current] = implode(";", $dt);
+            }
+
+            // to csv
+            $csv = [
+                'sampling',
+                $location['tipe'] == 2 ? 'wlevel(m)' : 'rain(mm)',
+                'sq',
+                'batt'
+            ];
+            $csv = implode($delimiter, $csv) ."\n";
+            $csv .= implode("\n", $data);
+
+            // stream
+            $stream = fopen('php://memory', 'r+');
+            fwrite($stream, $csv);
+            rewind($stream);
+
+            $month = date('mY', strtotime($month));
+            $filename = "pos_{$location['id']}_{$month}.csv";
+            return $response
+                ->withHeader('Content-Type', 'application/octet-stream')
+                ->withHeader('Content-Disposition', 'attachment;filename="'.$filename.'"')
+                ->withBody(new \Slim\Http\Stream($stream));
+        });
+    })->add($getLocationMiddleware);
 })->add($loggedinMiddleware);
