@@ -39,17 +39,30 @@
 						</button>
 
 						<div class="dropdown-menu dropdown-menu-right shadow p-3" style="width: 240px">
-							<form action="/location/{{ location.id }}/download" method="get">
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Bulan</span>
+							<form class="small" action="/location/{{ location.id }}/download" method="get">
+								<div class="form-group">
+									<label for="month">Bulan</label>
+									<input type="text" class="form-control form-control-sm" name="month" id="month" data-toggle="datetimepicker" data-target="#month" required>
+								</div>
+								<div class="form-group">
+									<label for="option">Data per</label>
+									<div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+										<label class="btn btn-outline-secondary border-0 rounded active">
+											<input type="radio" name="option" id="option1" value="5menit" checked> 5 menit
+										</label>
+										<label class="btn btn-outline-secondary border-0 rounded">
+											<input type="radio" name="option" id="option2" value="1jam"> 1 Jam
+										</label>
+										<label class="btn btn-outline-secondary border-0 rounded">
+											<input type="radio" name="option" id="option3" value="24jam"> 24 Jam
+										</label>
 									</div>
-									<input type="text" class="form-control" name="month" id="month" data-toggle="datetimepicker" data-target="#month" required>
-									<div class="input-group-append">
-										<button type="submit" class="btn btn-success text-nowrap">
-											<i class="fas fa-download"></i>
-										</button>
-									</div>
+								</div>
+								<div class="">
+									<button type="submit" class="btn btn-sm btn-success text-nowrap">
+										<i class="fas fa-download"></i>
+										Download
+									</button>
 								</div>
 							</form>
 						</div>
@@ -123,8 +136,8 @@
 								<div id="mapid" style="height: 240px;"></div>
 							</div>
 
-							<div class="list-group list-group-flush">
-								<div class="list-group-item rounded-0 px-3">
+							<div class="list-group list-group-squared list-group-flush">
+								<div class="list-group-item px-3">
 									<div class="row ">
 										<div class="col-4">Nama Lokasi</div>
 										<div class="col-8">
@@ -133,7 +146,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="list-group-item rounded-0 px-3">
+								<div class="list-group-item px-3">
 									<div class="row ">
 										<div class="col-4">Elevasi</div>
 										<div class="col-8">
@@ -147,9 +160,9 @@
 										</div>
 									</div>
 								</div>
-								<div class="list-group-item rounded-0 px-3">
+								<div class="list-group-item px-3">
 									<div class="row ">
-										<div class="col-4">Jenis Lokasi Pos</div>
+										<div class="col-4">Jenis Pos</div>
 										<div class="col-8">
 											<span v-show="!editMode">
 												<span v-if="location.tipe == 1">PCH (Pos Curah Hujan)</span>
@@ -174,7 +187,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="list-group-item rounded-0 px-3">
+								<div class="list-group-item px-3">
 									<div class="row ">
 										<div class="col-4">Wilayah</div>
 										<div class="col-8">
@@ -199,7 +212,7 @@
 									</div>
 								</div>
 								{% if user().tenant_id == 0 %}
-									<div class="list-group-item rounded-0 px-3">
+									<div class="list-group-item px-3">
 										<div class="row ">
 											<div class="col-4">Pemilik</div>
 											<div class="col-8">
@@ -212,7 +225,7 @@
 										</div>
 									</div>
 								{% endif %}
-								<div class="list-group-item rounded-0 px-3">
+								<div class="list-group-item px-3">
 									<div class="row ">
 										<div class="col-4">LonLat</div>
 										<div class="col-8 text-ellipsis">

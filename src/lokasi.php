@@ -277,6 +277,11 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 $month = date('Y-m');
             }
 
+            $option = $request->getParam('option', '');
+            if (empty($option)) {
+                $option = '5menit';
+            }
+
             // cek apakah date valid
             $d = DateTime::createFromFormat('Y-m', $month);
             if (!$d || $d->format('Y-m') !== $month) {
@@ -284,51 +289,44 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 return $response->withRedirect("/location/{$location['id']}");
             }
 
-            $from = date('Y-m-01', strtotime($month));
-            $to = date('Y-m-t', strtotime($month));
+            switch ($option) {
+                case '1jam':
+                    list($header, $data) = download1jam(
+                        $this->db,
+                        $location,
+                        date('Y-m-01', strtotime($month)),
+                        date('Y-m-t', strtotime($month)),
+                        $date_format,
+                        $delimiter
+                    );
+                    break;
 
-            // set no value
-            $data = [];
-            // cek $date_format
-            $start = "{$from}T00:00";
-            $finish = "{$to}T23:55";
-            $counter = $start;
-            while ($counter <= $finish) {
-                $data[$counter] = "{$counter}{$delimiter}{$delimiter}{$delimiter}";
-                $counter = date($date_format, strtotime("{$counter} +5minute"));
-            }
-            
-            // insert periodik to data
-            $periodik = $this->db->query("SELECT * FROM periodik
-                WHERE
-                    location_id={$location['id']} AND
-                    sampling BETWEEN '{$from}' AND '{$to}'
-                ORDER BY sampling")->fetchAll();
-            foreach ($periodik as $p) {
-                $current = date($date_format, strtotime($p['sampling']));
-                $dt = [$current];
-                if ($location['tipe'] == 2) {
-                    // 2 = awlr / PDA
-                    $dt[] = $p['wlev'];
-                } else {
-                    // 1,4 = arr / PCH, Klimat
-                    $dt[] = $p['rain'];
-                }
-                $dt[] = $p['sq'];
-                $dt[] = $p['batt'];
+                case '24jam':
+                    list($header, $data) = download24jam(
+                        $this->db,
+                        $location,
+                        date('Y-m-01', strtotime($month)),
+                        date('Y-m-t', strtotime($month)),
+                        $date_format,
+                        $delimiter
+                    );
+                    break;
 
-                // format to csv
-                $data[$current] = implode(";", $dt);
+                case '5menit':
+                default:
+                    list($header, $data) = download5menit(
+                        $this->db,
+                        $location,
+                        date('Y-m-01', strtotime($month)),
+                        date('Y-m-t', strtotime($month)),
+                        $date_format,
+                        $delimiter
+                    );
+                    break;
             }
 
             // to csv
-            $csv = [
-                'sampling',
-                $location['tipe'] == 2 ? 'wlevel(m)' : 'rain(mm)',
-                'sq',
-                'batt'
-            ];
-            $csv = implode($delimiter, $csv) ."\n";
+            $csv = implode($delimiter, $header) . "\n";
             $csv .= implode("\n", $data);
 
             // stream
@@ -340,8 +338,304 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             $filename = "pos_{$location['id']}_{$month}.csv";
             return $response
                 ->withHeader('Content-Type', 'application/octet-stream')
-                ->withHeader('Content-Disposition', 'attachment;filename="'.$filename.'"')
+                ->withHeader('Content-Disposition', 'attachment;filename="' . $filename . '"')
                 ->withBody(new \Slim\Http\Stream($stream));
         });
     })->add($getLocationMiddleware);
 })->add($loggedinMiddleware);
+
+function download5menit($db, $location, $from, $to, $date_format = "Y-m-d\TH:i", $delimiter = ";")
+{
+    // set no value
+    $data = [];
+    // cek $date_format
+    $start = "{$from}T00:00";
+    $finish = "{$to}T23:55";
+    $counter = $start;
+    while ($counter <= $finish) {
+        $data[$counter] = "{$counter}{$delimiter}{$delimiter}{$delimiter}";
+        $counter = date($date_format, strtotime("{$counter} +5minute"));
+    }
+
+    // insert periodik to data
+    $periodik = $db->query("SELECT * FROM periodik
+        WHERE
+            location_id={$location['id']} AND
+            sampling BETWEEN '{$from}' AND '{$to}'
+        ORDER BY sampling")->fetchAll();
+    foreach ($periodik as $p) {
+        $current = date($date_format, strtotime($p['sampling']));
+        $dt = [$current];
+        if ($location['tipe'] == 2) {
+            // 2 = awlr / PDA
+            $dt[] = $p['wlev'];
+        } else {
+            // 1,4 = arr / PCH, Klimat
+            $dt[] = $p['rain'];
+        }
+        $dt[] = $p['sq'];
+        $dt[] = $p['batt'];
+
+        // format to csv
+        $data[$current] = implode(";", $dt);
+    }
+
+    $header = [
+        'sampling',
+        $location['tipe'] == 2 ? 'wlevel(m)' : 'rain(mm)',
+        'sq',
+        'batt'
+    ];
+
+    return [$header, $data];
+}
+
+function download1jam($db, $location, $from, $to, $date_format = "Y-m-d\TH:i", $delimiter = ";")
+{
+    // set no value
+    $data = [];
+    // cek $date_format
+    $start = "{$from}T00:00";
+    $finish = "{$to}T23:00";
+    $counter = $start;
+    while ($counter <= $finish) {
+        // $data[$counter] = "{$counter}{$delimiter}{$delimiter}{$delimiter}";
+        if ($location['tipe'] == 2) {
+            // 2 = awlr / PDA
+            $data[$counter] = [
+                'sampling' => $counter,
+                'wlev_min' => '',
+                'wlev_max' => '',
+                'wlev_avg' => '',
+                'sq' => '',
+                'batt' => '',
+            ];
+        } else {
+            // 1,4 = arr / PCH, Klimat
+            $data[$counter] = [
+                'sampling' => $counter,
+                'rain' => '',
+                'sq' => '',
+                'batt' => '',
+            ];
+        }
+        $counter = date($date_format, strtotime("{$counter} +1hour"));
+    }
+
+    // dikurang 1 jam
+    // 00:00 = hari sebelumnya 23:00 - 23:55
+    $from = date('Y-m-d 23:00:00', strtotime($from . ' -1day'));
+    $to = date('Y-m-d 22:55:00', strtotime($to));
+
+    // insert periodik to data
+    $periodik = $db->query("SELECT * FROM periodik
+        WHERE
+            location_id={$location['id']} AND
+            sampling BETWEEN '{$from}' AND '{$to}'
+        ORDER BY sampling")->fetchAll();
+    $counter = count($periodik) > 0 ? date('Y-m-d\TH:00', strtotime($periodik[0]['sampling'] . ' +1hour')) : '';
+    $wlev_sum = 0;
+    $wlev_total = 0;
+    foreach ($periodik as $p) {
+        $current = date('Y-m-d\TH:00', strtotime($p['sampling'] . ' +1hour'));
+        if ($current > $counter) {
+            $counter = $current;
+            $wlev_sum = 0;
+            $wlev_total = 0;
+        }
+
+        if ($location['tipe'] == 2) {
+            // 2 = awlr / PDA
+            if (empty($data[$counter]['wlev_min'])) {
+                $data[$counter]['wlev_min'] = PHP_INT_MAX;
+            }
+            if (empty($data[$counter]['wlev_max'])) {
+                $data[$counter]['wlev_max'] = 0;
+            }
+
+            if ($p['wlev'] < $data[$counter]['wlev_min']) {
+                $data[$counter]['wlev_min'] = $p['wlev'];
+            }
+
+            if ($p['wlev'] > $data[$counter]['wlev_max']) {
+                $data[$counter]['wlev_max'] = $p['wlev'];
+            }
+
+            $wlev_sum += $p['wlev'];
+            $wlev_total++;
+            $data[$counter]['wlev_avg'] = round($wlev_sum / $wlev_total, 2);
+        } else {
+            // 1,4 = arr / PCH, Klimat
+            if (empty($data[$counter]['rain'])) {
+                $data[$counter]['rain'] = 0;
+            }
+            $data[$counter]['rain'] += $p['rain'];
+        }
+        $data[$counter]['sq'] = $p['sq'];
+        $data[$counter]['batt'] = $p['batt'];
+    }
+
+    array_walk($data, function (&$value) use ($delimiter) {
+        $value = implode($delimiter, $value);
+    });
+
+    // dump($data);
+
+    if ($location['tipe'] == 2) {
+        // 2 = awlr / PDA
+        $header = [
+            'sampling',
+            'wlevel min(m)',
+            'wlevel max(m)',
+            'wlevel rerata(m)',
+            'sq',
+            'batt'
+        ];
+    } else {
+        // 1,4 = arr / PCH, Klimat
+        $header = [
+            'sampling',
+            'rain(mm)',
+            'sq',
+            'batt'
+        ];
+    }
+
+    return [$header, $data];
+}
+
+function download24jam($db, $location, $from, $to, $date_format = "Y-m-d\TH:i", $delimiter = ";")
+{
+    // set no value
+    $data = [];
+    // cek $date_format
+    $start = "{$from}T00:00";
+    $finish = "{$to}T00:00";
+    $counter = $start;
+    while ($counter <= $finish) {
+        // $data[$counter] = "{$counter}{$delimiter}{$delimiter}{$delimiter}";
+        if ($location['tipe'] == 2) {
+            // 2 = awlr / PDA
+            $data[$counter] = [
+                'sampling' => $counter,
+                'wlev_min' => '',
+                'wlev_max' => '',
+                'wlev_avg' => '',
+                'sq' => '',
+                'batt' => '',
+            ];
+        } else {
+            // 1,4 = arr / PCH, Klimat
+            $data[$counter] = [
+                'sampling' => $counter,
+                'rain' => '',
+                'sq' => '',
+                'batt' => '',
+            ];
+        }
+        $counter = date($date_format, strtotime("{$counter} +1day"));
+    }
+
+    // dikurang 1 hari
+    // 00:00 = hari sebelumnya 23:00 - 23:55
+    if ($location['tipe'] == 2) {
+        // 2 = awlr / PDA
+        $from = date('Y-m-d 00:00:00', strtotime($from . ' -1day'));
+        $to = date('Y-m-d 23:55:00', strtotime($to . ' -1day'));
+    } else {
+        // 1,4 = arr / PCH, Klimat
+        $from = date('Y-m-d 07:00:00', strtotime($from . ' -1day'));
+        $to = date('Y-m-d 06:55:00', strtotime($to));
+    }
+
+    // insert periodik to data
+    $periodik = $db->query("SELECT * FROM periodik
+        WHERE
+            location_id={$location['id']} AND
+            sampling BETWEEN '{$from}' AND '{$to}'
+        ORDER BY sampling")->fetchAll();
+    if (count($periodik) > 0) {
+        if ($location['tipe'] == 2) {
+            $counter = date('Y-m-d\T00:00', strtotime($periodik[0]['sampling'] . ' +1day'));
+        } else {
+            $time = date('H:i', strtotime($periodik[0]['sampling']));
+            // jika > 7 berarti masuk next day
+            $counter = date('Y-m-d\T00:00', strtotime($periodik[0]['sampling'] . ($time > '07:00' ? ' +1day' : '')));
+        }
+    }
+
+    $wlev_sum = 0;
+    $wlev_total = 0;
+    foreach ($periodik as $p) {
+        if ($location['tipe'] == 2) {
+            $current = date('Y-m-d\T00:00', strtotime($p['sampling'] . ' +1day'));
+        } else {
+            $time = date('H:i', strtotime($p['sampling']));
+            // jika > 7 berarti masuk next day
+            $current = date('Y-m-d\T00:00', strtotime($p['sampling'] . ($time > '07:00' ? ' +1day' : '')));
+        }
+        if ($current > $counter) {
+            $counter = $current;
+            $wlev_sum = 0;
+            $wlev_total = 0;
+        }
+
+        if ($location['tipe'] == 2) {
+            // 2 = awlr / PDA
+            if (empty($data[$counter]['wlev_min'])) {
+                $data[$counter]['wlev_min'] = PHP_INT_MAX;
+            }
+            if (empty($data[$counter]['wlev_max'])) {
+                $data[$counter]['wlev_max'] = 0;
+            }
+
+            if ($p['wlev'] < $data[$counter]['wlev_min']) {
+                $data[$counter]['wlev_min'] = $p['wlev'];
+            }
+
+            if ($p['wlev'] > $data[$counter]['wlev_max']) {
+                $data[$counter]['wlev_max'] = $p['wlev'];
+            }
+
+            $wlev_sum += $p['wlev'];
+            $wlev_total++;
+            $data[$counter]['wlev_avg'] = round($wlev_sum / $wlev_total, 2);
+        } else {
+            // 1,4 = arr / PCH, Klimat
+            if (empty($data[$counter]['rain'])) {
+                $data[$counter]['rain'] = 0;
+            }
+            $data[$counter]['rain'] += $p['rain'];
+        }
+        $data[$counter]['sq'] = $p['sq'];
+        $data[$counter]['batt'] = $p['batt'];
+    }
+
+    array_walk($data, function (&$value) use ($delimiter) {
+        $value = implode($delimiter, $value);
+    });
+
+    // dump($data);
+
+    if ($location['tipe'] == 2) {
+        // 2 = awlr / PDA
+        $header = [
+            'sampling',
+            'wlevel min(m)',
+            'wlevel max(m)',
+            'wlevel rerata(m)',
+            'sq',
+            'batt'
+        ];
+    } else {
+        // 1,4 = arr / PCH, Klimat
+        $header = [
+            'sampling',
+            'rain(mm)',
+            'sq',
+            'batt'
+        ];
+    }
+
+    return [$header, $data];
+}

@@ -56,3 +56,10 @@
 .bg-accent {
     background-color: #d83939!important;
 }
+
+.list-group-squared .list-group-item {
+    border-radius: 0;
+}
+.list-group-borderless .list-group-item {
+    border-width: 0;
+}
