@@ -93,7 +93,7 @@ foreach ($locations as $location) {
 
     // get all logger
     $loggers = $db->query("SELECT * FROM logger
-        WHERE location_id = '{$location_id}'");
+        WHERE location_id = '{$location_id}'")->fetchAll();
     $logger_sn = [];
     foreach ($loggers as $logger) {
         $logger_sn[] = "'{$logger['sn']}'";
@@ -224,7 +224,7 @@ foreach ($locations as $location) {
 foreach ($location_to_cache_periodics as $location_id) {
     $location = $pclient->hgetall("location:{$location_id}");
 
-    $loggers = $db->query("SELECT * FROM logger WHERE location_id={$location_id}");
+    $loggers = $db->query("SELECT * FROM logger WHERE location_id={$location_id}")->fetchAll();
     $logger_sn = [];
     foreach ($loggers as $logger) {
         $logger_sn[] = "'{$logger['sn']}'";

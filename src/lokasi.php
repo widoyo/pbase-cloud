@@ -91,15 +91,6 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             if (empty($start_date)) {
                 $start_date = date("Y-m-d", strtotime("{$end_date} -3 months"));
             }
-            // $periodik_min = $this->db->query("SELECT sampling::date, rain FROM periodik
-            //     WHERE location_id={$location['id']}
-            //         AND sampling::date BETWEEN '{$from}' AND '{$to}'
-            //     ORDER BY sampling, rain DESC")->fetchAll(\PDO::FETCH_KEY_PAIR);
-            // $periodik_max = $this->db->query("SELECT sampling::date, rain FROM periodik
-            //     WHERE location_id={$location['id']}
-            //         AND sampling::date BETWEEN '{$from}' AND '{$to}'
-            //     ORDER BY sampling, rain")->fetchAll(\PDO::FETCH_KEY_PAIR);
-            // dump($periodik_max);
 
             // preparing initial datasets (0s) and labels (day)
             $result = [
@@ -158,12 +149,6 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                     $rdc_data['tanggal'] = date('d', strtotime($from));
                     $pclient->hmset("location:{$location['id']}:periodik:harian:{$from}", $rdc_data);
                 }
-                // if (isset($periodik_max[$from])) {
-                //     $p['max'] = $periodik_max[$from];
-                // }
-                // if (isset($periodik_min[$from])) {
-                //     $p['min'] = $periodik_min[$from];
-                // }
 
                 $result['datasets']['min'][] = $min;
                 $result['datasets']['max'][] = $max;
@@ -219,15 +204,15 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             if (count($logger_keys) > 0) {
                 $loggers = [];
                 foreach ($logger_keys as $key) {
-                    $logger[] = $pclient->hgetall($key);
+                    $loggers[] = $pclient->hgetall($key);
                 }
             } else {
                 $loggers = $this->db->query("SELECT logger_sn as sn, COUNT(*) FROM periodik
                     WHERE location_id={$location['id']}
                     GROUP BY logger_sn
                     ORDER BY logger_sn")->fetchAll();
-                // dump($loggers);
             }
+            // dump($loggers);
 
             return $this->view->render($response, 'location/show.html', [
                 'location' => $location,
