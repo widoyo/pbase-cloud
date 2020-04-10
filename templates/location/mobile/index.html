@@ -25,41 +25,17 @@
         <div class="card rounded-0 mx-n3" v-cloak>
             <div class="card-header">
                 <div class="d-flex justify-content-around align-items-center">                                
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Wilayah
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <button class="dropdown-item" @click="removeFilter('wilayah')">Semua</button>
-                            <button class="dropdown-item" @click="addFilter('wilayah', 'hulu')">Hulu</button>
-                            <button class="dropdown-item" @click="addFilter('wilayah', 'tengah')">Tengah</button>
-                            <button class="dropdown-item" @click="addFilter('wilayah', 'hilir')">Hilir</button>
-                        </div>
-                    </div>
-                    
-                    <div class="dropdown ml-3">
-                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Tipe
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <button class="dropdown-item" @click="removeFilter('tipe')">Semua</button>
-                            <button class="dropdown-item" @click="addFilter('tipe', 'pch')">Pos Curah Hujan</button>
-                            <button class="dropdown-item" @click="addFilter('tipe', 'pda')">Pos Duga Air</button>
-                            <button class="dropdown-item" @click="addFilter('tipe', 'klimat')">Klimat</button>
-                        </div>
-                    </div>
-                    
-                    <div class="dropdown ml-3">
-                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Sort
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-                            <button class="dropdown-item" @click="addFilter('sort', 'data_terbaru')">Usia data terbaru</button>
-                            <button class="dropdown-item" @click="addFilter('sort', 'data_terlama')">Usia data terlama</button>
-                            <button class="dropdown-item" @click="addFilter('sort', 'jml_banyak')">Jumlah data <i class="fas fa-sort-numeric-down-alt"></i></button>
-                            <button class="dropdown-item" @click="addFilter('sort', 'jml_sedikit')">Jumlah data <i class="fas fa-sort-numeric-down"></i></button>
-                        </div>
-                    </div>
+                    <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('wilayah')">
+                        Wilayah
+                    </button>
+
+                    <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('tipe')">
+                        Tipe
+                    </button>
+
+                    <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('sort')">
+                        Sort
+                    </button>
                 </div>
             </div>
             <div class="list-group list-group-borderless" v-for="location, index in sortedlocations">
@@ -87,37 +63,37 @@
                     <div class="ml-auto mr-2 small">
                         <div class="mt-1 mb-1">
                             <span v-if="!location.persen_data_diterima_today || location.persen_data_diterima_today <= 30" class="text-danger">
-                                {[{ location.persen_data_diterima_today ? location.persen_data_diterima_today : '0.0' }]}%
+                                {[{ location.persen_data_diterima_today ? location.persen_data_diterima_today : '0.0' }]}
                             </span>
                             <span v-else-if="location.persen_data_diterima_today <= 60" class="text-warning">
-                                {[{ location.persen_data_diterima_today }]}%
+                                {[{ location.persen_data_diterima_today }]}
                             </span>
                             <span v-else class="text-success">
-                                {[{ location.persen_data_diterima_today }]}%
+                                {[{ location.persen_data_diterima_today }]}
                             </span>
 
                             /
 
                             <span v-if="!location.persen_data_diterima_month || location.persen_data_diterima_month <= 30" class="text-danger">
-                                {[{ location.persen_data_diterima_month ? location.persen_data_diterima_month : '0.0' }]}%
+                                {[{ location.persen_data_diterima_month ? location.persen_data_diterima_month : '0.0' }]}
                             </span>
                             <span v-else-if="location.persen_data_diterima_month <= 60" class="text-warning">
-                                {[{ location.persen_data_diterima_month }]}%
+                                {[{ location.persen_data_diterima_month }]}
                             </span>
                             <span v-else class="text-success">
-                                {[{ location.persen_data_diterima_month }]}%
+                                {[{ location.persen_data_diterima_month }]}
                             </span>
 
                             /
 
                             <span v-if="!location.persen_data_diterima_year || location.persen_data_diterima_year <= 30" class="text-danger">
-                                {[{ location.persen_data_diterima_year ? location.persen_data_diterima_year : '0.0' }]}%
+                                {[{ location.persen_data_diterima_year ? location.persen_data_diterima_year : '0.0' }]}
                             </span>
                             <span v-else-if="location.persen_data_diterima_year <= 60" class="text-warning">
-                                {[{ location.persen_data_diterima_year }]}%
+                                {[{ location.persen_data_diterima_year }]}
                             </span>
                             <span v-else class="text-success">
-                                {[{ location.persen_data_diterima_year }]}%
+                                {[{ location.persen_data_diterima_year }]}
                             </span>
                         </div>
 
@@ -155,8 +131,30 @@
                 </tbody>
             </table>
         </div>
-    </div>
 
+        <!-- Modal -->
+        <div class="modal" id="filter-modal" tabindex="-1" role="dialog" aria-labelledby="filter-modal-title" aria-hidden="true">
+            <div class="modal-dialog p-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h6 class="mb-0" id="filter-modal-title" style="font-weight: 600">
+                            Filter by
+                            <span class="text-capitalize">{[{ filterModal.category }]}</span>
+                        </h6>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="card-body py-0">
+                        <div class="list-group list-group-flush">
+                            <button v-for="item in filterModal.items" class="list-group-item list-group-item-action" @click="itemFilter(item.value)" v-html="item.name">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -189,7 +187,11 @@
                 return {
                     moment,
                     filters: "",
-                    locations: {{ locations | json_encode | raw }}
+                    filterModal: {
+                        category: '',
+                        items: []
+                    },
+                    locations: {{ locations | json_encode | raw }},
                 }
             },
             computed: {
@@ -294,17 +296,86 @@
                 }
             },
             methods: {
-                showModalConfig: function (index) {
-                    var location = this.sortedlocations[index];
-                    modalConfig.showModal(location);
-                },
-                getLocationLink: function (location) {
-                    if (!location.ll || location.ll.length === 0) {
-                        return '#';
-                    }
+                showFilterModal: function (category) {
+                    let items = [];
+                    switch (category) {
+                        case 'wilayah':
+                            items = [
+                                {
+                                    value: null,
+                                    name: 'Semua'
+                                },
+                                {
+                                    value: 'hulu',
+                                    name: 'Hulu'
+                                },
+                                {
+                                    value: 'tengah',
+                                    name: 'Tengah'
+                                },
+                                {
+                                    value: 'hilir',
+                                    name: 'Hilir'
+                                }
+                            ];
+                            break;
 
-                    var ll = location.ll.split(',');
-                    return 'https://www.google.com/maps/search/?api=1&query='+ ll[0] +','+ ll[1];
+                        case 'tipe':
+                            items = [
+                                {
+                                    value: null,
+                                    name: 'Semua'
+                                },
+                                {
+                                    value: 'pch',
+                                    name: 'Pos Curah Hujan'
+                                },
+                                {
+                                    value: 'pda',
+                                    name: 'Pos Duga Air'
+                                },
+                                {
+                                    value: 'klimat',
+                                    name: 'Klimat'
+                                }
+                            ];
+                            break;
+
+                        case 'sort':
+                            items = [
+                                {
+                                    value: 'data_terbaru',
+                                    name: 'Usia data terbaru'
+                                },
+                                {
+                                    value: 'data_terlama',
+                                    name: 'Usia data terlama'
+                                },
+                                {
+                                    value: 'jml_banyak',
+                                    name: 'Jumlah data <i class="fas fa-sort-numeric-down-alt"></i>'
+                                },
+                                {
+                                    value: 'jml_sedikit',
+                                    name: 'Jumlah data <i class="fas fa-sort-numeric-down"></i>'
+                                }
+                            ];
+                            break;
+                    
+                        default:
+                            break;
+                    }
+                    this.filterModal.category = category;
+                    this.filterModal.items = items;
+                    $('#filter-modal').modal('show');
+                },
+                itemFilter: function (value) {
+                    if (value === null) {
+                        this.removeFilter(this.filterModal.category)
+                    } else {
+                        this.addFilter(this.filterModal.category, value)
+                    }
+                    $('#filter-modal').modal('hide');
                 },
                 addFilter: function (key, value) {
                     var filters = this.filters.split(' ')
