@@ -6,6 +6,9 @@ use Slim\Http\Response;
 $app->group('/location', function () use ($getLocationMiddleware) {
 
     $this->get('', function (Request $request, Response $response, $args) {
+        // override utk cek mobile
+        $request  = new Slim\Http\MobileRequest($request);
+		$response = new Slim\Http\MobileResponse($response);
         $user = $this->user;
 
         $pclient = new Predis\Client();
@@ -33,7 +36,10 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 
         $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
-        return $this->view->render($response, 'location/index.html', [
+        $template = $request->isMobile() ?
+            'location/mobile/index.html' :
+            'location/index.html';
+        return $this->view->render($response, $template, [
             'locations' => $location_data,
             // 'total_data' => $total_data,
             'tenants' => $tenants
