@@ -15,6 +15,7 @@
         <!-- Custom styles for this template-->
         <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet">
         <link href="{{asset('css/app.css?v=5')}}" rel="stylesheet">
+{#         
         <style>
             body {
                 font-weight: 400;
@@ -136,7 +137,7 @@
             .dropdown-toggle.noicon::after {
                 content: unset;
             }
-        </style>
+        </style> #}
 
         {% block css %}{% endblock %}
     </head>
@@ -219,89 +220,90 @@
             moment.locale('id');
             Vue.options.delimiters = ['{[{', '}]}'];
 
-            $(function () {
-                initTheme();
-                initSizeText();
+            // $(function () {
+            //     initTheme();
+            //     initSizeText();
 
-                $('.font-size-min').on('click', function (e) {
-                    if (e) {
-                        e.stopPropagation();
-                    }
+            //     $('.font-size-min').on('click', function (e) {
+            //         if (e) {
+            //             e.stopPropagation();
+            //         }
 
-                    resizeText(-1);
-                });
+            //         resizeText(-1);
+            //     });
 
-                $('.font-size-plus').on('click', function (e) {
-                    if (e) {
-                        e.stopPropagation();
-                    }
+            //     $('.font-size-plus').on('click', function (e) {
+            //         if (e) {
+            //             e.stopPropagation();
+            //         }
 
-                    resizeText(1);
-                });
+            //         resizeText(1);
+            //     });
 
-                $('.theme-change').on('click', function (e) {
-                    if (e) {
-                        e.stopPropagation();
-                    }
+            //     $('.theme-change').on('click', function (e) {
+            //         if (e) {
+            //             e.stopPropagation();
+            //         }
 
-                    var activeTheme = localStorage['activeTheme'] || 'light';
-                    activeTheme = activeTheme === 'light' ? 'dark' : 'light';
-                    changeTheme(activeTheme);
-                });
+            //         var activeTheme = localStorage['activeTheme'] || 'light';
+            //         activeTheme = activeTheme === 'light' ? 'dark' : 'light';
+            //         changeTheme(activeTheme);
+            //     });
 
-                $('#modal-setting').on('show.bs.modal', function (e) {
-                    $('#navbar-main').collapse('hide');
-                });
-            })
+            //     $('#modal-setting').on('show.bs.modal', function (e) {
+            //         $('#navbar-main').collapse('hide');
+            //     });
+            // })
 
-            function initTheme() {
-                var activeTheme = localStorage['activeTheme'] || 'light';
-                changeTheme(activeTheme);
-            }
+            // function initTheme() {
+            //     var activeTheme = localStorage['activeTheme'] || 'light';
+            //     changeTheme(activeTheme);
+            // }
 
-            function changeTheme(theme) {
-                if (theme === 'light') {
-                    $('.theme-dark').removeClass('theme-dark').addClass('theme-light');
-                    $('.theme-change').removeClass('bg-secondary').addClass('bg-white');
-                } else {
-                    $('.theme-light').removeClass('theme-light').addClass('theme-dark');
-                    $('.theme-change').removeClass('bg-white').addClass('bg-secondary');
-                }
+            // function changeTheme(theme) {
+            //     if (theme === 'light') {
+            //         $('.theme-dark').removeClass('theme-dark').addClass('theme-light');
+            //         $('.theme-change').removeClass('bg-secondary').addClass('bg-white');
+            //     } else {
+            //         $('.theme-light').removeClass('theme-light').addClass('theme-dark');
+            //         $('.theme-change').removeClass('bg-white').addClass('bg-secondary');
+            //     }
 
-                localStorage['activeTheme'] = theme;
-            }
+            //     localStorage['activeTheme'] = theme;
+            // }
 
-            function initSizeText() {
-                var resizeTextCounter = localStorage['resizeTextCounter'] || 1;
-                resizeText(resizeTextCounter, false);
-            }
+            // function initSizeText() {
+            //     var resizeTextCounter = localStorage['resizeTextCounter'] || 1;
+            //     resizeText(resizeTextCounter, false);
+            // }
 
-            function resizeText(multiplier, updateCounter) {
-                if (typeof updateCounter === typeof undefined) {
-                    updateCounter = true;
-                }
+            // function resizeText(multiplier, updateCounter) {
+            //     if (typeof updateCounter === typeof undefined) {
+            //         updateCounter = true;
+            //     }
 
-                if (updateCounter) {
-                    var resizeTextCounter = parseInt(localStorage['resizeTextCounter'] || 1);
-                    resizeTextCounter += multiplier;
-                    localStorage['resizeTextCounter'] = resizeTextCounter;
-                }
+            //     if (updateCounter) {
+            //         var resizeTextCounter = parseInt(localStorage['resizeTextCounter'] || 1);
+            //         resizeTextCounter += multiplier;
+            //         localStorage['resizeTextCounter'] = resizeTextCounter;
+            //     }
 
-                var elements = ['body', '.form-control', /*'.fas',*/ '.dropdown-menu', '.btn'];
-                for (var element of elements) {
-                    var size = $(element).css('fontSize');
-                    if (size) {
-                        size = parseFloat(size) + (multiplier * 1) + "px";
-                        $(element).css('fontSize', size);
-                    }
-                }
-                return;
-                if (document.body.style.fontSize == "") {
-                    document.body.style.fontSize = "1.0rem";
-                }
+            //     var elements = ['body', '.form-control', /*'.fas',*/ '.dropdown-menu', '.btn'];
+            //     for (var element of elements) {
+            //         var size = $(element).css('fontSize');
+            //         if (size) {
+            //             size = parseFloat(size) + (multiplier * 1) + "px";
+            //             $(element).css('fontSize', size);
+            //         }
+            //     }
+            //     return;
+            //     if (document.body.style.fontSize == "") {
+            //         document.body.style.fontSize = "1.0rem";
+            //     }
 
-                document.body.style.fontSize = parseFloat(document.body.style.fontSize) + (multiplier * 0.2) + "rem";
-            }
+            //     document.body.style.fontSize = parseFloat(document.body.style.fontSize) + (multiplier * 0.2) + "rem";
+            // }
+
         </script>
 
         {% include 'includes/toastr.html' %}

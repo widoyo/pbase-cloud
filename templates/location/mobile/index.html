@@ -1,159 +1,163 @@
-{% extends 'layouts/master.html' %}
+{% extends 'layouts/mobile/master.html' %}
 
 {% set title = 'Lokasi' %}
 
 {% block content %}
 
-    <!-- Page Heading -->
-    <div class="d-flex align-items-center justify-content-between mb-3 mt-n2">
-        <h1 class="h5 mb-0 text-gray-800">Daftar Lokasi</h1>
-        <a href="/location/add" class="btn btn-sm btn-primary" id="btn-create">New</a>
-    </div>
-    
-    <div id="app">
+	<div id="app" class="px-3 py-4">
+
+        <!-- Page Heading -->
+        <div class="d-flex align-items-center justify-content-between mb-3 mt-n2">
+            <h1 class="h5 mb-0 text-gray-800">Daftar Lokasi</h1>
+            <a href="/location/add" class="btn btn-sm btn-primary" id="btn-create">New</a>
+        </div>
+        
         <div class="mb-3">
-            <div class="form-group mb-1">
-                <input class="form-control" type="text" placeholder="filter" v-model="filters">
-            </div>
-
-            <span class="small" :class="sortedlocations.length == 0 ? 'text-danger' : ''">
-                <i class="fas fa-map-marker-alt mr-1"></i>
-                {[{ sortedlocations.length }]} Lokasi
-            </span>
-        </div>
-
-        <div class="card rounded-0 mx-n3" v-cloak>
-            <div class="card-header">
-                <div class="d-flex justify-content-around align-items-center">                                
-                    <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('wilayah')">
-                        Wilayah
-                    </button>
-
-                    <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('tipe')">
-                        Tipe
-                    </button>
-
-                    <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('sort')">
-                        Sort
-                    </button>
+            <div class="mb-3">
+                <div class="form-group mb-1">
+                    <input class="form-control" type="text" placeholder="filter" v-model="filters">
                 </div>
+
+                <span class="small" :class="sortedlocations.length == 0 ? 'text-danger' : ''">
+                    <i class="fas fa-map-marker-alt mr-1"></i>
+                    {[{ sortedlocations.length }]} Lokasi
+                </span>
             </div>
-            <div class="list-group list-group-borderless" v-for="location, index in sortedlocations">
-                <a :href="'/location/'+ location.id" class="list-group-item list-group-item-action px-2 py-2 d-flex border-bottom">
-                    <span class="small mt-1 mr-1">
-                        <i v-if="location.ll" class="fas fa-fw fa-map-marker-alt text-success"></i>
-                        <i v-else class="fas fa-fw fa-question text-warning"></i>
-                    </span>
 
-                    <div class="flex-fill">
-                        <h6 class="text-dark mt-1 mb-1" style="font-weight: 600">{[{ location.nama }]}</h6>
+            <div class="card rounded-0 mx-n3" v-cloak>
+                <div class="card-header">
+                    <div class="d-flex justify-content-around align-items-center">                                
+                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('wilayah')">
+                            Wilayah
+                        </button>
 
-                        <p class="small text-secondary mb-0">
-                            <span v-if="location.tipe == 1" class="badge text-primary border border-primary">PCH</span>
-                            <span v-else-if="location.tipe == 2" class="badge text-danger border border-danger">PDA</span>
-                            <span v-else-if="location.tipe == 4" class="badge text-warning border border-warning">KLIMAT</span>
-                            <span v-else class="badge text-secondary">no logger</span>
+                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('tipe')">
+                            Tipe
+                        </button>
 
-                            <span class="ml-1">
-                                {[{ location.elevasi ? location.elevasi +' mdpl' : '' }]}
-                            </span>
-                        </p>
-                    </div>
-
-                    <div class="ml-auto mr-2 small">
-                        <div class="mt-1 mb-1">
-                            <span v-if="!location.persen_data_diterima_today || location.persen_data_diterima_today <= 30" class="text-danger">
-                                {[{ location.persen_data_diterima_today ? location.persen_data_diterima_today : '0.0' }]}
-                            </span>
-                            <span v-else-if="location.persen_data_diterima_today <= 60" class="text-warning">
-                                {[{ location.persen_data_diterima_today }]}
-                            </span>
-                            <span v-else class="text-success">
-                                {[{ location.persen_data_diterima_today }]}
-                            </span>
-
-                            /
-
-                            <span v-if="!location.persen_data_diterima_month || location.persen_data_diterima_month <= 30" class="text-danger">
-                                {[{ location.persen_data_diterima_month ? location.persen_data_diterima_month : '0.0' }]}
-                            </span>
-                            <span v-else-if="location.persen_data_diterima_month <= 60" class="text-warning">
-                                {[{ location.persen_data_diterima_month }]}
-                            </span>
-                            <span v-else class="text-success">
-                                {[{ location.persen_data_diterima_month }]}
-                            </span>
-
-                            /
-
-                            <span v-if="!location.persen_data_diterima_year || location.persen_data_diterima_year <= 30" class="text-danger">
-                                {[{ location.persen_data_diterima_year ? location.persen_data_diterima_year : '0.0' }]}
-                            </span>
-                            <span v-else-if="location.persen_data_diterima_year <= 60" class="text-warning">
-                                {[{ location.persen_data_diterima_year }]}
-                            </span>
-                            <span v-else class="text-success">
-                                {[{ location.persen_data_diterima_year }]}
-                            </span>
-                        </div>
-
-                        <div class="font-weight-normal text-right">
-                            {[{ location.latest_sampling ? moment(location.latest_sampling).format('D MMM, kk:mm') : '' }]}
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-        <div class="table-responsive border mx-n3 w-auto" hidden>
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr class="small bg-white">
-                        <th class="text-left" colspan="999">
-                            
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white">
-                    <tr>
-
-                        {# <td class="fit text-center">
-                            {[{ location.elevasi ? location.elevasi +'mdpl' : '' }]}
-                        </td>
-                        <td class="text-center">
-                            <span v-if="location.tipe == 1" class="badge badge-primary">PCH</span>
-                            <span v-else-if="location.tipe == 2" class="badge badge-danger">PDA</span>
-                            <span v-else-if="location.tipe == 4" class="badge badge-warning">KLIMAT</span>
-                            <span v-else class="badge text-secondary">no logger</span>
-                        </td>
-
-                         #}
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Modal -->
-        <div class="modal" id="filter-modal" tabindex="-1" role="dialog" aria-labelledby="filter-modal-title" aria-hidden="true">
-            <div class="modal-dialog p-2" role="document">
-                <div class="modal-content">
-                    <div class="modal-header bg-light">
-                        <h6 class="mb-0" id="filter-modal-title" style="font-weight: 600">
-                            Filter by
-                            <span class="text-capitalize">{[{ filterModal.category }]}</span>
-                        </h6>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('sort')">
+                            Sort
                         </button>
                     </div>
-                    <div class="card-body py-0">
-                        <div class="list-group list-group-flush">
-                            <button v-for="item in filterModal.items" class="list-group-item list-group-item-action" @click="itemFilter(item.value)" v-html="item.name">
+                </div>
+                <div class="list-group list-group-borderless" v-for="location, index in sortedlocations">
+                    <a :href="'/location/'+ location.id" class="list-group-item list-group-item-action px-2 py-2 d-flex border-bottom">
+                        <span class="small mt-1 mr-1">
+                            <i v-if="location.ll" class="fas fa-fw fa-map-marker-alt text-success"></i>
+                            <i v-else class="fas fa-fw fa-question text-warning"></i>
+                        </span>
+
+                        <div class="flex-fill">
+                            <h6 class="text-dark mt-1 mb-1" style="font-weight: 600">{[{ location.nama }]}</h6>
+
+                            <p class="small text-secondary mb-0">
+                                <span v-if="location.tipe == 1" class="badge text-primary border border-primary">PCH</span>
+                                <span v-else-if="location.tipe == 2" class="badge text-danger border border-danger">PDA</span>
+                                <span v-else-if="location.tipe == 4" class="badge text-warning border border-warning">KLIMAT</span>
+                                <span v-else class="text-secondary">no logger</span>
+
+                                <span class="ml-1">
+                                    {[{ location.elevasi ? location.elevasi +' mdpl' : '' }]}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div class="ml-auto mr-2 small">
+                            <div class="mt-1 mb-1">
+                                <span v-if="!location.persen_data_diterima_today || location.persen_data_diterima_today <= 30" class="text-danger">
+                                    {[{ location.persen_data_diterima_today ? location.persen_data_diterima_today : '0.0' }]}
+                                </span>
+                                <span v-else-if="location.persen_data_diterima_today <= 60" class="text-warning">
+                                    {[{ location.persen_data_diterima_today }]}
+                                </span>
+                                <span v-else class="text-success">
+                                    {[{ location.persen_data_diterima_today }]}
+                                </span>
+
+                                /
+
+                                <span v-if="!location.persen_data_diterima_month || location.persen_data_diterima_month <= 30" class="text-danger">
+                                    {[{ location.persen_data_diterima_month ? location.persen_data_diterima_month : '0.0' }]}
+                                </span>
+                                <span v-else-if="location.persen_data_diterima_month <= 60" class="text-warning">
+                                    {[{ location.persen_data_diterima_month }]}
+                                </span>
+                                <span v-else class="text-success">
+                                    {[{ location.persen_data_diterima_month }]}
+                                </span>
+
+                                /
+
+                                <span v-if="!location.persen_data_diterima_year || location.persen_data_diterima_year <= 30" class="text-danger">
+                                    {[{ location.persen_data_diterima_year ? location.persen_data_diterima_year : '0.0' }]}
+                                </span>
+                                <span v-else-if="location.persen_data_diterima_year <= 60" class="text-warning">
+                                    {[{ location.persen_data_diterima_year }]}
+                                </span>
+                                <span v-else class="text-success">
+                                    {[{ location.persen_data_diterima_year }]}
+                                </span>
+                            </div>
+
+                            <div class="font-weight-normal text-right">
+                                {[{ location.latest_sampling ? moment(location.latest_sampling).format('D MMM, kk:mm') : '' }]}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="table-responsive border mx-n3 w-auto" hidden>
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="small bg-white">
+                            <th class="text-left" colspan="999">
+                                
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <tr>
+
+                            {# <td class="fit text-center">
+                                {[{ location.elevasi ? location.elevasi +'mdpl' : '' }]}
+                            </td>
+                            <td class="text-center">
+                                <span v-if="location.tipe == 1" class="badge badge-primary">PCH</span>
+                                <span v-else-if="location.tipe == 2" class="badge badge-danger">PDA</span>
+                                <span v-else-if="location.tipe == 4" class="badge badge-warning">KLIMAT</span>
+                                <span v-else class="badge text-secondary">no logger</span>
+                            </td>
+
+                            #}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal" id="filter-modal" tabindex="-1" role="dialog" aria-labelledby="filter-modal-title" aria-hidden="true">
+                <div class="modal-dialog p-2" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h6 class="mb-0" id="filter-modal-title" style="font-weight: 600">
+                                Filter by
+                                <span class="text-capitalize">{[{ filterModal.category }]}</span>
+                            </h6>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
                             </button>
+                        </div>
+                        <div class="card-body py-0">
+                            <div class="list-group list-group-flush">
+                                <button v-for="item in filterModal.items" class="list-group-item list-group-item-action" @click="itemFilter(item.value)" v-html="item.name">
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
 {% endblock %}
