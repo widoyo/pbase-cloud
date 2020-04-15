@@ -19,7 +19,7 @@
                         {% endif %}
                     </div>
 
-                    <button class="btn btn-sm btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
+                    <button class="btn btn-sm btn-primary" type="button" data-toggle="modal" data-target="#edit-modal">
                         Edit
                     </button>
                 </div>
@@ -32,10 +32,12 @@
                     {% elseif location.tipe == 4 %}
                         <span class="badge text-warning border border-warning">KLIMAT</span>
                     {% else %}
-                        <span class="badge text-secondary border border-secondary">NONE</span>                                
+                        <span class="badge text-secondary border border-secondary">Jenis pos tidak diketahui</span>                                
                     {% endif %}
 
-                    <span class="ml-1">{{ location.elevasi ? location.elevasi : '-' }} mdpl</span>
+                    {% if location.elevasi %}
+                        <span class="ml-1">{{ location.elevasi }} mdpl</span>
+                    {% endif %}
 
                     {% if location.wilayah %}
                         <span class="ml-1">( {{ location.wilayah }} )</span>
@@ -52,51 +54,30 @@
                         Ringkasan Data
                     </h2>
                 </div>
-                <div class="list-group list-group-flush d-none">
-                    <div class="list-group-item">
-                        <h5 class="text-secondary small mb-1">Waktu Data Terakhir</h5>
-                        <p class="mb-0">{{ latest_sampling ? (latest_sampling | date('d M Y, H:i')) : '-' }}</p>
-                    </div>
-
-                    <div class="list-group-item">
-                        <h5 class="text-secondary small mb-1">Jumlah Data Diterima</h5>
-                        <p class="mb-0">
-                            {{ total_data_diterima | number_format }}
-                            {% if persen_data_diterima >= 70 %}
-                                <span class="badge badge-pill badge-success">{{ persen_data_diterima | number_format }}%</span>
-                            {% elseif persen_data_diterima >= 40 %}
-                                <span class="badge badge-pill badge-warning">{{ persen_data_diterima | number_format }}%</span>										
-                            {% else %}
-                                <span class="badge badge-pill badge-danger">{{ persen_data_diterima | number_format }}%</span>										
-                            {% endif %}
-                        </p>
-                    </div>
-
-                    <div class="list-group-item">
-                        <h5 class="text-secondary small mb-1">Jumlah Data Seharusnya</h5>
-                        <p class="mb-0">{{ total_data_seharusnya | number_format }}</p>
-                    </div>
-                </div>
                 <div class="card-body">
-                    <dl class="mb-0">
-                        <dt class="text-secondary small">Waktu Data Terakhir</dt>
-                        <dd class="mb-3">{{ latest_sampling ? (latest_sampling | date('d M Y, H:i')) : '-' }}</dd>
+                    {% if latest_sampling %}
+                        <dl class="mb-0">
+                            <dt class="text-secondary small">Waktu Data Terakhir</dt>
+                            <dd class="mb-3">{{ latest_sampling | date('d M Y, H:i') }}</dd>
 
-                        <dt class="text-secondary small">Jumlah Data Diterima</dt>
-                        <dd class="mb-3">
-                            {{ total_data_diterima | number_format }}
-                            {% if persen_data_diterima >= 70 %}
-                                <span class="badge badge-pill badge-success">{{ persen_data_diterima | number_format }}%</span>
-                            {% elseif persen_data_diterima >= 40 %}
-                                <span class="badge badge-pill badge-warning">{{ persen_data_diterima | number_format }}%</span>										
-                            {% else %}
-                                <span class="badge badge-pill badge-danger">{{ persen_data_diterima | number_format }}%</span>										
-                            {% endif %}
-                        </dd>
+                            <dt class="text-secondary small">Jumlah Data Diterima</dt>
+                            <dd class="mb-3">
+                                {{ total_data_diterima | number_format }}
+                                {% if persen_data_diterima >= 70 %}
+                                    <span class="badge badge-pill badge-success">{{ persen_data_diterima | number_format }}%</span>
+                                {% elseif persen_data_diterima >= 40 %}
+                                    <span class="badge badge-pill badge-warning">{{ persen_data_diterima | number_format }}%</span>										
+                                {% else %}
+                                    <span class="badge badge-pill badge-danger">{{ persen_data_diterima | number_format }}%</span>										
+                                {% endif %}
+                            </dd>
 
-                        <dt class="text-secondary small">Jumlah Data Seharusnya</dt>
-                        <dd class="mb-1">{{ total_data_seharusnya | number_format }}</dd>
-                    </dl>
+                            <dt class="text-secondary small">Jumlah Data Seharusnya</dt>
+                            <dd class="mb-1">{{ total_data_seharusnya | number_format }}</dd>
+                        </dl>
+                    {% else %}
+                        <em class="text-secondary">Data logger tidak tersedia</em>
+                    {% endif %}
                 </div>
             </div>
 
@@ -107,27 +88,33 @@
                         Kontribusi Logger
                     </h2>
                 </div>
-                <div class="card-body">
-                    <table class="table table-bordered mb-0">
-                        <thead class="small text-secondary">
-                            <tr>
-                                <th>Logger</th>
-                                <th>Jumlah</th>
-                                <th>Persentase</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for logger in loggers %}
-                                <tr>
-                                    <td>{{ logger.sn }}</td>
-                                    <td class="text-right">{{ logger.count | number_format }}</td>
-                                    <td class="text-right">
-                                        {{ (logger.count * 100 / total_data_diterima) | number_format }}%
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="card-body pb-1">
+                    {% for logger in loggers %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex mb-0">
+                                    <h5 class="mb-1 mr-auto" style="font-weight: 600">{{ logger.sn }}</h5>
+                                    <span class="text-secondary" id="latest-sampling-{{ logger.sn }}"></span>
+                                </div>
+                                <span>
+                                    {{ logger.count }}
+                                </span>
+
+                                {% set persen_data_logger = total_data_diterima > 0 ? (logger.count * 100 / total_data_diterima) : 0 %}
+                                {% if persen_data_logger >= 70 %}
+                                    <span class="font-weight-bold text-success">({{ persen_data_logger | number_format }}%)</span>
+                                {% elseif persen_data_logger >= 40 %}
+                                    <span class="font-weight-bold text-warning">({{ persen_data_logger | number_format }}%)</span>
+                                {% else %}
+                                    <span class="font-weight-bold text-danger">({{ persen_data_logger | number_format }}%)</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <em class="text-secondary">Tidak ditemukan logger di lokasi ini</em>
+                        <br>
+                        <br>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -217,6 +204,126 @@
         </div>
         <!-- // Modal Download CSV -->
 
+        <!-- Modal Edit Data -->
+        <div class="modal fade" id="edit-modal" tabindex="-1" role="dialog" aria-labelledby="edit-modal-title" aria-hidden="true">
+            <div class="modal-dialog p-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h6 class="mb-0" id="edit-modal-title" style="font-weight: 600">
+                            Edit Informasi POS
+                        </h6>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <form method="post" action="/location/{{ location.id }}/config" v-cloak>
+							<div class="mb-3 mx-n3 mt-n3 border-bottom">
+								<div id="mapedit" style="height: 240px;"></div>
+							</div>
+
+							<div class="list-group list-group-borderless">
+								<div class="list-group-item p-0">
+									<div class="form-group">
+										<label class="small">Nama Lokasi</label>
+                                        <input class="form-control" name="nama" v-model="location.nama" required>
+									</div>
+								</div>
+								<div class="list-group-item p-0">
+									<div class="form-group">
+										<label class="small">Elevasi</label>
+                                        <div class="input-group">
+                                            <input class="form-control" name="elevasi" v-model="location.elevasi">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">mdpl</span>
+                                            </div>
+                                        </div>
+                                        <div class="small text-secondary" style="line-height: 1.1">
+                                            Nb. tunggu 5-10 menit agar cache terupdate dengan nilai baru
+                                        </div>
+									</div>
+								</div>
+								<div class="list-group-item p-0">
+									<div class="form-group">
+										<label class="small">Jenis Pos</label>
+										<div class="">
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="tipe1" name="tipe" class="custom-control-input" v-model="location.tipe" value="1" required>
+                                                <label class="custom-control-label" for="tipe1">PCH (Pos Curah Hujan)</label>
+                                            </div>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="tipe2" name="tipe" class="custom-control-input" v-model="location.tipe" value="2" required>
+                                                <label class="custom-control-label" for="tipe2">PDA (Pos Duga Air)</label>
+                                            </div>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="tipe3" name="tipe" class="custom-control-input" v-model="location.tipe" value="4" required>
+                                                <label class="custom-control-label" for="tipe3">Klimatologi</label>
+                                            </div>
+										</div>
+									</div>
+								</div>
+								<div class="list-group-item p-0">
+									<div class="form-group">
+										<label class="small">Wilayah</label>
+										<div class="">
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="wilayah1" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="hulu" required>
+                                                <label class="custom-control-label" for="wilayah1">Hulu</label>
+                                            </div>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="wilayah2" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="tengah" required>
+                                                <label class="custom-control-label" for="wilayah2">Tengah</label>
+                                            </div>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="wilayah3" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="hilir" required>
+                                                <label class="custom-control-label" for="wilayah3">Hilir</label>
+                                            </div>
+										</div>
+									</div>
+								</div>
+								{% if user().tenant_id == 0 %}
+									<div class="list-group-item p-0">
+										<div class="form-group">
+											<label class="small">Pemilik</label>
+                                            <select class="form-control" name="tenant_id" v-model="location.tenant_id" required>
+                                                <option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
+                                                <option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
+                                            </select>
+										</div>
+									</div>
+								{% endif %}
+								<div class="list-group-item p-0">
+									<div class="form-group mb-4">
+										<label class="small">LonLat</label>
+                                        <div class="input-group">
+                                            <input class="form-control" name="ll" v-model="location.ll">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-secondary" type="button" @click="getCurrentPosition()">
+                                                    <i class="fas fa-map-pin"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="small text-secondary" style="line-height: 1">
+                                            Klik pada MAP untuk mendapatkan nilai LonLat
+                                        </div>
+									</div>
+								</div>
+							</div>
+
+							<div class="mx-n3 px-3 pt-3 border-top">
+                                <button class="btn btn-warning" type="submit" key='btn-simpan'>
+                                    <i class="fas fa-save fa-sm mr-1"></i>
+                                    Simpan
+                                </button>
+							</div>
+						</form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // Modal Edit Data -->
+
 	</div>
 
 {% endblock %}
@@ -303,10 +410,14 @@
 					moment,
 					editMode: false,
 					location: {{ location | json_encode | raw }},
+					loggers: {{ loggers | json_encode | raw }},
 					tenants: {{ tenants | json_encode | raw }},
 					map: null,
+					mapEdit: null,
 					tileLayer: null,
-					marker: null
+					tileLayerEdit: null,
+					marker: null,
+					markerEdit: null,
 				}
 			},
 			mounted() {
@@ -316,8 +427,24 @@
 				} else {
 					initChartCH();
 				}
+
+                this.initLoggerLatestSampling()
+
+                // invalidate size map, karena saat hidden mapnya eror
+                $('#edit-modal').on('shown.bs.modal', () => {
+                    this.mapEdit.invalidateSize()
+                })
 			},
 			methods: {
+                initLoggerLatestSampling: function() {
+                    var now = moment()
+                    for (var logger of this.loggers) {
+                        var diffDay = moment.duration(now.diff(moment(logger.latest_sampling))).asDays().toFixed(0);
+                        var samplingTime = moment(logger.latest_sampling).format('kk:mm');
+                        var tanggal = diffDay > 0 ? diffDay +" D" : samplingTime;
+                        $('#latest-sampling-'+ logger.sn).text(tanggal)
+                    }
+                },
 				initMap: function() {
 					var ll = [-6.2088, 106.8456];
 					if (this.location.ll) {
@@ -325,7 +452,8 @@
 					}
 
 					this.map = L.map('mapid').setView(ll, 13);
-					this.map.on('click', this.onMapClick);
+					this.mapEdit = L.map('mapedit').setView(ll, 13);
+					this.mapEdit.on('click', this.onMapClick);
 
 					this.tileLayer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoid2lkb3lvIiwiYSI6ImNqcTNmNGh5NjFlMGk0Mm9iamJxdXIxaHUifQ.hxfPpTyy8g60K9baKtbvRw', {
 						maxZoom: 18,
@@ -333,6 +461,12 @@
 						id: 'mapbox/streets-v11'
 					});
 					this.tileLayer.addTo(this.map);
+					this.tileLayerEdit = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoid2lkb3lvIiwiYSI6ImNqcTNmNGh5NjFlMGk0Mm9iamJxdXIxaHUifQ.hxfPpTyy8g60K9baKtbvRw', {
+						maxZoom: 18,
+						attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' + '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' + 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+						id: 'mapbox/streets-v11'
+					});
+					this.tileLayerEdit.addTo(this.mapEdit);
 
 					if (this.location.ll) {
 						this.addMarker(ll);
@@ -365,8 +499,15 @@
 						this.marker.remove();
 					}
 
+					if (this.markerEdit) {
+						this.markerEdit.remove();
+					}
+
 					this.marker = L.marker(ll);
 					this.marker.addTo(this.map);
+
+					this.markerEdit = L.marker(ll);
+					this.markerEdit.addTo(this.mapEdit);
 				},
 				getCurrentPosition: function() {
 					if (navigator.geolocation) {
@@ -378,6 +519,7 @@
 								lng: position.coords.longitude
 							};
 							this.map.setView(ll, this.map.getZoom());
+							this.mapEdit.setView(ll, this.mapEdit.getZoom());
 							this.addMarker(ll);
 						})
 					} else {
