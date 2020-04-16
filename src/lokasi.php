@@ -79,6 +79,10 @@ $app->group('/location', function () use ($getLocationMiddleware) {
     $this->group('/{id:[0-9]+}', function () {
 
         $this->get('', function (Request $request, Response $response, $args) {
+            // override utk cek mobile
+            $request  = new Slim\Http\MobileRequest($request);
+            $response = new Slim\Http\MobileResponse($response);
+
             // $location = $request->getAttribute('location');
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
@@ -220,7 +224,11 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             }
             // dump($loggers);
 
-            return $this->view->render($response, 'location/show.html', [
+            $template = $request->isMobile() ?
+                'location/mobile/show.html' :
+                'location/show.html';
+
+            return $this->view->render($response, $template, [
                 'location' => $location,
                 'tenants' => $tenants,
                 'result' => $result,

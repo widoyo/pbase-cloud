@@ -74,15 +74,15 @@ foreach ($locations as $location) {
             case 'arr':
                 $rdc_data['tipe'] = '1';
                 break;
-    
+
             case 'awlr':
                 $rdc_data['tipe'] = '2';
                 break;
-    
+
             case 'klimat':
                 $rdc_data['tipe'] = '4';
                 break;
-    
+
             default:
                 $rdc_data['tipe'] = '0';
                 break;
@@ -102,10 +102,16 @@ foreach ($locations as $location) {
             WHERE logger_sn='{$logger['sn']}'
             GROUP BY logger_sn")->fetch();
 
+        $latest_periodik = $db->query("SELECT * FROM periodik
+            WHERE logger_sn='{$logger['sn']}'
+            ORDER BY sampling DESC
+            LIMIT 1")->fetch();
+
         // cache logger count
         $rdc_logger_data = [
             'sn' => $logger['sn'],
-            'count' => $logger_data ? $logger_data['count'] : 0
+            'count' => $logger_data ? $logger_data['count'] : 0,
+            'latest_sampling' => $latest_periodik ? $latest_periodik['sampling'] : '',
         ];
         $pclient->hmset("location:{$location['id']}:logger:{$logger['sn']}", $rdc_logger_data);
         $pclient->sadd("location:{$location['id']}:logger", "location:{$location['id']}:logger:{$logger['sn']}");
