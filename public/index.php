@@ -192,10 +192,31 @@ $loggedinMiddleware = function (Request $request, Response $response, $next) {
     $user_refresh_time = $this->session->user_refresh_time;
     $now = time();
 
+    // cek apakah ada login token
+    $login_token = \Dflydev\FigCookies\FigRequestCookies::get($request, 'login_token', null);
+
     // cek masa aktif login
-    if (!empty($user_refresh_time) && $user_refresh_time < $now) {
-        $this->session->destroy();
-        return $this->response->withRedirect('/login');
+    if ((!empty($user_refresh_time) && $user_refresh_time < $now) || $login_token) {
+        // cek apakah login_token valid
+        $login_token_valid = false;
+        $login_token = str_replace("login_token=", "", $login_token);
+        if ($login_token) {
+            $stmt = $this->db->prepare("SELECT * FROM users WHERE login_token=:login_token");
+            $stmt->execute([':login_token' => $login_token]);
+            $user = $stmt->fetch();
+            if ($user) {
+                $login_token_valid = true;
+        
+                $this->session->user_id = $user['id'];
+                $this->session->user_refresh_time = strtotime("+24hour");
+                // $this->session->user_basic_auth = base64_encode("{$credentials['username']}:{$credentials['password']}");
+            }
+        }
+
+        if (!$login_token_valid) {
+            $this->session->destroy();
+            return $this->response->withRedirect('/login');
+        }
     }
 
     // cek user exists, ada di index.php
