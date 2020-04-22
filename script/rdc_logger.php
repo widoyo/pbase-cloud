@@ -2,44 +2,58 @@
 
 include_once 'db.php';
 
-$loggers = $db->query("SELECT * FROM logger")->fetchAll();
+$timezone_default = "Asia/Jakarta";
+
+$loggers = $db->query("SELECT
+                    logger.id AS logger_id,
+                    logger.sn,
+                    location.nama AS location_nama,
+                    tenant.nama AS tenant_nama,
+                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
+                    periodik.*
+                FROM logger
+                    LEFT JOIN location ON logger.location_id = location.id
+                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
+                    LEFT JOIN periodik ON periodik.id = (
+                        SELECT id from periodik
+                        WHERE periodik.logger_sn = logger.sn
+                        ORDER BY periodik.sampling DESC
+                        LIMIT 1
+                    )
+                ORDER BY 
+                    periodik.mdpl DESC,
+                    periodik.sampling DESC,
+                    location.nama,
+                    logger.sn")->fetchAll();
+
 foreach ($loggers as $logger) {
     echo "{$logger['sn']}\n";
+    $logger_data = $db->query("SELECT COUNT(*) FROM periodik
+        WHERE logger_sn='{$logger['sn']}'
+        GROUP BY logger_sn")->fetch();
+
     $rdc_data = [
-        'id' => $logger['id'],
+        'id' => $logger['logger_id'],
         'sn' => $logger['sn'],
+        'location_nama' => $logger['location_nama'],
+        'tenant_nama' => $logger['tenant_nama'],
+        'timezone' => $logger['timezone'],
+        'latest_sampling' => $logger['sampling'],
+        'up_s' => $logger['up_s'],
+        'ts_a' => $logger['ts_a'],
+        'received' => $logger['received'],
+        'mdpl' => $logger['mdpl'],
+        'apre' => $logger['apre'],
+        'sq' => $logger['sq'],
+        'temp' => $logger['temp'],
+        'humi' => $logger['humi'],
+        'batt' => $logger['batt'],
+        'rain' => $logger['rain'],
+        'wlev' => $logger['wlev'],
+        'location_id' => $logger['location_id'],
+        'tenant_id' => $logger['tenant_id'],
+        'count' => $logger_data ? $logger_data['count'] : 0,
     ];
 
-    $periodik_mdpl = $db->query("SELECT * FROM periodik
-        WHERE (logger_sn='{$logger['sn']}')
-            AND mdpl IS NOT NULL
-        ORDER BY sampling DESC
-        LIMIT 1")->fetch();
-    if ($periodik_mdpl) {
-        $rdc_data['elevasi'] = $periodik_mdpl['mdpl'];
-    }
-
-    $first_periodik = $db->query("SELECT * FROM periodik
-        WHERE (logger_sn='{$logger['sn']}')
-        ORDER BY sampling ASC
-        LIMIT 1")->fetch();
-    if ($first_periodik) {
-        $rdc_data['first_sampling'] = $first_periodik['sampling'];
-    }
-
-    $latest_periodik = $db->query("SELECT * FROM periodik
-        WHERE (logger_sn='{$logger['sn']}')
-        ORDER BY sampling DESC
-        LIMIT 1")->fetch();
-    if ($latest_periodik) {
-        $rdc_data['latest_sampling'] = $latest_periodik['sampling'];
-    }
-
-    $total_data_diterima = $db->query("SELECT COUNT(*) FROM periodik
-        WHERE (logger_sn='{$logger['sn']}')")->fetch();
-    if ($total_data_diterima) {
-        $rdc_data['total_data_diterima'] = $total_data_diterima['count'];
-    }
-    
     $pclient->hmset("logger:{$logger['sn']}", $rdc_data);
 }

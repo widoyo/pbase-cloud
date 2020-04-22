@@ -98,23 +98,23 @@ foreach ($locations as $location) {
     foreach ($loggers as $logger) {
         $logger_sn[] = "'{$logger['sn']}'";
 
-        $logger_data = $db->query("SELECT COUNT(*) FROM periodik
-            WHERE logger_sn='{$logger['sn']}'
-            GROUP BY logger_sn")->fetch();
+        // $logger_data = $db->query("SELECT COUNT(*) FROM periodik
+        //     WHERE logger_sn='{$logger['sn']}'
+        //     GROUP BY logger_sn")->fetch();
 
-        $latest_periodik = $db->query("SELECT * FROM periodik
-            WHERE logger_sn='{$logger['sn']}'
-            ORDER BY sampling DESC
-            LIMIT 1")->fetch();
+        // $latest_periodik = $db->query("SELECT * FROM periodik
+        //     WHERE logger_sn='{$logger['sn']}'
+        //     ORDER BY sampling DESC
+        //     LIMIT 1")->fetch();
 
-        // cache logger count
-        $rdc_logger_data = [
-            'sn' => $logger['sn'],
-            'count' => $logger_data ? $logger_data['count'] : 0,
-            'latest_sampling' => $latest_periodik ? $latest_periodik['sampling'] : '',
-        ];
-        $pclient->hmset("location:{$location['id']}:logger:{$logger['sn']}", $rdc_logger_data);
-        $pclient->sadd("location:{$location['id']}:logger", "location:{$location['id']}:logger:{$logger['sn']}");
+        // // cache logger count
+        // $rdc_logger_data = [
+        //     'sn' => $logger['sn'],
+        //     'count' => $logger_data ? $logger_data['count'] : 0,
+        //     'latest_sampling' => $latest_periodik ? $latest_periodik['sampling'] : '',
+        // ];
+        // $pclient->hmset("location:{$location['id']}:logger:{$logger['sn']}", $rdc_logger_data);
+        $pclient->sadd("location:{$location['id']}:logger", "logger:{$logger['sn']}");
     }
     $logger_sn = implode(",", $logger_sn);
 
