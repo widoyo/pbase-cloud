@@ -2,6 +2,10 @@
     padding-top: 105px;
 } */
 
+[v-cloak] {
+    display: none;
+}
+
 .fixed-top-2 {
     margin-top: 56px;
 }
@@ -67,4 +71,8 @@
 .shadow-top-sm {
     box-shadow: 0 -.125rem .25rem rgba(0,0,0,.075) !important;
     /* box-shadow: 0 -5px 5px -5px #333; */
+}
+
+.dropdown-toggle.noicon::after {
+    content: unset;
 }

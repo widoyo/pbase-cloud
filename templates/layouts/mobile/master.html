@@ -14,15 +14,11 @@
 
         <!-- Custom styles for this template-->
         <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet">
-        <link href="{{asset('css/app.css?v=6')}}" rel="stylesheet">
+        <link href="{{asset('css/app.css?v=7')}}" rel="stylesheet">
         
         <style>
             body {
                 font-weight: 400;
-            }
-
-            [v-cloak] {
-                display: none;
             }
 
             .fas {
@@ -133,10 +129,6 @@
             .theme-light .list-group-item {
                 border-color: #6c757d;
             }
-            
-            .dropdown-toggle.noicon::after {
-                content: unset;
-            }
         </style>
 
         {% block css %}{% endblock %}
@@ -209,8 +201,8 @@
             </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+        {# <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> #}
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
         <script src="{{ asset('js/moment.min.js') }}"></script>
         <script src="{{ asset('js/id.js') }}"></script>
         <script src="{{asset('js/jquery.min.js')}}"></script>
