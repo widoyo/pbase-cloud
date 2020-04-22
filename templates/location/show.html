@@ -1,22 +1,22 @@
-{% extends 'layouts/mobile/master.html' %}
+{% extends 'layouts/master.html' %}
 
 {% set title = location.nama ~ ' | Lokasi' %}
 
 {% block content %}
 
-	<div id="app" class="p-3">
-		<div class="d-flex align-items-center mb-3">
-			<button class="btn btn-sm btn-link" @click="back()">
-				<i class="fas fa-fw fa-chevron-left"></i>
-			</button>
-			<p class="h2 font-weight-normal text-center mb-0">{{ location.nama }}</p>
+	<div id="app" class="">
+		<!-- Page Heading -->
+		<div class="d-flex align-items-center mb-4">
+			{# <button class="btn btn-sm btn-link px-1 py-0 mr-2" @click="back()" v-cloak>
+				<i class="fas fa-fw fa-arrow-left"></i>
+			</button> #}
+			<h1 class="h3 mb-0 text-gray-800">{{ location.nama }}</h1>
 		</div>
-		{# <h1 class="h2 font-weight-normal mb-3">{{ location.nama }}</h1> #}
 		
 		<div class="row">
 			<div class="col-12 col-lg-8 order-1 order-lg-0">
-				<div class="d-flex">
-					<div class="input-group mb-3 mr-auto">
+				<div class="d-flex mb-2">
+					<div class="input-group mr-auto">
 						<div class="input-group-prepend">
 							<a href="?start_date={{ (start_date ~ ' -3months')|date('Y-m-d') }}&end_date={{ (end_date ~ ' -3months')|date('Y-m-d') }}" class="btn btn-primary">
 								<i class="fas fa-chevron-left"></i>
@@ -69,202 +69,209 @@
 					</div>
 				</div>
 
-				<div>
-					<canvas id="chart" style="width: 100%; height: 400px; border: solid 1px #eee;" class="chartjs-render-monitor"></canvas>
+				<div class="card mb-4">					
+					<div class="card-body p-0">
+						<canvas id="chart" class="rounded" style="width: 100%; height: 400px; border: solid 1px #eee;" class="chartjs-render-monitor"></canvas>
+					</div>
 				</div>
-
-				<hr class="my-3">
 				
-				<h1 class="h3 font-weight-normal mb-3">Ringkasan Data</h1>
-				<div class="table-responsive">
-					<table class="table table-bordered table-hover">
-						<tbody>
-							<tr>
-								<th>Waktu Data Terakhir</th>
-								<td>{{ latest_sampling ? (latest_sampling | date('d M Y, H:i')) : '-' }}</td>
-							</tr>
-							<tr>
-								<th>Jumlah Data Diterima<br>(total / persen)</th>
-								<td>
-									{{ total_data_diterima | number_format }}
-									{% if persen_data_diterima >= 70 %}
-										<span class="badge badge-pill badge-success">{{ persen_data_diterima | number_format }}%</span>
-									{% elseif persen_data_diterima >= 40 %}
-										<span class="badge badge-pill badge-warning">{{ persen_data_diterima | number_format }}%</span>										
-									{% else %}
-										<span class="badge badge-pill badge-danger">{{ persen_data_diterima | number_format }}%</span>										
-									{% endif %}
-								</td>
-							</tr>
-							<tr>
-								<th>Jumlah Data Seharusnya</th>
-								<td>{{ total_data_seharusnya | number_format }}</td>
-							</tr>
-						</tbody>
-					</table>
+				<div class="card mb-4">
+					<div class="card-header">
+						<h1 class="h5 font-weight-bold mb-0">Ringkasan Data</h1>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table">
+								<tbody>
+									<tr>
+										<th style="width: 1%">Waktu Data Terakhir</th>
+										<td>{{ latest_sampling ? (latest_sampling | date('d M Y, H:i')) : '-' }}</td>
+									</tr>
+									<tr>
+										<th class="text-nowrap">Jumlah Data Diterima<br>(total / persen)</th>
+										<td>
+											{{ total_data_diterima | number_format }}
+											{% if persen_data_diterima >= 70 %}
+												<span class="badge badge-pill badge-success">{{ persen_data_diterima | number_format }}%</span>
+											{% elseif persen_data_diterima >= 40 %}
+												<span class="badge badge-pill badge-warning">{{ persen_data_diterima | number_format }}%</span>										
+											{% else %}
+												<span class="badge badge-pill badge-danger">{{ persen_data_diterima | number_format }}%</span>										
+											{% endif %}
+										</td>
+									</tr>
+									<tr>
+										<th>Jumlah Data Seharusnya</th>
+										<td>{{ total_data_seharusnya | number_format }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 
-				<hr class="my-3">
-
-				<h1 class="h3 font-weight-normal mb-3">Kontribusi Logger</h1>
-				<div class="table-responsive">
-					<table class="table table-bordered table-hover">
-						<thead>
-							<tr>
-								<th>Logger</th>
-								<th>Jumlah</th>
-								<th>Persentase</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for logger in loggers %}
-								<tr>
-									<td>{{ logger.sn }}</td>
-									<td>{{ logger.count | number_format }}</td>
-									<td>{{ (logger.count * 100 / total_data_diterima) | number_format }}%</td>
-								</tr>
-							{% endfor %}
-						</tbody>
-					</table>
+				<div class="card">
+					<div class="card-header">
+						<h1 class="h5 font-weight-bold mb-0">Kontribusi Logger</h5>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th>Logger</th>
+										<th>Jumlah</th>
+										<th>Persentase</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for logger in loggers %}
+										<tr>
+											<td>{{ logger.sn }}</td>
+											<td>{{ logger.count | number_format }}</td>
+											<td>{{ (logger.count * 100 / total_data_diterima) | number_format }}%</td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="col-12 col-lg-4 order-0 order-lg-1">
-				<div class="card shadow-sm">
-					<div class="card-body small p-0">
-						<form method="post" action="/location/{{ location.id }}/config" v-cloak>
-							<div>
-								<div id="mapid" style="height: 240px;"></div>
-							</div>
-
-							<div class="list-group list-group-squared list-group-flush">
-								<div class="list-group-item px-3">
-									<div class="row ">
-										<div class="col-4">Nama Lokasi</div>
-										<div class="col-8">
-											<span v-show="!editMode">{[{ location.nama }]}</span>
-											<input v-show="editMode" class="form-control" name="nama" v-model="location.nama" required>
-										</div>
-									</div>
-								</div>
-								<div class="list-group-item px-3">
-									<div class="row ">
-										<div class="col-4">Elevasi</div>
-										<div class="col-8">
-											<span v-show="!editMode">{[{ location.elevasi ? location.elevasi : '-' }]} mdpl</span>
-											<div v-show="editMode" class="input-group">
-												<input class="form-control" name="elevasi" v-model="location.elevasi">
-												<div class="input-group-append">
-													<span class="input-group-text">mdpl</span>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="list-group-item px-3">
-									<div class="row ">
-										<div class="col-4">Jenis Pos</div>
-										<div class="col-8">
-											<span v-show="!editMode">
-												<span v-if="location.tipe == 1">PCH (Pos Curah Hujan)</span>
-												<span v-else-if="location.tipe == 2">PDA (Pos Duga Air)</span>
-												<span v-else-if="location.tipe == 4">Klimatologi</span>
-												<span v-else>-</span>
-											</span>
-											<div v-show="editMode">
-												<div class="custom-control custom-radio">
-													<input type="radio" id="tipe1" name="tipe" class="custom-control-input" v-model="location.tipe" value="1" required>
-													<label class="custom-control-label" for="tipe1">PCH (Pos Curah Hujan)</label>
-												</div>
-												<div class="custom-control custom-radio">
-													<input type="radio" id="tipe2" name="tipe" class="custom-control-input" v-model="location.tipe" value="2" required>
-													<label class="custom-control-label" for="tipe2">PDA (Pos Duga Air)</label>
-												</div>
-												<div class="custom-control custom-radio">
-													<input type="radio" id="tipe3" name="tipe" class="custom-control-input" v-model="location.tipe" value="4" required>
-													<label class="custom-control-label" for="tipe3">Klimatologi</label>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="list-group-item px-3">
-									<div class="row ">
-										<div class="col-4">Wilayah</div>
-										<div class="col-8">
-											<span v-show="!editMode" class="text-capitalize">
-												{[{ location.wilayah }]}
-											</span>
-											<div v-show="editMode">
-												<div class="custom-control custom-radio">
-													<input type="radio" id="wilayah1" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="hulu" required>
-													<label class="custom-control-label" for="wilayah1">Hulu</label>
-												</div>
-												<div class="custom-control custom-radio">
-													<input type="radio" id="wilayah2" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="tengah" required>
-													<label class="custom-control-label" for="wilayah2">Tengah</label>
-												</div>
-												<div class="custom-control custom-radio">
-													<input type="radio" id="wilayah3" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="hilir" required>
-													<label class="custom-control-label" for="wilayah3">Hilir</label>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								{% if user().tenant_id == 0 %}
-									<div class="list-group-item px-3">
-										<div class="row ">
-											<div class="col-4">Pemilik</div>
-											<div class="col-8">
-												<span v-show="!editMode" class="">{[{ location.tenant_nama }]}</span>
-												<select v-show="editMode" class="form-control" name="tenant_id" v-model="location.tenant_id" required>
-													<option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
-													<option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
-												</select>
-											</div>
-										</div>
-									</div>
-								{% endif %}
-								<div class="list-group-item px-3">
-									<div class="row ">
-										<div class="col-4">LonLat</div>
-										<div class="col-8 text-ellipsis">
-											<span v-show="!editMode">{[{ location.ll ? location.ll : '-' }]}</span>
-											<div v-show="editMode">
-												<div class="input-group">
-													<input class="form-control" name="ll" v-model="location.ll">
-													<div class="input-group-append">
-														<button class="btn btn-secondary" type="button" @click="getCurrentPosition()">
-															<i class="fas fa-map-pin"></i>
-														</button>
-													</div>
-												</div>
-												<div class="small" style="line-height: 1">Klik pada MAP untuk mendapatkan nilai LonLat</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="d-flex p-3">
-								{# <a class="btn btn-secondary mr-2" href="/location">
-									Kembali
-								</a> #}
-
-								<div class="ml-auto" v-cloak>
-									<button v-show="!editMode" class="btn btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
-										Edit
-									</button>
-									<button v-show="editMode" class="btn btn-secondary mr-2" type="button" @click="toggleEdit()" key='btn-batal'>
-										Batal
-									</button>
-									<button v-show="editMode" class="btn btn-warning" type="submit" key='btn-simpan'>
-										Simpan
-									</button>
-								</div>
-							</div>
-						</form>
+				<div class="card">
+					<div>
+						<div id="mapid" style="height: 240px;"></div>
 					</div>
+					<form method="post" action="/location/{{ location.id }}/config" v-cloak>
+						<div class="list-group list-group-squared list-group-flush small">
+							<div class="list-group-item px-3">
+								<div class="row ">
+									<div class="col-4">Nama Lokasi</div>
+									<div class="col-8">
+										<span v-show="!editMode">{[{ location.nama }]}</span>
+										<input v-show="editMode" class="form-control form-control-sm" name="nama" v-model="location.nama" required>
+									</div>
+								</div>
+							</div>
+							<div class="list-group-item px-3">
+								<div class="row ">
+									<div class="col-4">Elevasi</div>
+									<div class="col-8">
+										<span v-show="!editMode">{[{ location.elevasi ? location.elevasi : '-' }]} mdpl</span>
+										<div v-show="editMode" class="input-group input-group-sm">
+											<input class="form-control" name="elevasi" v-model="location.elevasi">
+											<div class="input-group-append">
+												<span class="input-group-text">mdpl</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="list-group-item px-3">
+								<div class="row ">
+									<div class="col-4">Jenis Pos</div>
+									<div class="col-8">
+										<span v-show="!editMode">
+											<span v-if="location.tipe == 1">PCH (Pos Curah Hujan)</span>
+											<span v-else-if="location.tipe == 2">PDA (Pos Duga Air)</span>
+											<span v-else-if="location.tipe == 4">Klimatologi</span>
+											<span v-else>-</span>
+										</span>
+										<div v-show="editMode">
+											<div class="custom-control custom-radio">
+												<input type="radio" id="tipe1" name="tipe" class="custom-control-input" v-model="location.tipe" value="1" required>
+												<label class="custom-control-label" for="tipe1">PCH (Pos Curah Hujan)</label>
+											</div>
+											<div class="custom-control custom-radio">
+												<input type="radio" id="tipe2" name="tipe" class="custom-control-input" v-model="location.tipe" value="2" required>
+												<label class="custom-control-label" for="tipe2">PDA (Pos Duga Air)</label>
+											</div>
+											<div class="custom-control custom-radio">
+												<input type="radio" id="tipe3" name="tipe" class="custom-control-input" v-model="location.tipe" value="4" required>
+												<label class="custom-control-label" for="tipe3">Klimatologi</label>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="list-group-item px-3">
+								<div class="row ">
+									<div class="col-4">Wilayah</div>
+									<div class="col-8">
+										<span v-show="!editMode" class="text-capitalize">
+											{[{ location.wilayah }]}
+										</span>
+										<div v-show="editMode">
+											<div class="custom-control custom-radio">
+												<input type="radio" id="wilayah1" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="hulu" required>
+												<label class="custom-control-label" for="wilayah1">Hulu</label>
+											</div>
+											<div class="custom-control custom-radio">
+												<input type="radio" id="wilayah2" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="tengah" required>
+												<label class="custom-control-label" for="wilayah2">Tengah</label>
+											</div>
+											<div class="custom-control custom-radio">
+												<input type="radio" id="wilayah3" name="wilayah" class="custom-control-input" v-model="location.wilayah" value="hilir" required>
+												<label class="custom-control-label" for="wilayah3">Hilir</label>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							{% if user().tenant_id == 0 %}
+								<div class="list-group-item px-3">
+									<div class="row ">
+										<div class="col-4">Pemilik</div>
+										<div class="col-8">
+											<span v-show="!editMode" class="">{[{ location.tenant_nama }]}</span>
+											<select v-show="editMode" class="form-control form-control-sm" name="tenant_id" v-model="location.tenant_id" required>
+												<option hidden value="null">&gt;&gt; Pilih Tenant &lt;&lt;</option>
+												<option v-for="tenant in tenants" :value="tenant.id">{[{ tenant.nama }]}</option>
+											</select>
+										</div>
+									</div>
+								</div>
+							{% endif %}
+							<div class="list-group-item px-3">
+								<div class="row ">
+									<div class="col-4">LonLat</div>
+									<div class="col-8 text-ellipsis">
+										<span v-show="!editMode">{[{ location.ll ? location.ll : '-' }]}</span>
+										<div v-show="editMode">
+											<div class="input-group input-group-sm">
+												<input class="form-control" name="ll" v-model="location.ll">
+												<div class="input-group-append">
+													<button class="btn btn-secondary" type="button" @click="getCurrentPosition()">
+														<i class="fas fa-map-pin"></i>
+													</button>
+												</div>
+											</div>
+											<div class="small" style="line-height: 1">Klik pada MAP untuk mendapatkan nilai LonLat</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="d-flex p-3">
+							{# <a class="btn btn-secondary mr-2" href="/location">
+								Kembali
+							</a> #}
+
+							<div class="ml-auto" v-cloak>
+								<button v-show="!editMode" class="btn btn-primary" type="button" @click="toggleEdit()" key='btn-edit'>
+									Edit
+								</button>
+								<button v-show="editMode" class="btn btn-secondary mr-2" type="button" @click="toggleEdit()" key='btn-batal'>
+									Batal
+								</button>
+								<button v-show="editMode" class="btn btn-warning" type="submit" key='btn-simpan'>
+									Simpan
+								</button>
+							</div>
+						</div>
+					</form>
 				</div>
 			</div>
 		</div>
