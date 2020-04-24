@@ -64,6 +64,8 @@ foreach ($locations as $location) {
         'tenant_id' => $location['tenant_id'],
         'tenant_nama' => $location['tenant_nama'],
         'elevasi' => '',
+        'rain' => null,
+        'wlev' => null,
         'tipe' => $location['tipe'],
         'wilayah' => $location['wilayah'],
     ];
@@ -142,6 +144,8 @@ foreach ($locations as $location) {
             LIMIT 1")->fetch();
         if ($latest_periodik) {
             $rdc_data['latest_sampling'] = $latest_periodik['sampling'];
+            $rdc_data['rain'] = $latest_periodik['rain'];
+            $rdc_data['wlev'] = $latest_periodik['wlev'];
         }
 
         // total all time
