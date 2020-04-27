@@ -4,82 +4,141 @@
 
 {% block content %}
 
-    <div class="p-3" id="app">
+    <div class="px-3 py-4" id="app">
 
-        {% if (user().tenant_id == 0) %}
-            <!-- Page Heading -->
-            <div class="d-flex align-items-center mb-4">
-                <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-                <a href="/logger/add" class="btn btn-primary ml-auto" id="btn-create" autofocus>Add new logger</a>
+        <!-- Page Heading -->
+        <div class="d-flex align-items-center mb-3 mt-n2">
+            <h1 class="h5 mb-0 mr-auto text-gray-800">Daftar Logger</h1>
+            {% if (user().tenant_id == 0) %}
+                <a href="/logger/add" class="btn btn-sm btn-primary" id="btn-create" autofocus>New</a>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <div class="mb-3" v-cloak>
+                <div class="form-group mb-1">
+                    <input class="form-control" type="text" placeholder="filter" v-model="filters">
+                </div>
+
+                <span class="small" :class="sortedloggers.length == 0 ? 'text-danger' : ''">
+                    <i class="fas fa-microchip mr-1"></i>
+                    {[{ sortedloggers.length }]} Logger
+                </span>
             </div>
-        {% endif %}
 
-        <div v-cloak>
-            <div v-for="loggers, tenant_nama in groupedSortedLoggers" class="mb-3">
-                <h4>{[{ tenant_nama }]}</h4>
-                <div class="row">
-                    <div v-for="logger in loggers" class="col-12 col-sm-6 col-lg-4 mb-3">
-                        <div class="card card-sm h-100 shadow-sm" :class="getBorderType(logger)">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center font-large mb-3">
-                                    <div class="flex-fill font-weight-normal" :class="getColorType(logger)">
-                                        <span v-if="logger.location_nama">{[{ logger.location_nama }]}</span>
-                                        <span v-else class="text-muted">(location not set)</span>
-                                    </div>
-                                    <div v-if="logger.sampling && !logger.fetching" class="text-muted ml-auto">
-                                        {[{ formatSampling(logger.sampling) }]}
-                                    </div>
-                                    <div v-else-if="logger.fetching" class="text-muted ml-auto">
-                                        <i class="fas fa-spin fa-sync"></i>
-                                    </div>
-                                </div>
+            <div class="card rounded-0 mx-n3" v-cloak>
+                <div class="card-header">
+                    <div class="d-flex justify-content-around align-items-center">
+                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('tipe')">
+                            Tipe
+                        </button>
 
-                                <a class="btn-link text-decoration-none" :href="'/logger/' + logger.sn">
-                                    <div class="d-flex align-items-center font-small text-muted">
-                                        <div>
-                                            {[{ logger.sn }]}
-                                        </div>
-                                        <div v-if="logger.up_s" class="ml-auto">
-                                            On {[{ moment(logger.up_s).fromNow() }]}
-                                        </div>
-                                    </div>
+                        <button class="btn btn-sm btn-link text-secondary text-decoration-none" type="button" @click="showFilterModal('sort')">
+                            Sort
+                        </button>
+                    </div>
+                </div>
+                <div class="list-group list-group-borderless" v-for="logger, index in sortedloggers">
+                    <a :href="'/logger/'+ logger.sn" class="list-group-item list-group-item-action px-2 py-2 d-flex border-bottom">
+                        <div class="flex-fill ml-2">
+                            <small class="text-secondary">
+                                [{[{ logger.sn }]}]
+                            </small>
+                            <h6 class="text-dark mt-1 mb-1" style="font-weight: 600">
+                                {[{ logger.location_nama }]}
+                            </h6>
 
-                                    <div class="d-flex align-items-center font-small">
-                                        <div>
-                                            <!-- <span v-if="logger.rain != null">
-                                                {[{ logger.rain }]}
-                                            </span>
-                                            <span v-if="logger.wlev != null">
-                                                {[{ logger.wlev }]}
-                                            </span> -->
-                                            <span v-if="logger.temp != null">
-                                                <i class="fas fa-thermometer-half"></i>
-                                                {[{ logger.temp }]}℃
-                                            </span>
-                                            <span v-if="logger.humi != null">
-                                                • {[{ logger.humi }]}%
-                                            </span>
-                                        </div>
-                                        <div class="ml-auto">
-                                            <span v-if="logger.mdpl != null">
-                                                {[{ logger.mdpl }]}mdpl
-                                            </span>
-                                            <span v-if="logger.sq != null">
-                                                <i class="fas fa-signal"></i>
-                                                {[{ logger.sq }]}
-                                            </span>
-                                            <span v-if="logger.batt != null">
-                                                <i class="fas fa-battery-three-quarters"></i>
-                                                {[{ logger.batt }]}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </a>
+                            <p class="small mb-0">
+                                <span v-if="logger.tipe == 'arr'" class="badge text-primary border border-primary">PCH</span>
+                                <span v-else-if="logger.tipe == 'awlr'" class="badge text-danger border border-danger">PDA</span>
+                                <span v-else-if="logger.tipe == 'klimat'" class="badge text-warning border border-warning">KLIMAT</span>
+                                <span v-else class="text-secondary">unknown</span>
+
+                                <span class="ml-1">
+                                    <span v-if="logger.tipe == 'awlr'" class="">
+                                        <span v-if="logger.wlev">
+                                            <i class="fas fa-water fa-sm text-muted mr-0"></i>
+                                            {[{ logger.wlev }]}
+                                        </span>
+                                    </span>
+                                    <span v-else class="">
+                                        <span v-if="logger.rain">
+                                            <i class="fas fa-tint fa-sm text-muted mr-0"></i>
+                                            {[{ logger.rain }]}
+                                        </span>
+                                    </span>
+                                </span>
+                            </p>
+                        </div>
+
+                        <div class="ml-auto mr-2 small">
+                            <div class="mt-1 mb-1">
+                                <span v-if="!logger.persen_data_diterima_today || logger.persen_data_diterima_today <= 30" class="text-danger">
+                                    {[{ logger.persen_data_diterima_today ? logger.persen_data_diterima_today : '0.0' }]}
+                                </span>
+                                <span v-else-if="logger.persen_data_diterima_today <= 60" class="text-warning">
+                                    {[{ logger.persen_data_diterima_today }]}
+                                </span>
+                                <span v-else class="text-success">
+                                    {[{ logger.persen_data_diterima_today }]}
+                                </span>
+
+                                /
+
+                                <span v-if="!logger.persen_data_diterima_month || logger.persen_data_diterima_month <= 30" class="text-danger">
+                                    {[{ logger.persen_data_diterima_month ? logger.persen_data_diterima_month : '0.0' }]}
+                                </span>
+                                <span v-else-if="logger.persen_data_diterima_month <= 60" class="text-warning">
+                                    {[{ logger.persen_data_diterima_month }]}
+                                </span>
+                                <span v-else class="text-success">
+                                    {[{ logger.persen_data_diterima_month }]}
+                                </span>
+
+                                /
+
+                                <span v-if="!logger.persen_data_diterima_year || logger.persen_data_diterima_year <= 30" class="text-danger">
+                                    {[{ logger.persen_data_diterima_year ? logger.persen_data_diterima_year : '0.0' }]}
+                                </span>
+                                <span v-else-if="logger.persen_data_diterima_year <= 60" class="text-warning">
+                                    {[{ logger.persen_data_diterima_year }]}
+                                </span>
+                                <span v-else class="text-success">
+                                    {[{ logger.persen_data_diterima_year }]}
+                                </span>
+                            </div>
+
+                            <div class="font-weight-normal text-right">
+                                {[{ logger.latest_sampling ? moment(logger.latest_sampling).format('D MMM, kk:mm') : '' }]}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="filter-modal" tabindex="-1" role="dialog" aria-labelledby="filter-modal-title" aria-hidden="true">
+                <div class="modal-dialog p-2" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h6 class="mb-0" id="filter-modal-title" style="font-weight: 600">
+                                Filter by
+                                <span class="text-capitalize">{[{ filterModal.category }]}</span>
+                            </h6>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="card-body py-0">
+                            <div class="list-group list-group-flush">
+                                <button v-for="item in filterModal.items" class="list-group-item list-group-item-action" @click="itemFilter(item.value)" v-html="item.name">
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -87,142 +146,249 @@
 
 {% block js %}
     <script>
-        const groupBy = key => array =>
-          array.reduce((objectsByKeyValue, obj) => {
-            const value = obj[key];
-            objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
-            return objectsByKeyValue;
-          }, {});
-        const groupByTenantNama = groupBy('tenant_nama');
+        // const groupBy = key => array =>
+        //   array.reduce((objectsByKeyValue, obj) => {
+        //     const value = obj[key];
+        //     objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
+        //     return objectsByKeyValue;
+        //   }, {});
+        // const groupByTenantNama = groupBy('tenant_nama');
 
         var _app = new Vue({
             el: '#app',
             data: function () {
                 return {
                     moment,
-                    now: '',
-                    loggers: {{ loggers | json_encode | raw }}
+                    filters: "",
+                    filterModal: {
+                        category: '',
+                        items: []
+                    },
+                    loggers: {{ loggers | json_encode | raw }},
                 }
             },
-            beforeMount: function () {
-                this.now = moment(new Date());
-                // for (var index in this.loggers) {
-                //     this.fetchRaw(index);
-                // }
-            },
             computed: {
-                sortedLoggers: function () {
-                    var loggers = this.loggers.slice();
-                    loggers.sort((a, b) => {
-                        if (!a.sampling && !b.sampling) {
-                            return 0;
+                sortedloggers: function () {
+                    // duplikat dulu biar nggak pengaruh ke data asli
+                    var loggers = this.loggers.slice()
+
+                    // get filter as array
+                    var filters = this.filters.split(' ')
+                    var filtersArr = {}
+                    for (var filter of filters) {
+                        var f = filter.split(':')
+                        filtersArr[f[0]] = f[1] ? f[1] : ''
+                    }
+
+                    // filter wilayah
+                    if (filtersArr.wilayah) {
+                        loggers = loggers.filter(l => l.wilayah == filtersArr.wilayah)
+                    }
+
+                    // filter tipe
+                    if (filtersArr.tipe) {
+                        var tipe = ''
+                        switch (filtersArr.tipe) {
+                            case 'pch':
+                                tipe = 'arr'
+                                break;
+
+                            case 'pda':
+                                tipe = 'awlr'
+                                break;
+
+                            case 'klimat':
+                                tipe = 'klimat'
+                                break;
+                        
+                            default:
+                                break;
                         }
 
-                        if (!a.sampling) {
-                            return 1;
+                        if (tipe) {
+                            loggers = loggers.filter(l => l.tipe == tipe)
                         }
+                    }
 
-                        if (!b.sampling) {
-                            return -1;
+                    // sort
+                    if (filtersArr.sort) {
+                        if (filtersArr.sort == 'data_terbaru' || filtersArr.sort == 'data_terlama') {
+                            if (filtersArr.sort == 'data_terbaru') {
+                                loggers = loggers.sort((a,b) => {
+                                    if (a.latest_sampling == undefined) {
+                                        return 1
+                                    }
+                                    if (b.latest_sampling == undefined) {
+                                        return -1
+                                    }
+
+                                    return a.latest_sampling > b.latest_sampling ? -1 :
+                                        (a.latest_sampling < b.latest_sampling ? 1 : 0)
+                                })
+                            } else {
+                                loggers = loggers.sort((a,b) => {
+                                    if (a.latest_sampling == undefined) {
+                                        return 1
+                                    }
+                                    if (b.latest_sampling == undefined) {
+                                        return -1
+                                    }
+                                    
+                                    return a.latest_sampling > b.latest_sampling ? 1 :
+                                        (a.latest_sampling < b.latest_sampling ? -1 : 0)
+                                })
+                            }
+                        } else if (filtersArr.sort == 'jml_banyak' || filtersArr.sort == 'jml_sedikit') {
+                            if (filtersArr.sort == 'jml_banyak') {
+                                loggers = loggers.sort((a,b) => {
+                                    a.total_data_diterima = parseInt(a.total_data_diterima)
+                                    b.total_data_diterima = parseInt(b.total_data_diterima)
+
+                                    if (isNaN(a.total_data_diterima)) { a.total_data_diterima = 0 }
+                                    if (isNaN(b.total_data_diterima)) { b.total_data_diterima = 0 }
+                                    
+                                    return a.total_data_diterima > b.total_data_diterima ? -1 :
+                                        (a.total_data_diterima < b.total_data_diterima ? 1 : 0)
+                                })
+                            } else {
+                                loggers = loggers.sort((a,b) => {
+                                    a.total_data_diterima = parseInt(a.total_data_diterima)
+                                    b.total_data_diterima = parseInt(b.total_data_diterima)
+
+                                    if (isNaN(a.total_data_diterima)) { a.total_data_diterima = 0 }
+                                    if (isNaN(b.total_data_diterima)) { b.total_data_diterima = 0 }
+
+                                    return a.total_data_diterima > b.total_data_diterima ? 1 :
+                                        (a.total_data_diterima < b.total_data_diterima ? -1 : 0)
+                                })
+                            }
                         }
+                    }
 
-                        if (!a.mdpl) {
-                            return 1;
-                        }
-
-                        if (!b.mdpl) {
-                            return -1;
-                        }
-
-                        // a.mdpl = parseInt(a.mdpl);
-                        // b.mdpl = parseInt(b.mdpl);
-
-                        // if (a.mdpl > b.mdpl) {
-                        //     return -1;
-                        // } else if (a.mdpl < b.mdpl) {
-                        //     return 1;
-                        // }
-                        return 0;
-                    });
-                    // sort done on backend
-                    return loggers;
-                },
-                groupedSortedLoggers: function () {
-                    var gsl = groupByTenantNama(this.sortedLoggers);
-                    var gslOrdered = {};
-                    Object.keys(gsl).sort().forEach(function(key) {
-                      gslOrdered[key] = gsl[key];
-                    });
-                    return gslOrdered
+                    return loggers
                 }
             },
             methods: {
-                fetchRaw: function (index) {
-                    var logger = this.loggers[index];
-                    logger.fetching = true;
+                showFilterModal: function (category) {
+                    let items = [];
+                    switch (category) {
+                        case 'wilayah':
+                            items = [
+                                {
+                                    value: null,
+                                    name: 'Semua'
+                                },
+                                {
+                                    value: 'hulu',
+                                    name: 'Hulu'
+                                },
+                                {
+                                    value: 'tengah',
+                                    name: 'Tengah'
+                                },
+                                {
+                                    value: 'hilir',
+                                    name: 'Hilir'
+                                }
+                            ];
+                            break;
 
-                    // if (typeof localStorage['content_'+ logger.sn] != typeof undefined) {
-                    //     logger.content = JSON.parse(localStorage['content_'+ logger.sn]);
-                    // }
+                        case 'tipe':
+                            items = [
+                                {
+                                    value: null,
+                                    name: 'Semua'
+                                },
+                                {
+                                    value: 'pch',
+                                    name: 'Pos Curah Hujan'
+                                },
+                                {
+                                    value: 'pda',
+                                    name: 'Pos Duga Air'
+                                },
+                                {
+                                    value: 'klimat',
+                                    name: 'Klimat'
+                                }
+                            ];
+                            break;
 
-                    $.ajax({
-                        url: '/api/logger/'+ logger.sn +'/raw',
-                        data: {
-                            limit: 1
+                        case 'sort':
+                            items = [
+                                {
+                                    value: 'data_terbaru',
+                                    name: 'Usia data terbaru'
+                                },
+                                {
+                                    value: 'data_terlama',
+                                    name: 'Usia data terlama'
+                                },
+                                {
+                                    value: 'jml_banyak',
+                                    name: 'Jumlah data <i class="fas fa-sort-numeric-down-alt"></i>'
+                                },
+                                {
+                                    value: 'jml_sedikit',
+                                    name: 'Jumlah data <i class="fas fa-sort-numeric-down"></i>'
+                                }
+                            ];
+                            break;
+                    
+                        default:
+                            break;
+                    }
+                    this.filterModal.category = category;
+                    this.filterModal.items = items;
+                    $('#filter-modal').modal('show');
+                },
+                itemFilter: function (value) {
+                    if (value === null) {
+                        this.removeFilter(this.filterModal.category)
+                    } else {
+                        this.addFilter(this.filterModal.category, value)
+                    }
+                    $('#filter-modal').modal('hide');
+                },
+                addFilter: function (key, value) {
+                    var filters = this.filters.split(' ')
+                    var filtersArr = {}
+                    for (var filter of filters) {
+                        var f = filter.split(':')
+                        filtersArr[f[0]] = f[1] ? f[1] : ''
+                    }
+
+                    filtersArr[key] = value
+                    filters = []
+                    for (var key in filtersArr) {
+                        var value = filtersArr[key].toLowerCase()
+                        if (value) {
+                            filters.push(`${key}:${value}`)
+                        } else {
+                            filters.push(`${key}`)
                         }
-                    })
-                    .then(res => {
-                        if (res.status === 200) {
-                            if (res.data.loggers.length > 0) {
-                                logger.content = res.data.loggers[0].content;
-                                // localStorage['content_'+ logger.sn] = JSON.stringify(res.data.loggers[0].content);
-                            }
+                    }
+                    this.filters = filters.join(' ')
+                },
+                removeFilter: function (key) {
+                    var filters = this.filters.split(' ')
+                    var filtersArr = {}
+                    for (var filter of filters) {
+                        var f = filter.split(':')
+                        filtersArr[f[0]] = f[1] ? f[1] : ''
+                    }
+
+                    delete filtersArr[key]
+                    filters = []
+                    for (var key in filtersArr) {
+                        var value = filtersArr[key].toLowerCase()
+                        if (value) {
+                            filters.push(`${key}:${value}`)
+                        } else {
+                            filters.push(`${key}`)
                         }
-                    })
-                    .always(() => {
-                        logger.fetching = false;
-                    });
-                },
-                getBgSN: function (logger) {
-                    if (!logger.rain && !logger.wlev) {
-                        return 'bg-secondary';
                     }
-
-                    if (logger.rain) {
-                        return 'bg-primary';
-                    } else if (logger.wlev) {
-                        return 'bg-danger';
-                    }
-                    return 'bg-secondary';
-                },
-                getColorType: function (logger) {
-                    if (!logger.rain && !logger.wlev) {
-                        return '';
-                    }
-
-                    if (logger.rain) {
-                        return 'font-weight-bold text-primary';
-                    } else if (logger.wlev) {
-                        return 'font-weight-bold text-danger';
-                    }
-                    return '';
-                },
-                getBorderType: function (logger) {
-                    if (!logger.rain && !logger.wlev) {
-                        return '';
-                    }
-
-                    if (logger.rain) {
-                        return 'border-arr';
-                    } else if (logger.wlev) {
-                        return 'border-awlr';
-                    }
-                    return '';
-                },
-                formatSampling: function (sampling) {
-                    var diffDay = moment.duration(this.now.diff(moment(sampling))).asDays().toFixed(0);
-                    var samplingTime = moment(sampling).format('kk:mm');
-                    return  diffDay > 0 ? samplingTime +", "+ diffDay +"D" : samplingTime;
+                    this.filters = filters.join(' ')
                 }
             }
         });
