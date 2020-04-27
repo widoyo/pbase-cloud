@@ -8,9 +8,10 @@ $app->group('/login', function () {
 
 	$this->get('', function (Request $request, Response $response) {
 		// cek apakah ada login token
-		$login_token = \Dflydev\FigCookies\FigRequestCookies::get($request, 'login_token', null);
+		$login_token = \Dflydev\FigCookies\FigRequestCookies::get($request, KEY_LOGIN_TOKEN, null);
         if ($login_token) {
-			$login_token = str_replace("login_token=", "", $login_token);
+			$login_token = str_replace(KEY_LOGIN_TOKEN . "=", "", $login_token);
+			// dump($login_token);
 
             $stmt = $this->db->prepare("SELECT * FROM users WHERE login_token=:login_token");
             $stmt->execute([':login_token' => $login_token]);
@@ -54,8 +55,8 @@ $app->group('/login', function () {
 			$user['login_token'] = base64_encode("{$credentials['username']}:{$credentials['password']}:{$now}");
 			$user['login_token'] = md5($user['login_token']);
 
-			$domain = parse_url(env('APP_URL'));
-			$domain = $domain['host'];
+			// $domain = parse_url(env('APP_URL'));
+			// $domain = $domain['host'];
 
 			// dump($response);
 			$this->db->query("UPDATE users SET login_token='{$user['login_token']}' WHERE id={$user['id']}");
@@ -64,11 +65,11 @@ $app->group('/login', function () {
 		// set cookie ke browser
 		$response = \Dflydev\FigCookies\FigResponseCookies::set(
 			$response,
-			\Dflydev\FigCookies\SetCookie::create('login_token')
+			\Dflydev\FigCookies\SetCookie::create(KEY_LOGIN_TOKEN)
 				->withValue($user['login_token'])
 				->rememberForever()
 				->withPath('/')
-				->withDomain($domain)
+				// ->withDomain($domain)
 				->withHttpOnly(true)
 		);
 

@@ -21,6 +21,8 @@ session_start();
  * SETTINGS BLOCK
  */
 
+const KEY_LOGIN_TOKEN = 'login_token_v2';
+
 // Load .env
 $dotenv = new Dotenv\Dotenv(__DIR__ .'/../');
 $dotenv->load();
@@ -193,13 +195,13 @@ $loggedinMiddleware = function (Request $request, Response $response, $next) {
     $now = time();
 
     // cek apakah ada login token
-    $login_token = \Dflydev\FigCookies\FigRequestCookies::get($request, 'login_token', null);
+    $login_token = \Dflydev\FigCookies\FigRequestCookies::get($request, KEY_LOGIN_TOKEN, null);
 
     // cek masa aktif login
     if ((!empty($user_refresh_time) && $user_refresh_time < $now) || $login_token) {
         // cek apakah login_token valid
         $login_token_valid = false;
-        $login_token = str_replace("login_token=", "", $login_token);
+        $login_token = str_replace(KEY_LOGIN_TOKEN . "=", "", $login_token);
         if ($login_token) {
             $stmt = $this->db->prepare("SELECT * FROM users WHERE login_token=:login_token");
             $stmt->execute([':login_token' => $login_token]);
