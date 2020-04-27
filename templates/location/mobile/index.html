@@ -7,8 +7,8 @@
 	<div id="app" class="px-3 py-4">
 
         <!-- Page Heading -->
-        <div class="d-flex align-items-center justify-content-between mb-3 mt-n2">
-            <h1 class="h5 mb-0 text-gray-800">Daftar Lokasi</h1>
+        <div class="d-flex align-items-center mb-3 mt-n2">
+            <h1 class="h5 mb-0 mr-auto text-gray-800">Daftar Lokasi</h1>
             <a href="/location/add" class="btn btn-sm btn-primary" id="btn-create">New</a>
         </div>
         
@@ -188,10 +188,7 @@
 {% block js %}
     {# include 'location/modal_config.html' #}
     
-    <script>
-        moment.locale('id');
-        Vue.options.delimiters = ['{[{', '}]}'];
-        
+    <script>        
         var _app = new Vue({
             el: '#app',
             data: function () {
