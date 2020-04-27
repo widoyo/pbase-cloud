@@ -5,8 +5,11 @@
 {% block content %}
 
     <!-- Page Heading -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Daftar Lokasi</h1>
+    <div class="d-flex align-items-center mb-4">
+        <h1 class="h3 mb-0 mr-auto text-gray-800">
+            <i class="fas fa-map-marked-alt fa-sm mr-1"></i>
+            Daftar Lokasi
+        </h1>
         <a href="/location/add" class="btn btn-primary text-nowrap ml-3" id="btn-create">Tambah Lokasi</a>
     </div>
     
@@ -80,15 +83,26 @@
                     </td>
                     <td>
                         <a :href="'/location/'+ location.id" class="text-dark font-weight-bold">
-                            <h6 class="font-weight-bold text-dark mb-1">{[{ location.nama }]}</h6>
+                            <h6 class="mb-1">{[{ location.nama }]}</h6>
                         </a>
                         <p class="mb-0 font-weight-normal small text-muted">
                             Data terakhir {[{ location.latest_sampling ? moment(location.latest_sampling).format('D MMM YYYY, kk:mm') : '-' }]}
                         </p>
                     </td>
 
-                    <td class="fit text-center">
-                        {[{ location.elevasi ? location.elevasi +'mdpl' : '' }]}
+                    <td class="fit text-center text-nowrap">
+                        <span v-if="location.tipe == 2" class="">
+                            <span v-if="location.wlev">
+                                <i class="fas fa-water fa-sm text-muted mr-1"></i>
+                                {[{ location.wlev }]}
+                            </span>
+                        </span>
+                        <span v-else class="">
+                            <span v-if="location.rain">
+                                <i class="fas fa-tint fa-sm text-muted mr-1"></i>
+                                {[{ location.rain }]}
+                            </span>
+                        </span>
                     </td>
                     <td class="text-center">
                         <span v-if="location.tipe == 1" class="badge badge-primary">PCH</span>
@@ -153,16 +167,9 @@
 {% endblock %}
 
 {% block js %}
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
-    <script src="{{ asset('js/moment.min.js') }}"></script>
-    <script src="{{ asset('js/id.js') }}"></script>
     {# include 'location/modal_config.html' #}
     
     <script>
-        moment.locale('id');
-        Vue.options.delimiters = ['{[{', '}]}'];
-        
         var _app = new Vue({
             el: '#app',
             data: function () {

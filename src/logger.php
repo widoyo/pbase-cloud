@@ -6,70 +6,46 @@ use Slim\Http\Response;
 $app->group('/logger', function () use ($getLoggerMiddleware) {
 
     $this->get('', function (Request $request, Response $response, $args) {
+        // override utk cek mobile
+        $request  = new Slim\Http\MobileRequest($request);
+		$response = new Slim\Http\MobileResponse($response);
         $user = $this->user;
+
         $timezone_default = timezone_default();
 
+        $pclient = new Predis\Client();
+        $logger_data = [];
         if ($user['tenant_id'] > 0)
         {
-            $loggers_stmt = $this->db->query("SELECT
-                    logger.sn,
-                    location.nama AS location_nama,
-                    tenant.nama AS tenant_nama,
-                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                    periodik.*
-                FROM logger
-                    LEFT JOIN location ON logger.location_id = location.id
-                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                    LEFT JOIN periodik ON periodik.id = (
-                        SELECT id from periodik
-                        WHERE periodik.logger_sn = logger.sn
-                        ORDER BY periodik.sampling DESC
-                        LIMIT 1
-                    )
-                WHERE logger.tenant_id = {$user['tenant_id']}
-                ORDER BY 
-                    periodik.mdpl DESC,
-                    periodik.sampling DESC,
-                    location.nama,
-                    logger.sn");
+            $keys = $pclient->smembers("tenant:{$user['tenant_id']}:logger");
+            foreach ($keys as $key) {
+                $logger_data[] = $pclient->hgetall($key);
+            }
         }
         else
         {
-            $loggers_stmt = $this->db->query("SELECT
-                    logger.sn,
-                    location.nama AS location_nama,
-                    tenant.nama AS tenant_nama,
-                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                    periodik.*
-                FROM logger
-                    LEFT JOIN location ON logger.location_id = location.id
-                    LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                    LEFT JOIN periodik ON periodik.id = (
-                        SELECT id from periodik
-                        WHERE periodik.logger_sn = logger.sn
-                        ORDER BY periodik.sampling DESC
-                        LIMIT 1
-                    )
-                ORDER BY 
-                    periodik.mdpl DESC,
-                    periodik.sampling DESC,
-                    location.nama,
-                    logger.sn");
+            $keys = $pclient->smembers("logger");
+            foreach ($keys as $key) {
+                $logger_data[] = $pclient->hgetall($key);
+            }
         }
-        $logger_data = $loggers_stmt->fetchAll();
         // dump($logger_data);
 
         foreach ($logger_data as &$logger) {
-            if (!$logger['sampling']) {
+            if (!$logger['latest_sampling']) {
                 continue;
             }
 
-            $logger['sampling'] = $logger['sampling'] ? timezone_format($logger['sampling'], $logger['timezone']) : null;
+            $logger['sampling'] = $logger['latest_sampling'] ? timezone_format($logger['latest_sampling'], $logger['timezone']) : null;
             $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
             $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
         }
 
-        return $this->view->render($response, 'logger/mobile/index.html', [
+        $template = $request->isMobile() ?
+            'logger/mobile/index.html' :
+            'logger/index.html';
+
+        return $this->view->render($response, $template, [
             'loggers' => $logger_data,
             // 'total_data' => $total_data,
         ]);
@@ -106,7 +82,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         $stmt->bindValue(':tenant_id', $logger['tenant_id'] ? $logger['tenant_id'] : null);
         $stmt->execute();
 
-        $this->flash->addMessage('messages', "Logger {$logger[sn]} telah ditambahkan");
+        $this->flash->addMessage('messages', "Logger {$logger['sn']} telah ditambahkan");
         
         return $response->withRedirect('/logger');
     });
@@ -255,7 +231,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 	        $stmt->bindValue(':id', $logger['id']);
 	        $stmt->execute();
 
-	        $this->flash->addMessage('messages', "Perubahan Logger {$logger[sn]} telah disimpan");
+	        $this->flash->addMessage('messages', "Perubahan Logger {$logger['sn']} telah disimpan");
 	        
 	        return $response->withRedirect('/logger');
 	    });
@@ -288,10 +264,13 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $l['ts_a'] = $l['ts_a'] ? timezone_format($l['ts_a'], $timezone) : null;
             }
 
-            $locations = $this->db->query("SELECT * FROM location
-                WHERE tenant_id = {$logger['tenant_id']}
-                ORDER BY nama")
-            ->fetchAll();
+            $locations = [];
+            if ($logger['tenant_id']) {
+                $locations = $this->db->query("SELECT * FROM location
+                    WHERE tenant_id = {$logger['tenant_id']}
+                    ORDER BY nama")
+                ->fetchAll();
+            }
 
             return $this->view->render($response, 'logger/mobile/show.html', [
                 'loggers' => $loggers,

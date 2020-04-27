@@ -50,14 +50,25 @@
                         <div class="flex-fill">
                             <h6 class="text-dark mt-1 mb-1" style="font-weight: 600">{[{ location.nama }]}</h6>
 
-                            <p class="small text-secondary mb-0">
+                            <p class="small mb-0">
                                 <span v-if="location.tipe == 1" class="badge text-primary border border-primary">PCH</span>
                                 <span v-else-if="location.tipe == 2" class="badge text-danger border border-danger">PDA</span>
                                 <span v-else-if="location.tipe == 4" class="badge text-warning border border-warning">KLIMAT</span>
                                 <span v-else class="text-secondary">no logger</span>
 
                                 <span class="ml-1">
-                                    {[{ location.elevasi ? location.elevasi +' mdpl' : '' }]}
+                                    <span v-if="location.tipe == 2" class="">
+                                        <span v-if="location.wlev">
+                                            <i class="fas fa-water fa-sm text-muted mr-0"></i>
+                                            {[{ location.wlev }]}
+                                        </span>
+                                    </span>
+                                    <span v-else class="">
+                                        <span v-if="location.rain">
+                                            <i class="fas fa-tint fa-sm text-muted mr-0"></i>
+                                            {[{ location.rain }]}
+                                        </span>
+                                    </span>
                                 </span>
                             </p>
                         </div>
@@ -175,10 +186,6 @@
 {% endblock %}
 
 {% block js %}
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
-    <script src="{{ asset('js/moment.min.js') }}"></script>
-    <script src="{{ asset('js/id.js') }}"></script>
     {# include 'location/modal_config.html' #}
     
     <script>
