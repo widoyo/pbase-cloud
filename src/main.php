@@ -87,7 +87,7 @@ $app->post('/logout', function (Request $request, Response $response, $args) {
 	$this->session->destroy();
 
 	// remove login_token
-	$response = \Dflydev\FigCookies\FigResponseCookies::expire($response, 'login_token');
+	$response = \Dflydev\FigCookies\FigResponseCookies::expire($response, KEY_LOGIN_TOKEN);
 
 	return $response->withRedirect('/login');
 })->add($loggedinMiddleware);
