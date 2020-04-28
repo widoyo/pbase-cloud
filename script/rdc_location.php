@@ -99,23 +99,6 @@ foreach ($locations as $location) {
     $logger_sn = [];
     foreach ($loggers as $logger) {
         $logger_sn[] = "'{$logger['sn']}'";
-
-        // $logger_data = $db->query("SELECT COUNT(*) FROM periodik
-        //     WHERE logger_sn='{$logger['sn']}'
-        //     GROUP BY logger_sn")->fetch();
-
-        // $latest_periodik = $db->query("SELECT * FROM periodik
-        //     WHERE logger_sn='{$logger['sn']}'
-        //     ORDER BY sampling DESC
-        //     LIMIT 1")->fetch();
-
-        // // cache logger count
-        // $rdc_logger_data = [
-        //     'sn' => $logger['sn'],
-        //     'count' => $logger_data ? $logger_data['count'] : 0,
-        //     'latest_sampling' => $latest_periodik ? $latest_periodik['sampling'] : '',
-        // ];
-        // $pclient->hmset("location:{$location['id']}:logger:{$logger['sn']}", $rdc_logger_data);
         $pclient->sadd("location:{$location['id']}:logger", "logger:{$logger['sn']}");
     }
     $logger_sn = implode(",", $logger_sn);
@@ -123,6 +106,7 @@ foreach ($locations as $location) {
     if (!empty($logger_sn)) {
         $periodik_mdpl = $db->query("SELECT * FROM periodik
             WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
+                AND sampling >= '2018-01-01'
                 AND mdpl IS NOT NULL
             ORDER BY sampling DESC
             LIMIT 1")->fetch();
@@ -132,6 +116,7 @@ foreach ($locations as $location) {
 
         $first_periodik = $db->query("SELECT * FROM periodik
             WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
+                AND sampling >= '2018-01-01'
             ORDER BY sampling ASC
             LIMIT 1")->fetch();
         if ($first_periodik) {
@@ -140,6 +125,7 @@ foreach ($locations as $location) {
 
         $latest_periodik = $db->query("SELECT * FROM periodik
             WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
+                AND sampling >= '2018-01-01'
             ORDER BY sampling DESC
             LIMIT 1")->fetch();
         if ($latest_periodik) {
@@ -247,6 +233,7 @@ foreach ($location_to_cache_periodics as $location_id) {
         // get oldest
         $old_periodik = $db->query("SELECT * FROM periodik
             WHERE (location_id={$location_id} OR logger_sn IN ({$logger_sn}))
+                AND sampling >= '2018-01-01'
             ORDER BY sampling
             LIMIT 1")->fetch();
         if (!$old_periodik) {
@@ -259,7 +246,7 @@ foreach ($location_to_cache_periodics as $location_id) {
     $to = $today;
 
     while ($from <= $to) {
-        echo "{$location_id}:{$from}:{$to}\n";
+        // echo "{$location_id}:{$from}:{$to}\n";
         $min = 0;
         $max = 0;
         $rdc_data = [

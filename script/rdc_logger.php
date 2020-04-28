@@ -53,6 +53,7 @@ $loggers = $db->query("SELECT
                     LEFT JOIN periodik ON periodik.id = (
                         SELECT id from periodik
                         WHERE periodik.logger_sn = logger.sn
+                            AND periodik.sampling >= '2018-01-01'
                         ORDER BY periodik.sampling DESC
                         LIMIT 1
                     )
@@ -63,9 +64,10 @@ $loggers = $db->query("SELECT
                     logger.sn")->fetchAll();
 
 foreach ($loggers as $logger) {
-    echo "{$logger['sn']}\n";
+    // echo "{$logger['sn']}\n";
     $logger_data = $db->query("SELECT COUNT(*) FROM periodik
         WHERE logger_sn='{$logger['sn']}'
+            AND sampling >= '2018-01-01'
         GROUP BY logger_sn")->fetch();
 
     $rdc_data = [
@@ -94,6 +96,7 @@ foreach ($loggers as $logger) {
 
     $first_periodik = $db->query("SELECT * FROM periodik
         WHERE (logger_sn = '{$logger['sn']}')
+            AND sampling >= '2018-01-01'
         ORDER BY sampling ASC
         LIMIT 1")->fetch();
     if ($first_periodik) {
