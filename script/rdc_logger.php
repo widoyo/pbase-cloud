@@ -57,10 +57,6 @@ $loggers = $db->query("SELECT
 
 foreach ($loggers as $logger) {
     // echo "{$logger['sn']}\n";
-    $logger_data = $db->query("SELECT COUNT(*) FROM periodik
-        WHERE logger_sn='{$logger['sn']}'
-            AND sampling >= '2018-01-01'
-        GROUP BY logger_sn")->fetch();
 
     $rdc_data = [
         'id' => $logger['logger_id'],
@@ -71,7 +67,7 @@ foreach ($loggers as $logger) {
         'location_nama' => $logger['location_nama'],
         'tenant_nama' => $logger['tenant_nama'],
         'timezone' => $logger['timezone'],
-        'count' => $logger_data ? $logger_data['count'] : 0,
+        'count' => 0,
     ];
 
     $first_periodik = $db->query("SELECT * FROM periodik
@@ -114,6 +110,7 @@ foreach ($loggers as $logger) {
         $latest_periodik ? $latest_periodik['sampling'] : ''
     );
     if (count($total_all) > 0) {
+        $rdc_data['count']                  = $total_all['diterima'];
         $rdc_data['total_data_diterima']    = $total_all['diterima'];
         $rdc_data['total_data_seharusnya']  = $total_all['seharusnya'];
         $rdc_data['persen_data_diterima']   = $total_all['persen'];
