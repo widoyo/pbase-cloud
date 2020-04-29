@@ -43,23 +43,15 @@ $loggers = $db->query("SELECT
                     logger.id AS logger_id,
                     logger.sn,
                     logger.tipe,
+                    logger.location_id,
+                    logger.tenant_id,
                     location.nama AS location_nama,
                     tenant.nama AS tenant_nama,
-                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                    periodik.*
+                    COALESCE(tenant.timezone, '{$timezone_default}') AS timezone
                 FROM logger
                     LEFT JOIN location ON logger.location_id = location.id
                     LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                    LEFT JOIN periodik ON periodik.id = (
-                        SELECT id from periodik
-                        WHERE periodik.logger_sn = logger.sn
-                            AND periodik.sampling >= '2018-01-01'
-                        ORDER BY periodik.sampling DESC
-                        LIMIT 1
-                    )
                 ORDER BY 
-                    periodik.mdpl DESC,
-                    periodik.sampling DESC,
                     location.nama,
                     logger.sn")->fetchAll();
 
@@ -74,23 +66,11 @@ foreach ($loggers as $logger) {
         'id' => $logger['logger_id'],
         'sn' => $logger['sn'],
         'tipe' => $logger['tipe'],
+        'location_id' => $logger['location_id'],
+        'tenant_id' => $logger['tenant_id'],
         'location_nama' => $logger['location_nama'],
         'tenant_nama' => $logger['tenant_nama'],
         'timezone' => $logger['timezone'],
-        'latest_sampling' => $logger['sampling'],
-        'up_s' => $logger['up_s'],
-        'ts_a' => $logger['ts_a'],
-        'received' => $logger['received'],
-        'mdpl' => $logger['mdpl'],
-        'apre' => $logger['apre'],
-        'sq' => $logger['sq'],
-        'temp' => $logger['temp'],
-        'humi' => $logger['humi'],
-        'batt' => $logger['batt'],
-        'rain' => $logger['rain'],
-        'wlev' => $logger['wlev'],
-        'location_id' => $logger['location_id'],
-        'tenant_id' => $logger['tenant_id'],
         'count' => $logger_data ? $logger_data['count'] : 0,
     ];
 
@@ -103,12 +83,35 @@ foreach ($loggers as $logger) {
         $rdc_data['first_sampling'] = $first_periodik['sampling'];
     }
 
+    $latest_periodik = $db->query("SELECT * FROM periodik
+        WHERE (logger_sn = '{$logger['sn']}')
+            AND sampling >= '2018-01-01'
+        ORDER BY sampling DESC
+        LIMIT 1")->fetch();
+    if ($latest_periodik) {
+        $data_latest = [
+            'latest_sampling' => $latest_periodik['sampling'],
+            'up_s' => $latest_periodik['up_s'],
+            'ts_a' => $latest_periodik['ts_a'],
+            'received' => $latest_periodik['received'],
+            'mdpl' => $latest_periodik['mdpl'],
+            'apre' => $latest_periodik['apre'],
+            'sq' => $latest_periodik['sq'],
+            'temp' => $latest_periodik['temp'],
+            'humi' => $latest_periodik['humi'],
+            'batt' => $latest_periodik['batt'],
+            'rain' => $latest_periodik['rain'],
+            'wlev' => $latest_periodik['wlev'],
+        ];
+        $rdc_data = array_merge($rdc_data, $data_latest);
+    }
+
     // total all time
     $total_all = get_total_data_logger(
         $db,
         $logger['sn'],
         $first_periodik ? $first_periodik['sampling'] : '',
-        $logger['sampling'] ? $logger['sampling'] : ''
+        $latest_periodik ? $latest_periodik['sampling'] : ''
     );
     if (count($total_all) > 0) {
         $rdc_data['total_data_diterima']    = $total_all['diterima'];
