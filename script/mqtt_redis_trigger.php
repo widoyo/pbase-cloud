@@ -20,9 +20,9 @@ $mqtt->close();
 // dipanggil oleh mqtt 
 function procmsg($topic, $msg)
 {
-    echo "Msg Recieved: " . date("r") . "\n";
-    echo "Topic: {$topic}\n\n";
-    echo "\t$msg\n\n";
+    // echo "Msg Recieved: " . date("r") . "\n";
+    // echo "Topic: {$topic}\n\n";
+    // echo "\t$msg\n\n";
 
     callme($msg);
 }
@@ -120,7 +120,7 @@ function callme($msg)
         if ($location_key) {
             $pclient->hmset($location_key, $rdc_data_location);
         }
-        echo "SAVED\n";
+        // echo "SAVED\n";
 
         $curr_sampling = new DateTime($rdc_data['latest_sampling']);
         $now = date('Y-m-d H:i:s');
