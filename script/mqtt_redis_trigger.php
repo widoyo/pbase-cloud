@@ -57,8 +57,18 @@ function callme($msg)
         }
 
         $logger_key = "logger:{$logger['sn']}";
+        $location_key = "";
+        $pclient->sadd("logger", $logger_key);
+        if ($logger['location_id']) {
+            $location_key = "location:{$logger['location_id']}";
+            $pclient->sadd("location:{$logger['location_id']}:logger", $logger_key);
+        }
+        if ($logger['tenant_id']) {
+            $pclient->sadd("tenant:{$logger['tenant_id']}:logger", $logger_key);
+        }
 
         $rdc_data = $pclient->hgetall($logger_key);
+        $rdc_data_location = [];
         if (empty($rdc_data)) {
             $rdc_data = [
                 'latest_sampling' => '1970-01-01 00:00:00',
@@ -99,17 +109,25 @@ function callme($msg)
             $rdc_data,
             raw2periodic($raw, $logger)
         );
+        $rdc_data_location['rain'] = $rdc_data['rain'];
+        $rdc_data_location['wlev'] = $rdc_data['wlev'];
+        $rdc_data_location['elevasi'] = $rdc_data['mdpl'];
+        $rdc_data_location['first_sampling'] = $rdc_data['first_sampling'];
+        $rdc_data_location['latest_sampling'] = $rdc_data['latest_sampling'];
 
         // simpan dulu sebelum hitung total data
         $pclient->hmset($logger_key, $rdc_data);
+        if ($location_key) {
+            $pclient->hmset($location_key, $rdc_data_location);
+        }
         echo "SAVED\n";
 
         $curr_sampling = new DateTime($rdc_data['latest_sampling']);
         $now = date('Y-m-d H:i:s');
 
         // total
-        $pclient->hincrby($logger_key, 'count', 1);
-        $pclient->hincrby($logger_key, 'total_data_diterima', 1);
+        $count = $pclient->hincrby($logger_key, 'count', 1);
+        $total_data_diterima = $pclient->hincrby($logger_key, 'total_data_diterima', 1);
 
         $total_data_seharusnya = countTotalRecord(
             $rdc_data['first_sampling'],
@@ -118,7 +136,7 @@ function callme($msg)
         $pclient->hset($logger_key, 'total_data_seharusnya', $total_data_seharusnya);
 
         $persen_data_diterima = $total_data_seharusnya > 0 ?
-            $pclient->hget($logger_key, 'total_data_diterima') * 100 / $total_data_seharusnya :
+            $total_data_diterima * 100 / $total_data_seharusnya :
             100;
         $pclient->hset($logger_key, 'persen_data_diterima', number_format($persen_data_diterima, 1));
 
@@ -126,7 +144,7 @@ function callme($msg)
         if ($curr_sampling->format('d') != $prev_sampling->format('d')) {
             $pclient->hset($logger_key, 'total_data_diterima_today', 0);
         }
-        $pclient->hincrby($logger_key, 'total_data_diterima_today', 1);
+        $total_data_diterima_today = $pclient->hincrby($logger_key, 'total_data_diterima_today', 1);
 
         $total_data_seharusnya_today = countTotalRecord(
             $curr_sampling->format('Y-m-d 00:00:00'),
@@ -135,7 +153,7 @@ function callme($msg)
         $pclient->hset($logger_key, 'total_data_seharusnya_today', $total_data_seharusnya_today);
 
         $persen_data_diterima_today = $total_data_seharusnya_today > 0 ?
-            $pclient->hget($logger_key, 'total_data_diterima_today') * 100 / $total_data_seharusnya_today :
+            $total_data_diterima_today * 100 / $total_data_seharusnya_today :
             100;
         $pclient->hset($logger_key, 'persen_data_diterima_today', number_format($persen_data_diterima_today, 1));
 
@@ -143,7 +161,7 @@ function callme($msg)
         if ($curr_sampling->format('m') != $prev_sampling->format('m')) {
             $pclient->hset($logger_key, 'total_data_diterima_month', 0);
         }
-        $pclient->hincrby($logger_key, 'total_data_diterima_month', 1);
+        $total_data_diterima_month = $pclient->hincrby($logger_key, 'total_data_diterima_month', 1);
 
         $total_data_seharusnya_month = countTotalRecord(
             $curr_sampling->format('Y-m-01 00:00:00'),
@@ -152,7 +170,7 @@ function callme($msg)
         $pclient->hset($logger_key, 'total_data_seharusnya_month', $total_data_seharusnya_month);
         
         $persen_data_diterima_month = $total_data_seharusnya_month > 0 ?
-            $pclient->hget($logger_key, 'total_data_diterima_month') * 100 / $total_data_seharusnya_month :
+            $total_data_diterima_month * 100 / $total_data_seharusnya_month :
             100;
         $pclient->hset($logger_key, 'persen_data_diterima_month', number_format($persen_data_diterima_month, 1));
 
@@ -160,7 +178,7 @@ function callme($msg)
         if ($curr_sampling->format('Y') != $prev_sampling->format('Y')) {
             $pclient->hset($logger_key, 'total_data_diterima_year', 0);
         }
-        $pclient->hincrby($logger_key, 'total_data_diterima_year', 1);
+        $total_data_diterima_year = $pclient->hincrby($logger_key, 'total_data_diterima_year', 1);
 
         $total_data_seharusnya_year = countTotalRecord(
             $curr_sampling->format('Y-01-01 00:00:00'),
@@ -169,9 +187,26 @@ function callme($msg)
         $pclient->hset($logger_key, 'total_data_seharusnya_year', $total_data_seharusnya_year);
         
         $persen_data_diterima_year = $total_data_seharusnya_year > 0 ?
-            $pclient->hget($logger_key, 'total_data_diterima_year') * 100 / $total_data_seharusnya_year :
+            $total_data_diterima_year * 100 / $total_data_seharusnya_year :
             100;
         $pclient->hset($logger_key, 'persen_data_diterima_year', number_format($persen_data_diterima_year, 1));
+
+        if ($location_key) {
+            $pclient->hmset($location_key, [
+                'total_data_diterima' => $total_data_diterima,
+                'total_data_seharusnya' => $total_data_seharusnya,
+                'persen_data_diterima' => number_format($persen_data_diterima, 1),
+                'total_data_diterima_today' => $total_data_diterima_today,
+                'total_data_seharusnya_today' => $total_data_seharusnya_today,
+                'persen_data_diterima_today' => number_format($persen_data_diterima_today, 1),
+                'total_data_diterima_month' => $total_data_diterima_month,
+                'total_data_seharusnya_month' => $total_data_seharusnya_month,
+                'persen_data_diterima_month' => number_format($persen_data_diterima_month, 1),
+                'total_data_diterima_year' => $total_data_diterima_year,
+                'total_data_seharusnya_year' => $total_data_seharusnya_year,
+                'persen_data_diterima_year' => number_format($persen_data_diterima_year, 1),
+            ]);
+        }
     }
 }
 
