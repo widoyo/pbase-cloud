@@ -36,7 +36,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 continue;
             }
 
-            $logger['sampling'] = $logger['latest_sampling'] ? timezone_format($logger['latest_sampling'], $logger['timezone']) : null;
+            $logger['latest_sampling'] = $logger['latest_sampling'] ? timezone_format($logger['latest_sampling'], $logger['timezone']) : null;
             $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
             $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
         }
