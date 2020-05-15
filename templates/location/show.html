@@ -33,7 +33,7 @@
 					</div>
 
 					<div class="dropdown">
-						<button class="btn btn-success text-nowrap" data-toggle="dropdown">
+						<button class="btn btn-success dropdown-toggle text-nowrap" data-toggle="dropdown">
 							<i class="fas fa-download"></i>
 							Download CSV
 						</button>
@@ -326,7 +326,9 @@
 					scales: {
 						yAxes: [{
 							ticks: {
-								beginAtZero: true
+								beginAtZero: true,
+								min: 0,
+								max: (type == 'bar' ? 200 : undefined),
 							},
 							scaleLabel: {
 								display: true,
