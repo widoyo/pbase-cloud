@@ -1,0 +1,69 @@
+{% extends 'layouts/master.html' %}
+
+{% set title = 'Logger' %}
+
+{% block content %}
+
+    <!-- Page Heading -->
+    <div class="d-flex align-items-center mb-4">
+        {# <button class="btn btn-sm btn-link px-1 py-0 mr-2" @click="back()" v-cloak>
+            <i class="fas fa-fw fa-arrow-left"></i>
+        </button> #}
+        <h1 class="h3 mb-0 text-gray-800">
+            {{ logger.sn }}
+            {% if logger.location_nama %}
+                <small class="text-secondary">{{ logger.location_nama }}</small>
+            {% endif %}
+        </h1>
+    </div>
+
+    <div class="table-responsive" id="app">
+        <table class="table table-hover table-bordered bg-white mb-0" id="myTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Sampling</th>
+                    <th>{{ logger.tipe == 'awlr' ? 'WLevel' : 'Rain' }}</th>
+                    <th>SQ</th>
+                    <th>BATT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in loggers %}
+                    <tr>
+                        <td class="text-right" data-orderable="false">{{ loop.index }}</td>
+                        <td class="text-center" data-order="{{ p.sampling }}">{{ tanggal_format(p.sampling, true, true) }}</td>
+                        <td class="text-center">{{ logger.tipe == 'awlr' ? p.wlev : p.rain }}</td>
+                        <td class="text-center">{{ p.sq }}</td>
+                        <td class="text-center">{{ p.batt }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.css"/>
+    <style>
+        th.fit, td.fit {
+            width: 1%;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.js"></script>
+    <script>
+        $(document).ready( function () {
+            $('#myTable').DataTable({
+                "pageLength": 25
+            });
+        } );
+    </script>
+{% endblock %}
