@@ -244,7 +244,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $loggers = $this->db->query("SELECT * FROM periodik
                 WHERE logger_sn='{$logger['sn']}'
                 ORDER BY id DESC
-                LIMIT 10")->fetchAll();
+                LIMIT 200")->fetchAll();
 
             $timezone = timezone_default();
             if (!empty($logger['tenant_id'])) {
@@ -271,8 +271,16 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     ORDER BY nama")
                 ->fetchAll();
             }
+            $logger['location_nama'] = '';
+            if ($logger['location_id']) {
+                $location = $this->db->query("SELECT * FROM location
+                    WHERE id = {$logger['location_id']}")->fetch();
+                if ($location) {
+                    $logger['location_nama'] = $location['nama'];
+                }
+            }
 
-            return $this->view->render($response, 'logger/mobile/show.html', [
+            return $this->view->render($response, 'logger/show.html', [
                 'loggers' => $loggers,
                 'logger' => $logger,
                 'locations' => $locations

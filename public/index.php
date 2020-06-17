@@ -433,23 +433,31 @@ function dump($var, $die=true) {
 /**
  * HELPER UNTUK FORMAT DATE
  */
-function tanggal_format($time, $usetime=false) {
-    switch (date('n', $time)) {
-        case 1: $month = 'Januari'; break;
-        case 2: $month = 'Februari'; break;
-        case 3: $month = 'Maret'; break;
-        case 4: $month = 'April'; break;
-        case 5: $month = 'Mei'; break;
-        case 6: $month = 'Juni'; break;
-        case 7: $month = 'Juli'; break;
-        case 8: $month = 'Agustus'; break;
-        case 9: $month = 'September'; break;
-        case 10: $month = 'Oktober'; break;
-        case 11: $month = 'November'; break;
-        default: $month = 'Desember'; break;
+function tanggal_format($time, $usetime=false, $short=false) {
+    if (strpos($time, '-') !== false) {
+        $time = strtotime($time);
+    }
+    $month_long = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    ];
+    $month_short = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    $m = date('n', $time);
+    if ($m >= 1 && $m <= 12) {
+        $m -= 1;
+        $month = $short ? $month_short[$m] : $month_long[$m];
+    } else {
+        return 'Invalid date';
     }
     return date('j', $time) .' '. $month .' '. date('Y', $time) . ($usetime ? ' '. date('H:i', $time) : '');
 }
+$tanggal_format = new Twig\TwigFunction('tanggal_format', function ($time, $usetime=false, $short=false) use ($container) {
+	return tanggal_format($time, $usetime, $short);
+});
+$container->get('view')->getEnvironment()->addFunction($tanggal_format);
 
 function timezone_default() {
     return "Asia/Jakarta";
