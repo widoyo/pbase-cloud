@@ -8,7 +8,7 @@
 
         <!-- Page Heading -->
         <div class="d-flex align-items-center mb-3 mt-n2">
-            <h1 class="h5 mb-0 mr-auto text-gray-800">Daftar Logger</h1>
+            <h1 class="h5 mb-0 mr-auto text-gray-800">Logger</h1>
             {% if (user().tenant_id == 0) %}
                 <a href="/logger/add" class="btn btn-sm btn-primary" id="btn-create" autofocus>New</a>
             {% endif %}
@@ -19,9 +19,9 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>SN</th>
-                        <th>Banyak Data</th>
-                        <th>Latest Sampling</th>
+                        <th>Logger</th>
+                        <th class="text-nowrap"># Data</th>
+                        <th>Terakhir</th>
                         <th>Latest SQ</th>
                         <th>Latest BATT</th>
                     </tr>
@@ -68,7 +68,7 @@
                                 {% endif %}
                             </td> #}
                             <td class="text-center" data-order="{{ logger.latest_sampling ? logger.latest_sampling : '-' }}">
-                                {{ logger.latest_sampling ? tanggal_format(logger.latest_sampling) : '-' }}
+                                {{ logger.latest_sampling ? tanggal_format(logger.latest_sampling, true, true) : '-' }}
                             </td>
                             <td class="text-center">{{ logger.sq }}</td>
                             <td class="text-center">{{ logger.batt }}</td>
