@@ -55,7 +55,7 @@
                             {% endif %}
                         </td>
                         <td class="text-center" data-order="{{ logger.latest_sampling ? logger.latest_sampling : '-' }}">
-                            {{ logger.latest_sampling ? tanggal_format(logger.latest_sampling) : '-' }}
+                            {{ logger.latest_sampling ? tanggal_format(logger.latest_sampling, true, true) : '-' }}
                         </td>
                         <td class="text-center">{{ logger.sq }}</td>
                         <td class="text-center">{{ logger.batt }}</td>

@@ -1,5 +1,11 @@
 <nav class="navbar navbar-expand-md navbar-light bg-white fixed-top" style="box-shadow: 0 .25rem .5rem rgba(0,0,0,.088) !important">
     <a href="/logger" class="navbar-brand">{{ env('APP_NAME', 'App') }}</a>
+    <div class="custom-control custom-switch">
+        <input type="checkbox" class="custom-control-input" id="darkSwitch" />
+        <label class="custom-control-label" for="darkSwitch">Dark Mode</label>
+    </div>
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
+    <script src="{{ asset('js/dark-mode-switch.min.js') }}"></script>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false" aria-label="Toggle navigation">
         {# <span class="navbar-toggler-icon"></span> #}
         <i class="fas fa-bars fa-sm"></i>
