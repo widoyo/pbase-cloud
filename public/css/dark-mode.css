@@ -44,9 +44,16 @@
 }
 
 /* card */
-[data-theme="dark"] .card {
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body {
   color: #eee;
   background-color: #000;
+}
+
+/* form */
+[data-theme="dark"] .form-control {
+  color: #eee;
+  background-color: #111;
 }
 
 /* dropdown */
@@ -90,5 +97,12 @@
 [data-theme="dark"] .page-item.disabled .page-link {
   color: #eee;
   background-color: #666;
+  border-color: #666;
+}
+
+/* list */
+[data-theme="dark"] .list-group-item {
+  color: #eee;
+  background-color: #111;
   border-color: #666;
 }
