@@ -27,15 +27,22 @@ function procmsg($topic, $msg)
     callme($msg);
 }
 
+function rutime($ru, $rus, $index) {
+    return ($ru["ru_$index.tv_sec"]*1000 + intval($ru["ru_$index.tv_usec"]/1000))
+    -  ($rus["ru_$index.tv_sec"]*1000 + intval($rus["ru_$index.tv_usec"]/1000));
+}
+
 // dipanggil procmsg
 function callme($msg)
 {
     global $db;
     global $pclient;
+    global $log;
 
     $raw = json_decode($msg);
     if ($raw && isset($raw->device)) {
         $timezone_default = "Asia/Jakarta";
+        $rustart = getrusage();
 
         $sn = explode("/", $raw->device)[1];
         $stmt = $db->prepare("SELECT
@@ -121,6 +128,14 @@ function callme($msg)
             $pclient->hmset($location_key, $rdc_data_location);
         }
         // echo "SAVED\n";
+
+        // stop untuk test cpu usage
+        // Script end
+        $ru = getrusage();
+        $computation = rutime($ru, $rustart, "utime");
+        $sys_calls = rutime($ru, $rustart, "stime");
+        $log->addInfo("{$logger['sn']} | {$computation} | {$sys_calls}");
+        return;
 
         $curr_sampling = new DateTime($rdc_data['latest_sampling']);
         $now = date('Y-m-d H:i:s');
