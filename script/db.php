@@ -17,6 +17,11 @@ $settings = [
     'database' => env('DB_DATABASE'),
     'username' => env('DB_USERNAME'),
     'password' => env('DB_PASSWORD'),
+    'logger' => [
+        'name' => env('APP_NAME', 'App'),
+        'path' => env('docker') ? 'php://stdout' : __DIR__ . '/../logs/app.log',
+        'level' => \Monolog\Logger::DEBUG,
+    ],
 ];
 $connection = $settings['connection'];
 $host = $settings['host'];
@@ -35,6 +40,12 @@ $options = [
 try {
     $db = new PDO($dsn, $username, $password, $options);
     $pclient = new Predis\Client();
+
+    $log = new Monolog\Logger('MQTT_PBASE_TRIGGER');
+    $log->pushProcessor(new Monolog\Processor\UidProcessor());
+    $handler = new Monolog\Handler\RotatingFileHandler($settings['logger']['path'], 0, $settings['logger']['level'], true, 0664);
+    $handler->setFilenameFormat('{date}_{filename}', 'Y-m-d');
+    $log->pushHandler($handler);
 } catch (PDOException $e) {
     echo "ERROR ({$e->getCode()}): {$e->getMessage()}\n";
     die();
