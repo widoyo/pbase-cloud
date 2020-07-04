@@ -65,14 +65,14 @@ function callme($msg)
 
         $logger_key = "logger:{$logger['sn']}";
         $location_key = "";
-        $pclient->sadd("logger", $logger_key);
-        if ($logger['location_id']) {
-            $location_key = "location:{$logger['location_id']}";
-            $pclient->sadd("location:{$logger['location_id']}:logger", $logger_key);
-        }
-        if ($logger['tenant_id']) {
-            $pclient->sadd("tenant:{$logger['tenant_id']}:logger", $logger_key);
-        }
+        // $pclient->sadd("logger", $logger_key);
+        // if ($logger['location_id']) {
+        //     $location_key = "location:{$logger['location_id']}";
+        //     $pclient->sadd("location:{$logger['location_id']}:logger", $logger_key);
+        // }
+        // if ($logger['tenant_id']) {
+        //     $pclient->sadd("tenant:{$logger['tenant_id']}:logger", $logger_key);
+        // }
 
         $rdc_data = $pclient->hgetall($logger_key);
         $rdc_data_location = [];
