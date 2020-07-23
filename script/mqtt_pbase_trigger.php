@@ -63,71 +63,71 @@ function callme($msg)
             return;
         }
 
-        $logger_key = "logger:{$logger['sn']}";
-        $location_key = "";
-        // $pclient->sadd("logger", $logger_key);
-        // if ($logger['location_id']) {
-        //     $location_key = "location:{$logger['location_id']}";
-        //     $pclient->sadd("location:{$logger['location_id']}:logger", $logger_key);
+        // $logger_key = "logger:{$logger['sn']}";
+        // $location_key = "";
+        // // $pclient->sadd("logger", $logger_key);
+        // // if ($logger['location_id']) {
+        // //     $location_key = "location:{$logger['location_id']}";
+        // //     $pclient->sadd("location:{$logger['location_id']}:logger", $logger_key);
+        // // }
+        // // if ($logger['tenant_id']) {
+        // //     $pclient->sadd("tenant:{$logger['tenant_id']}:logger", $logger_key);
+        // // }
+
+        // $rdc_data = $pclient->hgetall($logger_key);
+        // $rdc_data_location = [];
+        // if (empty($rdc_data)) {
+        //     $rdc_data = [
+        //         'latest_sampling' => '1970-01-01 00:00:00',
+        //         'count' => 0,
+        //         'total_data_diterima' => 0,
+        //         'total_data_seharusnya' => 0,
+        //         'persen_data_diterima' => 0,
+        //         'total_data_diterima_today' => 0,
+        //         'total_data_seharusnya_today' => 0,
+        //         'persen_data_diterima_today' => 0,
+        //         'total_data_diterima_month' => 0,
+        //         'total_data_seharusnya_month' => 0,
+        //         'persen_data_diterima_month' => 0,
+        //     ];
+
+        //     $first_periodik = $db->query("SELECT * FROM periodik
+        //         WHERE (logger_sn = '{$logger['sn']}')
+        //             AND sampling >= '2018-01-01'
+        //         ORDER BY sampling ASC
+        //         LIMIT 1")->fetch();
+        //     if ($first_periodik) {
+        //         $rdc_data['first_sampling'] = $first_periodik['sampling'];
+        //     } else {
+        //         $rdc_data['first_sampling'] = date('Y-m-d H:i:s', $raw->sampling);
+        //     }
         // }
-        // if ($logger['tenant_id']) {
-        //     $pclient->sadd("tenant:{$logger['tenant_id']}:logger", $logger_key);
+
+        // // simpan prev_sampling utk reset counter
+        // $prev_sampling = new DateTime($rdc_data['latest_sampling']);
+
+        // // masukkan data baru logger
+        // foreach ($logger as $k => $v) {
+        //     $rdc_data[$k] = $v;
         // }
 
-        $rdc_data = $pclient->hgetall($logger_key);
-        $rdc_data_location = [];
-        if (empty($rdc_data)) {
-            $rdc_data = [
-                'latest_sampling' => '1970-01-01 00:00:00',
-                'count' => 0,
-                'total_data_diterima' => 0,
-                'total_data_seharusnya' => 0,
-                'persen_data_diterima' => 0,
-                'total_data_diterima_today' => 0,
-                'total_data_seharusnya_today' => 0,
-                'persen_data_diterima_today' => 0,
-                'total_data_diterima_month' => 0,
-                'total_data_seharusnya_month' => 0,
-                'persen_data_diterima_month' => 0,
-            ];
+        // // masukkan data periodik dari raw
+        // $rdc_data = array_merge(
+        //     $rdc_data,
+        //     raw2periodic($raw, $logger)
+        // );
+        // $rdc_data_location['rain'] = $rdc_data['rain'];
+        // $rdc_data_location['wlev'] = $rdc_data['wlev'];
+        // $rdc_data_location['elevasi'] = $rdc_data['mdpl'];
+        // $rdc_data_location['first_sampling'] = $rdc_data['first_sampling'];
+        // $rdc_data_location['latest_sampling'] = $rdc_data['latest_sampling'];
 
-            $first_periodik = $db->query("SELECT * FROM periodik
-                WHERE (logger_sn = '{$logger['sn']}')
-                    AND sampling >= '2018-01-01'
-                ORDER BY sampling ASC
-                LIMIT 1")->fetch();
-            if ($first_periodik) {
-                $rdc_data['first_sampling'] = $first_periodik['sampling'];
-            } else {
-                $rdc_data['first_sampling'] = date('Y-m-d H:i:s', $raw->sampling);
-            }
-        }
-
-        // simpan prev_sampling utk reset counter
-        $prev_sampling = new DateTime($rdc_data['latest_sampling']);
-
-        // masukkan data baru logger
-        foreach ($logger as $k => $v) {
-            $rdc_data[$k] = $v;
-        }
-
-        // masukkan data periodik dari raw
-        $rdc_data = array_merge(
-            $rdc_data,
-            raw2periodic($raw, $logger)
-        );
-        $rdc_data_location['rain'] = $rdc_data['rain'];
-        $rdc_data_location['wlev'] = $rdc_data['wlev'];
-        $rdc_data_location['elevasi'] = $rdc_data['mdpl'];
-        $rdc_data_location['first_sampling'] = $rdc_data['first_sampling'];
-        $rdc_data_location['latest_sampling'] = $rdc_data['latest_sampling'];
-
-        // simpan dulu sebelum hitung total data
-        $pclient->hmset($logger_key, $rdc_data);
-        if ($location_key) {
-            $pclient->hmset($location_key, $rdc_data_location);
-        }
-        // echo "SAVED\n";
+        // // simpan dulu sebelum hitung total data
+        // $pclient->hmset($logger_key, $rdc_data);
+        // if ($location_key) {
+        //     $pclient->hmset($location_key, $rdc_data_location);
+        // }
+        // // echo "SAVED\n";
 
         // stop untuk test cpu usage
         // Script end
