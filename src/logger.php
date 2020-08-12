@@ -13,21 +13,81 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         $timezone_default = timezone_default();
 
-        $pclient = new Predis\Client();
-        $logger_data = [];
-        if ($user['tenant_id'] > 0)
-        {
-            $keys = $pclient->smembers("tenant:{$user['tenant_id']}:logger");
-            foreach ($keys as $key) {
-                $logger_data[] = $pclient->hgetall($key);
-            }
+        // cek apakah redis available
+        try {
+            $pclient = new Predis\Client();
+            $pclient->connect();
+        } catch (Predis\Connection\ConnectionException $e) {
+            $pclient = null;
         }
-        else
-        {
-            $keys = $pclient->smembers("logger");
-            foreach ($keys as $key) {
-                $logger_data[] = $pclient->hgetall($key);
+
+        $logger_data = [];
+        if ($pclient) {
+            if ($user['tenant_id'] > 0)
+            {
+                $keys = $pclient->smembers("tenant:{$user['tenant_id']}:logger");
+                foreach ($keys as $key) {
+                    $logger_data[] = $pclient->hgetall($key);
+                }
             }
+            else
+            {
+                $keys = $pclient->smembers("logger");
+                foreach ($keys as $key) {
+                    $logger_data[] = $pclient->hgetall($key);
+                }
+            }
+        } else {
+            if ($user['tenant_id'] > 0)
+            {
+                $loggers_stmt = $this->db->query("SELECT
+                        logger.sn,
+                        location.nama AS location_nama,
+                        tenant.nama AS tenant_nama,
+                        COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
+                        periodik.*,
+                        periodik.sampling as latest_sampling
+                    FROM logger
+                        LEFT JOIN location ON logger.location_id = location.id
+                        LEFT JOIN tenant ON logger.tenant_id = tenant.id
+                        LEFT JOIN periodik ON periodik.id = (
+                            SELECT id from periodik
+                            WHERE periodik.logger_sn = logger.sn
+                            ORDER BY periodik.sampling DESC
+                            LIMIT 1
+                        )
+                    WHERE logger.tenant_id = {$user['tenant_id']}
+                    ORDER BY 
+                        periodik.mdpl DESC,
+                        periodik.sampling DESC,
+                        location.nama,
+                        logger.sn");
+            }
+            else
+            {
+                $loggers_stmt = $this->db->query("SELECT
+                        logger.sn,
+                        location.nama AS location_nama,
+                        tenant.nama AS tenant_nama,
+                        COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
+                        periodik.*,
+                        periodik.sampling as latest_sampling
+                    FROM logger
+                        LEFT JOIN location ON logger.location_id = location.id
+                        LEFT JOIN tenant ON logger.tenant_id = tenant.id
+                        LEFT JOIN periodik ON periodik.id = (
+                            SELECT id from periodik
+                            WHERE periodik.logger_sn = logger.sn
+                            ORDER BY periodik.sampling DESC
+                            LIMIT 1
+                        )
+                    ORDER BY 
+                        periodik.mdpl DESC,
+                        periodik.sampling DESC,
+                        location.nama,
+                        logger.sn");
+            }
+            $logger_data = $loggers_stmt->fetchAll();
         }
         // dump($logger_data);
 
