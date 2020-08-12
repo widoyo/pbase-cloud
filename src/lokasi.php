@@ -11,26 +11,83 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 		$response = new Slim\Http\MobileResponse($response);
         $user = $this->user;
 
-        $pclient = new Predis\Client();
+        // cek apakah redis available
+        try {
+            $pclient = new Predis\Client();
+            $pclient->connect();
+        } catch (Predis\Connection\ConnectionException $e) {
+            $pclient = null;
+        }
+
         $location_data = [];
-        if ($user['tenant_id'] > 0) {
-            $keys = $pclient->smembers("tenant:{$user['tenant_id']}:location");
-            foreach ($keys as $key) {
-                $location_data[] = $pclient->hgetall($key);
+        if ($pclient) {
+            if ($user['tenant_id'] > 0) {
+                $keys = $pclient->smembers("tenant:{$user['tenant_id']}:location");
+                foreach ($keys as $key) {
+                    $location_data[] = $pclient->hgetall($key);
+                }
+                // $location_data = $this->db->query("SELECT * FROM location
+                //     WHERE
+                //         location.tenant_id = {$user['tenant_id']}
+                //     ORDER BY nama"
+                //     )->fetchAll();
+            } else {
+                $keys = $pclient->smembers("location");
+                foreach ($keys as $key) {
+                    $location_data[] = $pclient->hgetall($key);
+                }
+                // $location_data = $this->db->query("SELECT * FROM location
+                //     ORDER BY nama"
+                //     )->fetchAll();
             }
-            // $location_data = $this->db->query("SELECT * FROM location
-            //     WHERE
-            //         location.tenant_id = {$user['tenant_id']}
-            //     ORDER BY nama"
-            //     )->fetchAll();
         } else {
-            $keys = $pclient->smembers("location");
-            foreach ($keys as $key) {
-                $location_data[] = $pclient->hgetall($key);
+            if ($user['tenant_id'] > 0) {
+                $location_data = $this->db->query("SELECT
+                        location.*,
+                        logger.tipe AS logger_tipe
+                    FROM
+                        location
+                        LEFT JOIN logger ON (location.id = logger.location_id)
+                    WHERE
+                        location.tenant_id = {$user['tenant_id']}
+                    ORDER BY nama"
+                    )->fetchAll();
+            } else {
+                $location_data = $this->db->query("SELECT
+                        location.*,
+                        logger.tipe AS logger_tipe
+                    FROM
+                        location
+                        LEFT JOIN logger ON (location.id = logger.location_id)
+                    ORDER BY nama"
+                    )->fetchAll();
             }
-            // $location_data = $this->db->query("SELECT * FROM location
-            //     ORDER BY nama"
-            //     )->fetchAll();
+            foreach ($location_data as &$l) {
+                $latest_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$l['id']} ORDER BY id DESC")->fetch();
+                if ($latest_periodik) {
+                    $l['latest_sampling'] = $latest_periodik['sampling'];
+                }
+                if (empty($l['tipe'])) {
+                    $logger_tipe = strtolower($l['logger_tipe']);
+                    switch ($logger_tipe) {
+                        case 'arr':
+                            $l['tipe'] = '1';
+                            break;
+            
+                        case 'awlr':
+                            $l['tipe'] = '2';
+                            break;
+            
+                        case 'klimat':
+                            $l['tipe'] = '4';
+                            break;
+            
+                        default:
+                            $l['tipe'] = '0';
+                            break;
+                    }
+                }
+            }
         }
         // dump($location_data);
 
@@ -86,9 +143,18 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             // $location = $request->getAttribute('location');
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
-            $pclient = new Predis\Client();
-            $location = $pclient->hgetall("location:{$args['id']}");
-            if (count($location) == 0) {
+            // cek apakah redis available
+            try {
+                $pclient = new Predis\Client();
+                $pclient->connect();
+            } catch (Predis\Connection\ConnectionException $e) {
+                $pclient = null;
+            }
+
+            if ($pclient) {
+                $location = $pclient->hgetall("location:{$args['id']}");
+            }
+            if (!isset($location)) {
                 $location = $request->getAttribute('location');
             }
             // dump($location);
@@ -128,14 +194,18 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 $max = 0;
                 $result['labels'][] = tanggal_format(strtotime($from));
 
-                $res = $pclient->hgetall("location:{$location['id']}:periodik:harian:{$from}");
-                if (count($res) > 0) {
+                $res = NULL;
+                if ($pclient) {
+                    $res = $pclient->hgetall("location:{$location['id']}:periodik:harian:{$from}");
+                }
+
+                if ($res && count($res) > 0) {
                     if ($location['tipe'] == 2) {
-                        $min = doubleval($res['wlev_min']);
-                        $max = doubleval($res['wlev_max']);
+                        $min = isset($res['wlev_min']) ? doubleval($res['wlev_min']) : 0;
+                        $max = isset($res['wlev_max']) ?  doubleval($res['wlev_max']) : 0;
                     } else {
-                        $min = doubleval($res['rain_min']);
-                        $max = doubleval($res['rain_max']);
+                        $min = isset($res['rain_min']) ? doubleval($res['rain_min']) : 0;
+                        $max = isset($res['rain_max']) ? doubleval($res['rain_max']) : 0;
                     }
                 } else {
                     $res = $this->db->query("SELECT * FROM periodik WHERE location_id={$location['id']} AND sampling::date='{$from}' ORDER BY rain, wlev")->fetchAll();
@@ -157,14 +227,16 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                         $rdc_data['rain_max'] = $max;
                     }
                     $rdc_data['tanggal'] = date('d', strtotime($from));
-                    $pclient->hmset("location:{$location['id']}:periodik:harian:{$from}", $rdc_data);
+                    if ($pclient) {
+                        $pclient->hmset("location:{$location['id']}:periodik:harian:{$from}", $rdc_data);
+                    }
                 }
 
                 $result['datasets']['min'][] = $min;
                 $result['datasets']['max'][] = $max;
                 $from = date("Y-m-d", strtotime("{$from} +1day"));
             }
-            // dump($result);
+            // dump($location);
 
             // get ringkasan data
             if (
@@ -189,7 +261,11 @@ $app->group('/location', function () use ($getLocationMiddleware) {
 
                     $first = strtotime($first_periodik['sampling']);
                     $last = strtotime($latest_periodik['sampling']);
-                    $total_data_seharusnya = ($last - $first) / (60 * 5);
+                    if ($first == $last) {
+                        $total_data_seharusnya = 1;
+                    } else {
+                        $total_data_seharusnya = ($last - $first) / (60 * 5);
+                    }
                     if ($total_data_seharusnya > 0) {
                         $persen_data_diterima = $total_data_diterima * 100 / $total_data_seharusnya;
                     }
@@ -200,7 +276,9 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                     $rdc_data['total_data_diterima'] = $total_data_diterima;
                     $rdc_data['total_data_seharusnya'] = $total_data_seharusnya;
                     $rdc_data['persen_data_diterima'] = $persen_data_diterima;
-                    $pclient->hmset("location:{$location['id']}", $rdc_data);
+                    if ($pclient) {
+                        $pclient->hmset("location:{$location['id']}", $rdc_data);
+                    }
                 }
             } else {
                 $latest_sampling = $location['latest_sampling'];
@@ -210,8 +288,11 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             }
 
             // get total data logger
-            $logger_keys = $pclient->smembers("location:{$args['id']}:logger");
-            if (count($logger_keys) > 0) {
+            $logger_keys = NULL;
+            if ($pclient) {
+                $logger_keys = $pclient->smembers("location:{$args['id']}:logger");
+            }
+            if ($logger_keys && count($logger_keys) > 0) {
                 $loggers = [];
                 foreach ($logger_keys as $key) {
                     $loggers[] = $pclient->hgetall($key);
@@ -222,7 +303,7 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                     GROUP BY logger_sn
                     ORDER BY logger_sn")->fetchAll();
             }
-            // dump($loggers);
+            // dump($location);
 
             $template = $request->isMobile() ?
                 'location/mobile/show.html' :

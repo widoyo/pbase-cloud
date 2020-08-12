@@ -4,6 +4,7 @@ logs/*.log
 public/uploads/*
 public/php_errors.log
 /vendor
+/vendor_server
 raw/
 .env
 *.zip
