@@ -42,24 +42,24 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             {
                 $loggers_stmt = $this->db->query("SELECT
                         logger.sn,
+                        logger.tipe,
                         location.nama AS location_nama,
                         tenant.nama AS tenant_nama,
                         COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                        periodik.*,
-                        periodik.sampling as latest_sampling
+                        raw.content->>'sampling' as latest_sampling,
+                        raw.content->>'battery' as batt,
+                        raw.content->>'signal_quality' as sq
                     FROM logger
                         LEFT JOIN location ON logger.location_id = location.id
                         LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                        LEFT JOIN periodik ON periodik.id = (
-                            SELECT id from periodik
-                            WHERE periodik.logger_sn = logger.sn
-                            ORDER BY periodik.sampling DESC
+                        LEFT JOIN raw ON raw.id = (
+                            SELECT id from raw
+                            WHERE content->>'device' LIKE CONCAT('%','/',logger.sn,'/','%')
+                            ORDER BY content->>'sampling' DESC
                             LIMIT 1
                         )
                     WHERE logger.tenant_id = {$user['tenant_id']}
-                    ORDER BY 
-                        periodik.mdpl DESC,
-                        periodik.sampling DESC,
+                    ORDER BY
                         location.nama,
                         logger.sn");
             }
@@ -67,29 +67,28 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             {
                 $loggers_stmt = $this->db->query("SELECT
                         logger.sn,
+                        logger.tipe,
                         location.nama AS location_nama,
                         tenant.nama AS tenant_nama,
                         COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                        periodik.*,
-                        periodik.sampling as latest_sampling
+                        raw.content->>'sampling' as latest_sampling,
+                        raw.content->>'battery' as batt,
+                        raw.content->>'signal_quality' as sq
                     FROM logger
                         LEFT JOIN location ON logger.location_id = location.id
                         LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                        LEFT JOIN periodik ON periodik.id = (
-                            SELECT id from periodik
-                            WHERE periodik.logger_sn = logger.sn
-                            ORDER BY periodik.sampling DESC
+                        LEFT JOIN raw ON raw.id = (
+                            SELECT id from raw
+                            WHERE content->>'device' LIKE CONCAT('%','/',logger.sn,'/','%')
+                            ORDER BY content->>'sampling' DESC
                             LIMIT 1
                         )
-                    ORDER BY 
-                        periodik.mdpl DESC,
-                        periodik.sampling DESC,
+                    ORDER BY
                         location.nama,
                         logger.sn");
             }
             $logger_data = $loggers_stmt->fetchAll();
         }
-        // dump($logger_data);
 
         foreach ($logger_data as &$logger) {
             if (!$logger['latest_sampling']) {
@@ -97,8 +96,8 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             }
 
             $logger['latest_sampling'] = $logger['latest_sampling'] ? timezone_format($logger['latest_sampling'], $logger['timezone']) : null;
-            $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
-            $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
+            // $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
+            // $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
         }
 
         $template = $request->isMobile() ?

@@ -11,3 +11,4 @@ raw/
 composer.lock
 /*.bat
 /commit_messages
+/*.sql
