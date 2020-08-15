@@ -46,16 +46,16 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                         location.nama AS location_nama,
                         tenant.nama AS tenant_nama,
                         COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                        raw.content->>'sampling' as latest_sampling,
-                        raw.content->>'battery' as batt,
-                        raw.content->>'signal_quality' as sq
+                        periodik.sampling as latest_sampling,
+                        periodik.batt,
+                        periodik.sq
                     FROM logger
                         LEFT JOIN location ON logger.location_id = location.id
                         LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                        LEFT JOIN raw ON raw.id = (
-                            SELECT id from raw
-                            WHERE content->>'device' LIKE CONCAT('%','/',logger.sn,'/','%')
-                            ORDER BY content->>'sampling' DESC
+                        LEFT JOIN periodik ON periodik.id = (
+                            SELECT id from periodik
+                            WHERE logger_sn=logger.sn
+                            ORDER BY sampling DESC
                             LIMIT 1
                         )
                     WHERE logger.tenant_id = {$user['tenant_id']}
@@ -71,16 +71,16 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                         location.nama AS location_nama,
                         tenant.nama AS tenant_nama,
                         COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                        raw.content->>'sampling' as latest_sampling,
-                        raw.content->>'battery' as batt,
-                        raw.content->>'signal_quality' as sq
+                        periodik.sampling as latest_sampling,
+                        periodik.batt,
+                        periodik.sq
                     FROM logger
                         LEFT JOIN location ON logger.location_id = location.id
                         LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                        LEFT JOIN raw ON raw.id = (
-                            SELECT id from raw
-                            WHERE content->>'device' LIKE CONCAT('%','/',logger.sn,'/','%')
-                            ORDER BY content->>'sampling' DESC
+                        LEFT JOIN periodik ON periodik.id = (
+                            SELECT id from periodik
+                            WHERE logger_sn=logger.sn
+                            ORDER BY sampling DESC
                             LIMIT 1
                         )
                     ORDER BY
