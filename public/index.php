@@ -468,7 +468,11 @@ function timezone_format($date_str, $timezone="Asia/Jakarta") {
         $timezone = timezone_default();
     }
 
-    $datetime = new DateTime($date_str);
+    if (intval($date_str) > 0) {
+        $datetime = new DateTime(date('Y-m-d H:i:s', $date_str));
+    } else {
+        $datetime = new DateTime($date_str);
+    }
     $datetime->setTimezone(new DateTimeZone($timezone));
     return $datetime->format('Y-m-d H:i:s');
 }
