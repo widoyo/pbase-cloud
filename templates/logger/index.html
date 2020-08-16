@@ -22,10 +22,14 @@
                     <th>#</th>
                     <th>SN</th>
                     <th>Tipe</th>
-                    <th>Latest Sampling</th>
+                    <th>Lokasi</th>
+                    {% if user()['tenant_id'] == 0 %}
+                        <th>Pemilik</th>
+                    {% endif %}
+                    {# <th>Latest Sampling</th>
                     <th>Latest SQ</th>
                     <th>Latest BATT</th>
-                    <th>Banyak Data</th>
+                    <th>Banyak Data</th> #}
                 </tr>
             </thead>
             <tbody>
@@ -34,13 +38,7 @@
                         <td class="text-right">{{ loop.index }}</td>
                         <td>
                             <a href="/logger/{{ logger.sn }}">
-                                <div>
-                                    {{ logger.sn }}
-                                    {% if logger.location_nama %}
-                                        <small class="text-secondary">{{ logger.location_nama }}</small>
-                                    {% endif %}
-                                    <br>
-                                </div>
+                                {{ logger.sn }}
                             </a>
                         </td>
                         <td class="text-center">
@@ -54,7 +52,19 @@
                                 <span class="badge text-secondary">unknown</span>
                             {% endif %}
                         </td>
-                        <td class="text-center" data-order="{{ logger.latest_sampling ? logger.latest_sampling : '-' }}">
+                        <td>
+                            <a href="/location/{{ logger.location_id }}">
+                                {{ logger.location_nama }}
+                            </a>
+                        </td>
+                        {% if user()['tenant_id'] == 0 %}
+                            <td>
+                                <a href="/tenant/{{ logger.tenant_id }}">
+                                    {{ logger.tenant_nama }}
+                                </a>
+                            </td>
+                        {% endif %}
+                        {# <td class="text-center" data-order="{{ logger.latest_sampling ? logger.latest_sampling : '-' }}">
                             {{ logger.latest_sampling ? tanggal_format(logger.latest_sampling, true, true) : '-' }}
                         </td>
                         <td class="text-center">{{ logger.sq }}</td>
@@ -73,7 +83,7 @@
                                     {{ logger.persen_data_diterima }}%
                                 </span>
                             {% endif %}
-                        </td>
+                        </td> #}
                     </tr>
                 {% endfor %}
             </tbody>

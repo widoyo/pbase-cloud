@@ -20,10 +20,10 @@
                     <tr>
                         <th>#</th>
                         <th>Logger</th>
-                        <th class="text-nowrap"># Data</th>
+                        {# <th class="text-nowrap"># Data</th>
                         <th>Terakhir</th>
                         <th>Latest SQ</th>
-                        <th>Latest BATT</th>
+                        <th>Latest BATT</th> #}
                     </tr>
                 </thead>
                 <tbody>
@@ -41,7 +41,7 @@
                                     </div>
                                 </a>
                             </td>
-                            <td class="text-right">
+                            {# <td class="text-right">
                                 {% if not logger.persen_data_diterima or logger.persen_data_diterima <= 30 %}
                                     <span class="text-danger">
                                         {{ logger.persen_data_diterima ? logger.persen_data_diterima : '0.0' }}%
@@ -55,7 +55,7 @@
                                         {{ logger.persen_data_diterima }}%
                                     </span>
                                 {% endif %}
-                            </td>
+                            </td> #}
                             {# <td class="text-center">
                                 {% if logger.tipe == 'arr' %}
                                     <span class="badge badge-primary">PCH</span>
@@ -67,11 +67,11 @@
                                     <span class="badge text-secondary">unknown</span>
                                 {% endif %}
                             </td> #}
-                            <td class="text-center" data-order="{{ logger.latest_sampling ? logger.latest_sampling : '-' }}">
+                            {# <td class="text-center" data-order="{{ logger.latest_sampling ? logger.latest_sampling : '-' }}">
                                 {{ logger.latest_sampling ? tanggal_format(logger.latest_sampling, true, true) : '-' }}
                             </td>
                             <td class="text-center">{{ logger.sq }}</td>
-                            <td class="text-center">{{ logger.batt }}</td>
+                            <td class="text-center">{{ logger.batt }}</td> #}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -98,9 +98,15 @@
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.js"></script>
     <script>
         $(document).ready( function () {
-            $('#myTable').DataTable({
+            var t = $('#myTable').DataTable({
                 "pageLength": 25
             });
+
+            t.on( 'order.dt search.dt', function () {
+                t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+                    cell.innerHTML = i+1;
+                } );
+            } ).draw();
         } );
     </script>
 {% endblock %}
