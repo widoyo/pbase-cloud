@@ -43,21 +43,13 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $loggers_stmt = $this->db->query("SELECT
                         logger.sn,
                         logger.tipe,
+                        logger.location_id,
+                        logger.tenant_id,
                         location.nama AS location_nama,
-                        tenant.nama AS tenant_nama,
-                        COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                        periodik.sampling as latest_sampling,
-                        periodik.batt,
-                        periodik.sq
+                        tenant.nama AS tenant_nama
                     FROM logger
                         LEFT JOIN location ON logger.location_id = location.id
                         LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                        LEFT JOIN periodik ON periodik.id = (
-                            SELECT id from periodik
-                            WHERE logger_sn=logger.sn
-                            ORDER BY sampling DESC
-                            LIMIT 1
-                        )
                     WHERE logger.tenant_id = {$user['tenant_id']}
                     ORDER BY
                         location.nama,
@@ -68,21 +60,13 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $loggers_stmt = $this->db->query("SELECT
                         logger.sn,
                         logger.tipe,
+                        logger.location_id,
+                        logger.tenant_id,
                         location.nama AS location_nama,
-                        tenant.nama AS tenant_nama,
-                        COALESCE(tenant.timezone, '{$timezone_default}') AS timezone,
-                        periodik.sampling as latest_sampling,
-                        periodik.batt,
-                        periodik.sq
+                        tenant.nama AS tenant_nama
                     FROM logger
                         LEFT JOIN location ON logger.location_id = location.id
                         LEFT JOIN tenant ON logger.tenant_id = tenant.id
-                        LEFT JOIN periodik ON periodik.id = (
-                            SELECT id from periodik
-                            WHERE logger_sn=logger.sn
-                            ORDER BY sampling DESC
-                            LIMIT 1
-                        )
                     ORDER BY
                         location.nama,
                         logger.sn");
@@ -90,15 +74,15 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $logger_data = $loggers_stmt->fetchAll();
         }
 
-        foreach ($logger_data as &$logger) {
-            if (!$logger['latest_sampling']) {
-                continue;
-            }
+        // foreach ($logger_data as &$logger) {
+        //     if (!$logger['latest_sampling']) {
+        //         continue;
+        //     }
 
-            $logger['latest_sampling'] = $logger['latest_sampling'] ? timezone_format($logger['latest_sampling'], $logger['timezone']) : null;
-            // $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
-            // $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
-        }
+        //     $logger['latest_sampling'] = $logger['latest_sampling'] ? timezone_format($logger['latest_sampling'], $logger['timezone']) : null;
+        //     $logger['up_s'] = $logger['up_s'] ? timezone_format($logger['up_s'], $logger['timezone']) : null;
+        //     $logger['ts_a'] = $logger['ts_a'] ? timezone_format($logger['ts_a'], $logger['timezone']) : null;
+        // }
 
         $template = $request->isMobile() ?
             'logger/mobile/index.html' :
@@ -183,7 +167,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
         $loggers = $loggers_stmt->fetchAll();
         // dump($loggers);
 
-        try {
+        // try {
             foreach ($loggers as &$logger) {
                 // dapatkan selisih dengan UTC
                 date_default_timezone_set($logger['timezone']);
@@ -197,30 +181,40 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 // hitung batas from & to untuk sampling
                 $sampling_from = date('Y-m-d H:i:s', strtotime($sampling ." {$sampling_offset}hour"));
                 $sampling_to = date('Y-m-d H:i:s', strtotime($sampling ." +23hour +59min {$sampling_offset}hour"));
+                $sampling_from_int = strtotime($sampling_from);
+                $sampling_to_int = strtotime($sampling_to);
                 // dump($sampling_from, false);
                 // dump($sampling_to);
 
-                // $stmt = $this->db->prepare("SELECT (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date) AS hour, COUNT(*)
-                //    FROM raw
-                //    WHERE (content->>'device')=:sn AND (content->>'sampling')::date=:sampling
-                //    GROUP BY (content->>'sampling')::date, date_part('hour', (content->>'sampling')::date)
-                //    ORDER BY (content->>'sampling')");
-                $stmt = $this->db->prepare("SELECT
-                            sampling::date,
-                            (date_part('hour', sampling)) AS hour,
-                            COUNT(*)
-                        FROM periodik
-                        WHERE logger_sn=:sn
-                            AND sampling BETWEEN :sampling_from AND :sampling_to
-                        GROUP BY
-                            sampling::date,
-                            date_part('hour', sampling)
-                        ORDER BY sampling");
-                $stmt->execute([
-                    ':sn' => $logger['sn'],
-                    ':sampling_from' => $sampling_from,
-                    ':sampling_to' => $sampling_to,
-                ]);
+                $sql = "SELECT
+                        (to_timestamp((content->>'sampling')::int))::date,
+                        date_part('hour', (to_timestamp((content->>'sampling')::int))::date) AS hour,
+                        COUNT(content->>'sampling')
+                    FROM raw
+                    WHERE (content->>'device') LIKE '%/{$logger['sn']}/%'
+                        AND (content->>'sampling')::int BETWEEN {$sampling_from_int} AND {$sampling_to_int}
+                    GROUP BY
+                        (to_timestamp((content->>'sampling')::int))::date,
+                        date_part('hour', (to_timestamp((content->>'sampling')::int))::date)
+                    ORDER BY (to_timestamp((content->>'sampling')::int))::date";
+                // dump($sql, false);
+                $stmt = $this->db->query($sql);
+                // $stmt = $this->db->prepare("SELECT
+                //             sampling::date,
+                //             (date_part('hour', sampling)) AS hour,
+                //             COUNT(*)
+                //         FROM periodik
+                //         WHERE logger_sn=:sn
+                //             AND sampling BETWEEN :sampling_from AND :sampling_to
+                //         GROUP BY
+                //             sampling::date,
+                //             date_part('hour', sampling)
+                //         ORDER BY sampling");
+                // $stmt->execute([
+                //     ':sn' => $logger['sn'],
+                //     ':sampling_from' => $sampling_from,
+                //     ':sampling_to' => $sampling_to,
+                // ]);
                 $logger['periodik'] = $stmt->fetchAll();
                 
                 // normalize untuk jam-jam yang kosong
@@ -238,9 +232,9 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
                 $logger['periodik'] = $periodik;
             }
-        } catch (\Exception $e) {
-            // $this->flash->addMessage('errors', 'Tabel periodik belum tersedia');
-        }
+        // } catch (\Exception $e) {
+        //     $this->flash->addMessage('errors', 'Tabel periodik belum tersedia');
+        // }
         unset($logger);
         // dump($loggers);
 
@@ -300,9 +294,9 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         $this->get('', function (Request $request, Response $response, $args) {
             $logger = $request->getAttribute('logger');
-            $loggers = $this->db->query("SELECT * FROM periodik
-                WHERE logger_sn='{$logger['sn']}'
-                ORDER BY id DESC
+            $loggers = $this->db->query("SELECT * FROM raw
+                WHERE content->>'device' LIKE '%/{$logger['sn']}/%'
+                ORDER BY (content->>'sampling')::int DESC
                 LIMIT 200")->fetchAll();
 
             $timezone = timezone_default();
@@ -314,9 +308,23 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 }
             }
             foreach ($loggers as &$l) {
-                if (!$l['sampling']) {
+                // if (!$l['sampling']) {
+                //     continue;
+                // }
+
+                // if use raw
+                $content = json_decode($l['content'], true);
+                if (!$content['sampling']) {
                     continue;
                 }
+                $l['sampling'] = $content['sampling'];
+                $l['up_s'] = $content['up_since'];
+                $l['ts_a'] = $content['time_set_at'];
+                $l['sq'] = isset($content['signal_quality']) ? $content['signal_quality'] : '';
+                $l['batt'] = isset($content['battery']) ? $content['battery'] : '';
+                $l['tick'] = isset($content['tick']) ? $content['tick'] : '';
+                $l['distance'] = isset($content['distance']) ? $content['distance'] : '';
+                // if use raw
 
                 $l['sampling'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
                 $l['up_s'] = $l['up_s'] ? timezone_format($l['up_s'], $timezone) : null;

@@ -23,7 +23,7 @@
                 <tr>
                     <th>#</th>
                     <th>Sampling</th>
-                    <th>{{ logger.tipe == 'awlr' ? 'WLevel' : 'Rain' }}</th>
+                    <th>{{ logger.tipe == 'awlr' ? 'Distance' : 'Tick' }}</th>
                     <th>SQ</th>
                     <th>BATT</th>
                 </tr>
@@ -33,7 +33,7 @@
                     <tr>
                         <td class="text-right" data-orderable="false">{{ loop.index }}</td>
                         <td class="text-center" data-order="{{ p.sampling }}">{{ tanggal_format(p.sampling, true, true) }}</td>
-                        <td class="text-center">{{ logger.tipe == 'awlr' ? p.wlev : p.rain }}</td>
+                        <td class="text-center">{{ logger.tipe == 'awlr' ? p.distance : p.tick }}</td>
                         <td class="text-center">{{ p.sq }}</td>
                         <td class="text-center">{{ p.batt }}</td>
                     </tr>
