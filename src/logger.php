@@ -188,14 +188,14 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
                 $sql = "SELECT
                         (to_timestamp((content->>'sampling')::int))::date,
-                        date_part('hour', (to_timestamp((content->>'sampling')::int))::date) AS hour,
+                        date_part('hour', to_timestamp((content->>'sampling')::int)) AS hour,
                         COUNT(content->>'sampling')
                     FROM raw
                     WHERE (content->>'device') LIKE '%/{$logger['sn']}/%'
                         AND (content->>'sampling')::int BETWEEN {$sampling_from_int} AND {$sampling_to_int}
                     GROUP BY
                         (to_timestamp((content->>'sampling')::int))::date,
-                        date_part('hour', (to_timestamp((content->>'sampling')::int))::date)
+                        date_part('hour', to_timestamp((content->>'sampling')::int))
                     ORDER BY (to_timestamp((content->>'sampling')::int))::date";
                 // dump($sql, false);
                 $stmt = $this->db->query($sql);
