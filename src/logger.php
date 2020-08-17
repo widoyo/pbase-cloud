@@ -187,16 +187,16 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 // dump($sampling_to);
 
                 $sql = "SELECT
-                        (to_timestamp((content->>'sampling')::int))::date,
-                        date_part('hour', to_timestamp((content->>'sampling')::int)) AS hour,
+                        (to_timestamp((content->>'sampling')::bigint))::date,
+                        date_part('hour', to_timestamp((content->>'sampling')::bigint)) AS hour,
                         COUNT(content->>'sampling')
                     FROM raw
                     WHERE (content->>'device') LIKE '%/{$logger['sn']}/%'
-                        AND (content->>'sampling')::int BETWEEN {$sampling_from_int} AND {$sampling_to_int}
+                        AND (content->>'sampling')::bigint BETWEEN {$sampling_from_int} AND {$sampling_to_int}
                     GROUP BY
-                        (to_timestamp((content->>'sampling')::int))::date,
-                        date_part('hour', to_timestamp((content->>'sampling')::int))
-                    ORDER BY (to_timestamp((content->>'sampling')::int))::date";
+                        (to_timestamp((content->>'sampling')::bigint))::date,
+                        date_part('hour', to_timestamp((content->>'sampling')::bigint))
+                    ORDER BY (to_timestamp((content->>'sampling')::bigint))::date";
                 // dump($sql, false);
                 $stmt = $this->db->query($sql);
                 // $stmt = $this->db->prepare("SELECT
@@ -296,7 +296,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $logger = $request->getAttribute('logger');
             $loggers = $this->db->query("SELECT * FROM raw
                 WHERE content->>'device' LIKE '%/{$logger['sn']}/%'
-                ORDER BY (content->>'sampling')::int DESC
+                ORDER BY (content->>'sampling')::bigint DESC
                 LIMIT 200")->fetchAll();
 
             $timezone = timezone_default();

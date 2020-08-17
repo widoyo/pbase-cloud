@@ -10,6 +10,15 @@
             <i class="fas fa-fw fa-arrow-left"></i>
         </button> #}
         <h1 class="h3 mb-0 text-gray-800">
+            {% if logger.tipe == 'arr' %}
+                <span class="badge badge-primary">PCH</span>
+            {% elseif logger.tipe == 'awlr' %}
+                <span class="badge badge-danger">PDA</span>
+            {% elseif logger.tipe == 'klimat' %}
+                <span class="badge badge-warning">KLIMAT</span>
+            {% else %}
+                <span class="badge text-secondary">unknown</span>
+            {% endif %}
             {{ logger.sn }}
             {% if logger.location_nama %}
                 <small class="text-secondary">{{ logger.location_nama }}</small>
