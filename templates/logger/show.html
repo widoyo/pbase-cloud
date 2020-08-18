@@ -9,7 +9,7 @@
         {# <button class="btn btn-sm btn-link px-1 py-0 mr-2" @click="back()" v-cloak>
             <i class="fas fa-fw fa-arrow-left"></i>
         </button> #}
-        <h1 class="h3 mb-0 text-gray-800">
+        <h1 class="h3 mb-0 mr-auto text-gray-800">
             {% if logger.tipe == 'arr' %}
                 <span class="badge badge-primary">PCH</span>
             {% elseif logger.tipe == 'awlr' %}
@@ -24,6 +24,9 @@
                 <small class="text-secondary">{{ logger.location_nama }}</small>
             {% endif %}
         </h1>
+        {% if (user().tenant_id == 0) %}
+            {# <a href="/logger/{{ logger.sn }}/edit" class="btn btn-warning ml-3" id="btn-create">Edit Logger</a> #}
+        {% endif %}
     </div>
 
     <div class="table-responsive" id="app">

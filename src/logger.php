@@ -119,8 +119,9 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
     $this->post('/add', function (Request $request, Response $response, $args) {
         $logger = $request->getParams();
 
-        $stmt = $this->db->prepare("INSERT INTO logger (sn, location_id, tenant_id) VALUES (:sn, :location_id, :tenant_id)");
+        $stmt = $this->db->prepare("INSERT INTO logger (sn, location_id, tenant_id, tipe) VALUES (:sn, :location_id, :tenant_id, :tipe)");
         $stmt->bindValue(':sn', $logger['sn']);
+        $stmt->bindValue(':tipe', $logger['tipe']);
         $stmt->bindValue(':location_id', $logger['location_id'] ? $logger['location_id'] : null);
         $stmt->bindValue(':tenant_id', $logger['tenant_id'] ? $logger['tenant_id'] : null);
         $stmt->execute();
@@ -257,37 +258,6 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 'message' => "OK"
             ]);
         });
-
-        $this->get('/edit', function (Request $request, Response $response, $args) {
-	        $logger = $request->getAttribute('logger');
-	        $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
-
-	        return $this->view->render($response, 'logger/edit.html', [
-	            'mode' => 'Edit',
-	            'logger' => $logger,
-	            'tenants' => $tenants
-	        ]);
-	    });
-
-        $this->post('/edit', function (Request $request, Response $response, $args) {
-	        $logger = $request->getAttribute('logger');
-	        $logger['sn'] = $request->getParam('sn', $logger['sn']);
-	        $logger['location_id'] = $request->getParam('location_id', $logger['location_id']);
-	        $logger['tenant_id'] = $request->getParam('tenant_id', $logger['tenant_id']);
-
-	        $now = date('Y-m-d H:i:s');
-
-	        $stmt = $this->db->prepare("UPDATE logger set sn=:sn, location_id=:location_id, tenant_id=:tenant_id, modified_at='$now' WHERE id=:id");
-	        $stmt->bindValue(':sn', $logger['sn']);
-	        $stmt->bindValue(':location_id', $logger['location_id'] ? $logger['location_id'] : null);
-	        $stmt->bindValue(':tenant_id', $logger['tenant_id'] ? $logger['tenant_id'] : null);
-	        $stmt->bindValue(':id', $logger['id']);
-	        $stmt->execute();
-
-	        $this->flash->addMessage('messages', "Perubahan Logger {$logger['sn']} telah disimpan");
-	        
-	        return $response->withRedirect('/logger');
-	    });
     })->add($getLoggerMiddleware);
 
     $this->group('/{sn}', function () {
@@ -432,5 +402,49 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
             return $response->withRedirect("/logger/{$logger['sn']}");
         });
+
+        $this->get('/edit', function (Request $request, Response $response, $args) {
+            $logger = $request->getAttribute('logger');
+	        $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
+            if ($this->user['tenant_id'] > 0) {
+                $this->flash->addMessage('errors', "Anda tidak dapat mengakses halaman ini");
+                return $response->withRedirect('/logger/'. $logger['sn']);
+            }
+
+	        return $this->view->render($response, 'logger/edit.html', [
+	            'mode' => 'Edit',
+	            'logger' => $logger,
+	            'tenants' => $tenants
+	        ]);
+	    });
+
+        $this->post('/edit', function (Request $request, Response $response, $args) {
+	        $logger = $request->getAttribute('logger');
+
+            if ($this->user['tenant_id'] > 0) {
+                $this->flash->addMessage('errors', "Anda tidak dapat mengakses halaman ini");
+                return $response->withRedirect('/logger/'. $logger['sn']);
+            }
+
+	        $logger['sn'] = $request->getParam('sn', $logger['sn']);
+	        $logger['location_id'] = $request->getParam('location_id', $logger['location_id']);
+	        $logger['tenant_id'] = $request->getParam('tenant_id', $logger['tenant_id']);
+	        $logger['tipe'] = $request->getParam('tipe', $logger['tipe']);
+
+	        $now = date('Y-m-d H:i:s');
+
+	        $stmt = $this->db->prepare("UPDATE logger set sn=:sn, location_id=:location_id, tenant_id=:tenant_id, tipe=:tipe, modified_at='$now' WHERE id=:id");
+	        $stmt->bindValue(':sn', $logger['sn']);
+	        $stmt->bindValue(':tipe', $logger['tipe']);
+	        $stmt->bindValue(':location_id', $logger['location_id'] ? $logger['location_id'] : null);
+	        $stmt->bindValue(':tenant_id', $logger['tenant_id'] ? $logger['tenant_id'] : null);
+	        $stmt->bindValue(':id', $logger['id']);
+	        $stmt->execute();
+
+	        $this->flash->addMessage('messages', "Perubahan Logger {$logger['sn']} telah disimpan");
+	        
+	        return $response->withRedirect('/logger');
+	    });
     })->add($getLoggerMiddleware);
 })->add($loggedinMiddleware);
