@@ -444,7 +444,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
 	        $this->flash->addMessage('messages', "Perubahan Logger {$logger['sn']} telah disimpan");
 	        
-	        return $response->withRedirect('/logger');
+	        return $response->withRedirect('/logger/'. $logger['sn']);
 	    });
     })->add($getLoggerMiddleware);
 })->add($loggedinMiddleware);
