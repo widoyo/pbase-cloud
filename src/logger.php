@@ -277,6 +277,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     $timezone = $tenant['timezone'];
                 }
             }
+            $axes_raw = [];
             foreach ($loggers as &$l) {
                 // if (!$l['sampling']) {
                 //     continue;
@@ -290,16 +291,84 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $l['sampling'] = $content['sampling'];
                 $l['up_s'] = $content['up_since'];
                 $l['ts_a'] = $content['time_set_at'];
-                $l['sq'] = isset($content['signal_quality']) ? $content['signal_quality'] : '';
-                $l['batt'] = isset($content['battery']) ? $content['battery'] : '';
-                $l['tick'] = isset($content['tick']) ? $content['tick'] : '';
-                $l['distance'] = isset($content['distance']) ? $content['distance'] : '';
+                $l['sq'] = isset($content['signal_quality']) ? $content['signal_quality'] : null;
+                $l['batt'] = isset($content['battery']) ? $content['battery'] : null;
+                $l['tick'] = isset($content['tick']) ? $content['tick'] : null;
+                $l['distance'] = isset($content['distance']) ? $content['distance'] : null;
                 // if use raw
 
-                $l['sampling'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
+                // insert to raw axes
+                $axes_raw[$l['sampling']] = [
+                    'tick' => $l['tick'],
+                    'distance' => $l['distance'],
+                    'sq' => $l['sq'],
+                    'batt' => $l['batt'],
+                ];
+
+                // $l['sampling'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
                 $l['up_s'] = $l['up_s'] ? timezone_format($l['up_s'], $timezone) : null;
                 $l['ts_a'] = $l['ts_a'] ? timezone_format($l['ts_a'], $timezone) : null;
             }
+            
+            $plot_timelines = [];
+            $plot_tick = [];
+            $plot_distance = [];
+            $plot_sq = [];
+            $plot_batt = [];
+            // $plot_limit = strtotime('02:00:00') - strtotime('00:00:00'); // 1 hour
+            // // get to kelipatan 5 menit terdekat
+            // $jam = strtotime(date('H:00:00'));
+            // $now = strtotime(date('H:i:s'));
+            // $plot_to = $jam;
+            // while ($plot_to + 300 <= $now) {
+            //     $plot_to += 300;
+            // }
+            // // tambahkan hari, krn sebelum ini baru jam saja
+            // $plot_to = strtotime(date('Y-m-d') .' '. date('H:i:s', $plot_to));
+            // $plot_to = strtotime('2020-08-15 08:00:00');
+            // // foreach ($axes_raw as $sampling => $data) {
+            // //     $plot_to = $sampling;
+            // //     break;
+            // // }
+            // // get from
+            // $plot_from = $plot_to - $plot_limit;
+            // $default_raw = [
+            //     'tick' => null,
+            //     'distance' => null,
+            //     'sq' => null,
+            //     'batt' => null,
+            // ];
+            // // dump(date('Y-m-d H:i:s', $plot_to), false);
+            // // dump(date('Y-m-d H:i:s', $plot_from), true);
+            // while ($plot_from <= $plot_to) {
+            //     $plot_timelines[] = $plot_from;
+            //     if (isset($axes_raw[$plot_from])) {
+            //         $raw = $axes_raw[$plot_from];
+            //     } else {
+            //         $raw = $default_raw;
+            //     }
+            //     $plot_tick[] = $raw['tick'];
+            //     $plot_distance[] = $raw['distance'];
+            //     $plot_sq[] = $raw['sq'];
+            //     $plot_batt[] = $raw['batt'];
+            //     $plot_from += 300; // 5 min
+            // }
+            for ($i=count($loggers)-1; $i>=0; $i--) {
+                $raw = $loggers[$i];
+                $plot_timelines[] = $raw['sampling'];
+                $plot_tick[] = $raw['tick'];
+                $plot_distance[] = $raw['distance'];
+                $plot_sq[] = $raw['sq'];
+                $plot_batt[] = $raw['batt'];
+            }
+            // dump($plot_tick);
+            $plot = [
+                'timelines' => $plot_timelines,
+                'tick' => $plot_tick,
+                'distance' => $plot_distance,
+                'sq' => $plot_sq,
+                'batt' => $plot_batt,
+            ];
 
             $locations = [];
             if ($logger['tenant_id']) {
@@ -320,7 +389,8 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             return $this->view->render($response, 'logger/show.html', [
                 'loggers' => $loggers,
                 'logger' => $logger,
-                'locations' => $locations
+                'locations' => $locations,
+                'plot' => $plot,
             ]);
         });
 
