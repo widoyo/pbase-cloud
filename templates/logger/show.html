@@ -48,7 +48,7 @@
                 {% for p in loggers %}
                     <tr>
                         <td class="text-right" data-orderable="false">{{ loop.index }}</td>
-                        <td class="text-center" data-order="{{ p.sampling }}">{{ tanggal_format(p.sampling, true, true) }}</td>
+                        <td class="text-center" data-order="{{ p.sampling }}">{{ p.sampling_str }}</td>
                         <td class="text-center">{{ logger.tipe == 'awlr' ? p.distance : p.tick }}</td>
                         <td class="text-center">{{ p.sq }}</td>
                         <td class="text-center">{{ p.batt }}</td>
