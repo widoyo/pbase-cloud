@@ -29,6 +29,10 @@
         {% endif %}
     </div>
 
+    <div id="chart"></div>
+
+    <br>
+
     <div class="table-responsive" id="app">
         <table class="table table-hover table-bordered bg-white mb-0" id="myTable">
             <thead>
@@ -57,7 +61,6 @@
 {% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.css"/>
     <style>
         th.fit, td.fit {
             width: 1%;
@@ -70,6 +73,8 @@
 {% endblock %}
 
 {% block js %}
+    {# datatable #}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.js"></script>
     <script>
         $(document).ready( function () {
@@ -77,5 +82,83 @@
                 "pageLength": 25
             });
         } );
+    </script>
+
+    {# plot #}
+    <link rel="stylesheet" href="{{ asset('vendor/uplot/uPlot.min.css') }}">
+    <script src="{{ asset('vendor/uplot/uPlot.iife.min.js') }}"></script>
+    {% if logger.tipe == 'awlr' %}
+        <script>
+            let data = [
+                {{ plot['timelines'] | json_encode(true) }},
+                {{ plot['distance'] | json_encode(true) }},
+                {{ plot['sq'] | json_encode(true) }},
+                {{ plot['batt'] | json_encode(true) }},
+            ];
+        </script>
+    {% else %}
+        <script>
+            let data = [
+                {{ plot['timelines'] | json_encode(true) }},
+                {{ plot['tick'] | json_encode(true) }},
+                {{ plot['sq'] | json_encode(true) }},
+                {{ plot['batt'] | json_encode(true) }},
+            ];
+        </script>
+    {% endif %}
+    <script>
+        let opts = {
+            // title: "My Chart",
+            // id: "chart1",
+            // class: "my-chart",
+            width: document.getElementById('chart').offsetWidth,
+            height: 600,
+            series: [
+                {},
+                {
+                    // initial toggled state (optional)
+                    show: true,
+
+                    spanGaps: false,
+
+                    // in-legend display
+                    label: {{ logger.tipe == 'awlr' ? "'DIST.'" : "'TICK'" }},
+                    // value: (self, rawValue) => "$" + rawValue.toFixed(2),
+
+                    // series style
+                    stroke: "red",
+                    width: 1,
+                    // fill: "rgba(255, 0, 0, 0.3)",
+                    // dash: [10, 5],
+                },
+                {
+                    // initial toggled state (optional)
+                    show: true,
+
+                    spanGaps: false,
+
+                    // in-legend display
+                    label: "SQ",
+
+                    // series style
+                    stroke: "green",
+                    width: 1,
+                },
+                {
+                    // initial toggled state (optional)
+                    show: true,
+
+                    spanGaps: false,
+
+                    // in-legend display
+                    label: "BATT",
+
+                    // series style
+                    stroke: "blue",
+                    width: 1,
+                },
+            ],
+        };
+        let uplot = new uPlot(opts, data, document.getElementById('chart'));
     </script>
 {% endblock %}
