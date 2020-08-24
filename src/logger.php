@@ -305,7 +305,8 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     'batt' => $l['batt'],
                 ];
 
-                // $l['sampling'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
+                // $l['sampling'] = $l['sampling'] ? strtotime(timezone_format($l['sampling'], $timezone)) : null;
+                $l['sampling_str'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
                 $l['up_s'] = $l['up_s'] ? timezone_format($l['up_s'], $timezone) : null;
                 $l['ts_a'] = $l['ts_a'] ? timezone_format($l['ts_a'], $timezone) : null;
             }
