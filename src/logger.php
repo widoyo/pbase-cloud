@@ -278,6 +278,24 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 }
             }
             $axes_raw = [];
+            $result = [
+                'datasets' => [
+                    'sq' => [],
+                    'tick' => []
+                ],
+                'labels' => [],
+                'colors' => [],
+                'title' => ['SQ', 'TICK']
+            ];
+            $result['colors'] = [
+                "0,0,255",
+                // "0,255,0",
+                // "255,0,0",
+                "255,0,255",
+                "0,255,255",
+                "255,255,0"
+            ];
+            $prev_d = '';
             foreach ($loggers as &$l) {
                 // if (!$l['sampling']) {
                 //     continue;
@@ -297,18 +315,35 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $l['distance'] = isset($content['distance']) ? $content['distance'] : null;
                 // if use raw
 
-                // insert to raw axes
+                // insert to line chart
                 $axes_raw[$l['sampling']] = [
-                    'tick' => $l['tick'],
                     'distance' => $l['distance'],
-                    'sq' => $l['sq'],
                     'batt' => $l['batt'],
                 ];
+                // insert to bar chart
+                $result['datasets']['sq'][] = $l['sq'];
+                $result['datasets']['tick'][] = $l['tick'];
 
                 // $l['sampling'] = $l['sampling'] ? strtotime(timezone_format($l['sampling'], $timezone)) : null;
                 $l['sampling_str'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
                 $l['up_s'] = $l['up_s'] ? timezone_format($l['up_s'], $timezone) : null;
                 $l['ts_a'] = $l['ts_a'] ? timezone_format($l['ts_a'], $timezone) : null;
+
+                // label bar
+                $ss = explode(' ', $l['sampling_str']);
+                $d = explode('-', $ss[0]);
+                $m = $d[1];
+                $d = $d[2];
+                $md = "{$m}/{$d}";
+                $H = explode(':', $ss[1]);
+                $i = $H[1];
+                $H = $H[0];
+                if ($prev_d != $md) {
+                    $prev_d = $md;
+                    $result['labels'][] = "{$m}/{$d}, {$H}:{$i}";
+                } else {
+                    $result['labels'][] = "{$H}:{$i}";
+                }
             }
             
             $plot_timelines = [];
@@ -387,11 +422,14 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 }
             }
 
+            // dump($result['datasets']);
+
             return $this->view->render($response, 'logger/show.html', [
                 'loggers' => $loggers,
                 'logger' => $logger,
                 'locations' => $locations,
                 'plot' => $plot,
+                'result' => $result,
             ]);
         });
 
