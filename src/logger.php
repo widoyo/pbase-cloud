@@ -287,6 +287,10 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 'colors' => [],
                 'title' => ['SQ', 'TICK']
             ];
+            if ($logger['tipe'] == 'awlr') {
+                unset($result['datasets']['tick']);
+                unset($result['title'][1]);
+            }
             $result['colors'] = [
                 "0,0,255",
                 // "0,255,0",
@@ -320,30 +324,11 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     'distance' => $l['distance'],
                     'batt' => $l['batt'],
                 ];
-                // insert to bar chart
-                $result['datasets']['sq'][] = $l['sq'];
-                $result['datasets']['tick'][] = $l['tick'];
 
                 // $l['sampling'] = $l['sampling'] ? strtotime(timezone_format($l['sampling'], $timezone)) : null;
                 $l['sampling_str'] = $l['sampling'] ? timezone_format($l['sampling'], $timezone) : null;
                 $l['up_s'] = $l['up_s'] ? timezone_format($l['up_s'], $timezone) : null;
                 $l['ts_a'] = $l['ts_a'] ? timezone_format($l['ts_a'], $timezone) : null;
-
-                // label bar
-                $ss = explode(' ', $l['sampling_str']);
-                $d = explode('-', $ss[0]);
-                $m = $d[1];
-                $d = $d[2];
-                $md = "{$m}/{$d}";
-                $H = explode(':', $ss[1]);
-                $i = $H[1];
-                $H = $H[0];
-                if ($prev_d != $md) {
-                    $prev_d = $md;
-                    $result['labels'][] = "{$m}/{$d}, {$H}:{$i}";
-                } else {
-                    $result['labels'][] = "{$H}:{$i}";
-                }
             }
             
             $plot_timelines = [];
@@ -396,6 +381,27 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $plot_distance[] = $raw['distance'];
                 $plot_sq[] = $raw['sq'];
                 $plot_batt[] = $raw['batt'];
+                
+                // insert to bar chart
+                $result['datasets']['sq'][] = $raw['sq'];
+                if ($logger['tipe'] != 'awlr') {
+                    $result['datasets']['tick'][] = $raw['tick'];
+                }
+                // label bar
+                $ss = explode(' ', $raw['sampling_str']);
+                $d = explode('-', $ss[0]);
+                $m = $d[1];
+                $d = $d[2];
+                $md = "{$m}/{$d}";
+                $H = explode(':', $ss[1]);
+                $I = $H[1];
+                $H = $H[0];
+                if ($prev_d != $md) {
+                    $prev_d = $md;
+                    $result['labels'][] = "{$m}/{$d}, {$H}:{$I}";
+                } else {
+                    $result['labels'][] = "{$H}:{$I}";
+                }
             }
             // dump($plot_tick);
             $plot = [
@@ -422,7 +428,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 }
             }
 
-            // dump($result['datasets']);
+            // dump($result);
 
             return $this->view->render($response, 'logger/show.html', [
                 'loggers' => $loggers,
