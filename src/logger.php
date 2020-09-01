@@ -267,7 +267,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $now_time = strtotime('now +2hour');
             $loggers = $this->db->query("SELECT * FROM raw
                 WHERE content->>'device' LIKE '%/{$logger['sn']}/%'
-                    AND (content->>'sampling')::bigint < {$now_time}
+                    AND (content->>'sampling')::bigint <= {$now_time}
                 ORDER BY (content->>'sampling')::bigint DESC
                 LIMIT 200")->fetchAll();
 
