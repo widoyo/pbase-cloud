@@ -25,7 +25,8 @@
             {% endif %}
         </h1>
         {% if (user().tenant_id == 0) %}
-            {# <a href="/logger/{{ logger.sn }}/edit" class="btn btn-warning ml-3" id="btn-create">Edit Logger</a> #}
+            <a href="/logger/{{ logger.sn }}/config" class="btn btn-info ml-1" id="btn-create">Config</a>
+            <a href="/logger/{{ logger.sn }}/edit" class="btn btn-warning ml-1" id="btn-create">Edit</a>
         {% endif %}
     </div>
 
