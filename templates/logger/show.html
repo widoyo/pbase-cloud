@@ -24,8 +24,10 @@
                 <small class="text-secondary">{{ logger.location_nama }}</small>
             {% endif %}
         </h1>
-        {% if (user().tenant_id == 0) %}
+        {% if (user().tenant_id == 0 or user().tenant_id == logger.tenant_id) %}
             <a href="/logger/{{ logger.sn }}/config" class="btn btn-info ml-1" id="btn-create">Config</a>
+        {% endif %}
+        {% if (user().tenant_id == 0) %}
             <a href="/logger/{{ logger.sn }}/edit" class="btn btn-warning ml-1" id="btn-create">Edit</a>
         {% endif %}
     </div>
