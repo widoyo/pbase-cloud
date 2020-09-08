@@ -441,6 +441,22 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             ]);
         });
 
+        $this->get('/config', function (Request $request, Response $response, $args) {
+            $logger = $request->getAttribute('logger');
+	        $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+
+            if ($this->user['tenant_id'] > 0) {
+                $this->flash->addMessage('errors', "Anda tidak dapat mengakses halaman ini");
+                return $response->withRedirect('/logger/'. $logger['sn']);
+            }
+
+	        return $this->view->render($response, 'logger/config.html', [
+	            'mode' => 'Config',
+	            'logger' => $logger,
+	            'tenants' => $tenants
+	        ]);
+        });
+
         $this->post('/config', function (Request $request, Response $response, $args) {
             $logger = $request->getAttribute('logger');
 
