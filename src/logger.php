@@ -178,6 +178,9 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 } else {
                     $sampling_offset = "+". ($utc_offset * -1);
                 }
+
+                // kembalikan default ke UTC, just because
+                date_default_timezone_set('UTC');
                 
                 // hitung batas from & to untuk sampling
                 $sampling_from = date('Y-m-d H:i:s', strtotime($sampling ." {$sampling_offset}hour"));
