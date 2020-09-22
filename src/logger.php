@@ -297,7 +297,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     'tick' => [],
                 ],
                 'labels' => [],
-                'colors' => ['0,0,255'],
+                'colors' => ['3,172,237'],
                 'title' => ['TICK']
             ];
             $result_awlr = [
@@ -305,13 +305,13 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     'dist' => [],
                 ],
                 'labels' => [],
-                'colors' => ['255,0,0'],
+                'colors' => ['254,21,84'],
                 'title' => ['DISTANCE']
             ];
             $result['colors'] = [
                 // "0,0,255",
                 "255,0,255",
-                "0,255,0",
+                "12,245,117",
                 // "0,255,255",
                 // "255,255,0"
             ];
