@@ -285,24 +285,35 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $axes_raw = [];
             $result = [
                 'datasets' => [
+                    'batt' => [],
                     'sq' => [],
-                    'tick' => []
                 ],
                 'labels' => [],
                 'colors' => [],
-                'title' => ['SQ', 'TICK']
+                'title' => ['SQ','BATT']
             ];
-            if ($logger['tipe'] == 'awlr') {
-                unset($result['datasets']['tick']);
-                unset($result['title'][1]);
-            }
+            $result_arr = [
+                'datasets' => [
+                    'tick' => [],
+                ],
+                'labels' => [],
+                'colors' => ['0,0,255'],
+                'title' => ['TICK']
+            ];
+            $result_awlr = [
+                'datasets' => [
+                    'dist' => [],
+                ],
+                'labels' => [],
+                'colors' => ['255,0,0'],
+                'title' => ['DISTANCE']
+            ];
             $result['colors'] = [
-                "0,0,255",
-                // "0,255,0",
-                // "255,0,0",
+                // "0,0,255",
                 "255,0,255",
-                "0,255,255",
-                "255,255,0"
+                "0,255,0",
+                // "0,255,255",
+                // "255,255,0"
             ];
             $prev_d = '';
             foreach ($loggers as &$l) {
@@ -389,8 +400,11 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 
                 // insert to bar chart
                 $result['datasets']['sq'][] = $raw['sq'];
-                if ($logger['tipe'] != 'awlr') {
-                    $result['datasets']['tick'][] = $raw['tick'];
+                $result['datasets']['batt'][] = $raw['batt'];
+                if ($logger['tipe'] == 'awlr') {
+                    $result_awlr['datasets']['dist'][] = $raw['distance'];
+                } else {
+                    $result_arr['datasets']['tick'][] = $raw['tick'];
                 }
                 // label bar
                 $ss = explode(' ', $raw['sampling_str']);
@@ -404,8 +418,12 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 if ($prev_d != $md) {
                     $prev_d = $md;
                     $result['labels'][] = "{$m}/{$d}, {$H}:{$I}";
+                    $result_arr['labels'][] = "{$m}/{$d}, {$H}:{$I}";
+                    $result_awlr['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                 } else {
                     $result['labels'][] = "{$H}:{$I}";
+                    $result_arr['labels'][] = "{$H}:{$I}";
+                    $result_awlr['labels'][] = "{$H}:{$I}";
                 }
             }
             // dump($plot_tick);
@@ -441,6 +459,8 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 'locations' => $locations,
                 'plot' => $plot,
                 'result' => $result,
+                'result_arr' => $result_arr,
+                'result_awlr' => $result_awlr,
             ]);
         });
 
