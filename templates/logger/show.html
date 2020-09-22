@@ -32,12 +32,21 @@
         {% endif %}
     </div>
 
+    {% if logger.tipe == 'awlr' %}
+        <h4 class="text-center">Tinggi Muka Air</h4>
+        <canvas id="chart-awlr" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
+    {% else %}
+        <h4 class="text-center">Curah Hujan</h4>
+        <canvas id="chart-arr" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
+    {% endif %}
+
+    <br>
+    <br>
+
+    <h4 class="text-center">Signal & Battery</h4>
     <canvas id="chart-bar" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
 
     <br>
-
-    <div id="chart-line"></div>
-
     <br>
 
     <div class="table-responsive" id="app">
@@ -92,82 +101,132 @@
     </script>
 
     {# plot #}
-    <link rel="stylesheet" href="{{ asset('vendor/uplot/uPlot.min.css') }}">
-    <script src="{{ asset('vendor/uplot/uPlot.iife.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     {% if logger.tipe == 'awlr' %}
         <script>
-            let data = [
-                {{ plot['timelines'] | json_encode(true) }},
-                {{ plot['batt'] | json_encode(true) }},
-                {{ plot['distance'] | json_encode(true) }},
-            ];
+            initChartAwlr = function () {
+                let ctx = document.getElementById('chart-awlr').getContext('2d');
+                let myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: {{ result_awlr.labels|json_encode|raw }},
+                        datasets: [
+                            {% for data in result_awlr.datasets %}
+                            {
+                                label: "{{ result_awlr.title[loop.index0] }}",
+                                data: {{ data|json_encode|raw }},
+                                backgroundColor: 'rgba({{ result_awlr.colors[loop.index0] }},0.5)',
+                                borderColor: 'rgba({{ result_awlr.colors[loop.index0] }},1)',
+                                borderWidth: 3,
+                                fill: false,
+                            },
+                            {% endfor %}
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    min: 0,
+                                    // max: 200,
+                                },
+                                // scaleLabel: {
+                                // 	display: true,
+                                // 	labelString: 'm'
+                                // }
+                            }],
+                            // xAxes: [{
+                            // 	ticks: {
+                            // 		maxTicksLimit: 12
+                            // 	}
+                            // }]
+                        },
+                        legend: {
+                            position: 'bottom'
+                        },
+                        // tooltips: {
+                        // 	callbacks: {
+                        // 		label: (item, data) => `${data.datasets[item.datasetIndex].label} : ${item.yLabel} mm`,
+                        // 	},
+                        // },
+                    }
+                });
+            }
+            initChartAwlr();
         </script>
     {% else %}
         <script>
-            let data = [
-                {{ plot['timelines'] | json_encode(true) }},
-                {{ plot['batt'] | json_encode(true) }},
-            ];
+            initChartArr = function () {
+                let ctx = document.getElementById('chart-arr').getContext('2d');
+                let myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: {{ result_arr.labels|json_encode|raw }},
+                        datasets: [
+                            {% for data in result_arr.datasets %}
+                            {
+                                label: "{{ result_arr.title[loop.index0] }}",
+                                data: {{ data|json_encode|raw }},
+                                backgroundColor: 'rgba({{ result_arr.colors[loop.index0] }},0.5)',
+                                borderColor: 'rgba({{ result_arr.colors[loop.index0] }},1)',
+                                borderWidth: 3,
+                                fill: true,
+                            },
+                            {% endfor %}
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    min: 0,
+                                    max: 200,
+                                },
+                                scaleLabel: {
+                                	display: true,
+                                	labelString: 'mm'
+                                }
+                            }],
+                            // xAxes: [{
+                            // 	ticks: {
+                            // 		maxTicksLimit: 12
+                            // 	}
+                            // }]
+                        },
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltips: {
+                        	callbacks: {
+                        		label: (item, data) => `${data.datasets[item.datasetIndex].label} : ${item.yLabel} mm`,
+                        	},
+                        },
+                    }
+                });
+            }
+            initChartArr();
         </script>
     {% endif %}
     <script>
-        let opts = {
-            width: document.getElementById('chart-line').offsetWidth,
-            height: 400,
-            series: [
-                {},
-                {
-                    // initial toggled state (optional)
-                    show: true,
-
-                    spanGaps: false,
-
-                    // in-legend display
-                    label: "BATT",
-                    // value: (self, rawValue) => "$" + rawValue.toFixed(2),
-
-                    // series style
-                    stroke: "red",
-                    width: 1,
-                    // fill: "rgba(255, 0, 0, 0.3)",
-                    // dash: [10, 5],
-                },
-                {% if logger.tipe == 'awlr' %}
-                {
-                    // initial toggled state (optional)
-                    show: true,
-
-                    spanGaps: false,
-
-                    // in-legend display
-                    label: "DISTANCE",
-
-                    // series style
-                    stroke: "green",
-                    width: 1,
-                },
-                {% endif %}
-            ],
-        };
-        let uplot = new uPlot(opts, data, document.getElementById('chart-line'));
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-    <script>
-        initChart = function (type, title) {
+        initChart = function () {
 			let ctx = document.getElementById('chart-bar').getContext('2d');
 			let myChart = new Chart(ctx, {
-				type: type,
+				type: 'bar',
 				data: {
 					labels: {{ result.labels|json_encode|raw }},
 					datasets: [
-						{% for data in result.datasets %}
+						{% for key, data in result.datasets %}
 						{
 							label: "{{ result.title[loop.index0] }}",
 							data: {{ data|json_encode|raw }},
 							backgroundColor: 'rgba({{ result.colors[loop.index0] }},0.5)',
 							borderColor: 'rgba({{ result.colors[loop.index0] }},1)',
-							borderWidth: 1,
-							fill: type == 'bar',
+							borderWidth: 3,
+                            fill: {{ key == 'sq' ? 'true' : 'false' }},
+                            type: "{{ key == 'sq' ? 'bar' : 'line' }}",
+                            // order: {{ loop.index0 + 1 }}
 						},
 						{% endfor %}
 					]
@@ -178,7 +237,7 @@
 							ticks: {
 								beginAtZero: true,
 								min: 0,
-								max: (type == 'bar' ? 200 : undefined),
+								// max: (type == 'bar' ? 200 : undefined),
 							},
 							// scaleLabel: {
 							// 	display: true,
@@ -202,6 +261,6 @@
 				}
 			});
 		}
-        initChart('bar', '');
+        initChart();
     </script>
 {% endblock %}
