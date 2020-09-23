@@ -290,7 +290,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 ],
                 'labels' => [],
                 'colors' => [],
-                'title' => ['SQ','BATT']
+                'title' => ['BATT','SQ']
             ];
             $result_arr = [
                 'datasets' => [
@@ -390,6 +390,8 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             //     $plot_batt[] = $raw['batt'];
             //     $plot_from += 300; // 5 min
             // }
+            $date_from = '';
+            $date_to = '';
             for ($i=count($loggers)-1; $i>=0; $i--) {
                 $raw = $loggers[$i];
                 $plot_timelines[] = $raw['sampling'];
@@ -416,15 +418,31 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $I = $H[1];
                 $H = $H[0];
                 if ($prev_d != $md) {
+                    if (empty($date_from)) {
+                        $date_from = $raw['sampling_str'];
+                    } else {
+                        $date_to = $raw['sampling_str'];
+                    }
                     $prev_d = $md;
                     $result['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                     $result_arr['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                     $result_awlr['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                 } else {
+                    $date_to = $raw['sampling_str'];
                     $result['labels'][] = "{$H}:{$I}";
                     $result_arr['labels'][] = "{$H}:{$I}";
                     $result_awlr['labels'][] = "{$H}:{$I}";
                 }
+            }
+            $date_from = date('d-m-Y H:i',strtotime($date_from));
+            $date_to = date('d-m-Y H:i',strtotime($date_to));
+            $date_from = explode(' ', $date_from);
+            $date_to = explode(' ', $date_to);
+            $date_range = '';
+            if ($date_from[0] == $date_to[0]) {
+                $date_range = "{$date_from[0]} {$date_from[1]} - {$date_to[1]}";
+            } else {
+                $date_range = "{$date_from[0]} {$date_from[1]} - {$date_to[0]} {$date_to[1]}";
             }
             // dump($plot_tick);
             $plot = [
@@ -461,6 +479,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 'result' => $result,
                 'result_arr' => $result_arr,
                 'result_awlr' => $result_awlr,
+                'date_range' => $date_range,
             ]);
         });
 

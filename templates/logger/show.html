@@ -33,17 +33,29 @@
     </div>
 
     {% if logger.tipe == 'awlr' %}
-        <h4 class="text-center">Tinggi Muka Air</h4>
+        <h4 class="text-center">
+            Tinggi Muka Air
+            <br>
+            {{ date_range }}
+        </h4>
         <canvas id="chart-awlr" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
     {% else %}
-        <h4 class="text-center">Curah Hujan</h4>
+        <h4 class="text-center">
+            Curah Hujan
+            <br>
+            {{ date_range }}
+        </h4>
         <canvas id="chart-arr" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
     {% endif %}
 
     <br>
     <br>
 
-    <h4 class="text-center">Signal & Battery</h4>
+    <h4 class="text-center">
+        Signal & Battery
+        <br>
+        {{ date_range }}
+    </h4>
     <canvas id="chart-bar" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
 
     <br>
