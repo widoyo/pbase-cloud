@@ -44,7 +44,7 @@
             <!-- Nav Item - Lokasi -->
             <li class="nav-item {{ title is same as('Lokasi') ? 'active' : '' }}">
                 <a class="nav-link" href="/location">
-                    Lokasi
+                    Pos/Lokasi
                 </a>
             </li>
 
@@ -65,11 +65,17 @@
             </li> #}
 
             <!-- Nav Item - Logout -->
-            <li class="nav-item">
-                <form action="/logout" method="post" id="form-logout"></form>
-                <a class="nav-link" href="#" onclick="$('#form-logout').submit()">
-                    Logout
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarAccountDropdown" role="button" data-toggle="dropdown">
+		<i class="fas fa-user"></i> {{ user().username }} 
                 </a>
+                <div class="dropdown-menu">
+                <form action="/logout" method="post" id="form-logout"></form>
+                <a class="nav-link" href="#" onclick="$('#form-logout').submit()">Logout
+                </a>
+                </div>
+            </li>
+            <li class="nav-item">
             </li>
 
         </ul>
