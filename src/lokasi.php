@@ -298,10 +298,10 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                     $loggers[] = $pclient->hgetall($key);
                 }
             } else {
-                $loggers = $this->db->query("SELECT logger_sn as sn, COUNT(*) FROM periodik
+                $loggers = $this->db->query("SELECT device_sn as sn, COUNT(*) FROM periodik
                     WHERE location_id={$location['id']}
-                    GROUP BY logger_sn
-                    ORDER BY logger_sn")->fetchAll();
+                    GROUP BY device_sn
+                    ORDER BY device_sn")->fetchAll();
             }
             // dump($location);
 
