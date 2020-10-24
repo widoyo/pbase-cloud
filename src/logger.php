@@ -592,10 +592,22 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 return $response->withRedirect('/logger/'. $logger['sn']);
             }
 
+            if (!empty($logger['tenant_id'])) {
+                $locations = $this->db->query("SELECT * FROM location
+                    WHERE tenant_id = {$logger['tenant_id']}
+                    ORDER BY nama")
+                ->fetchAll();
+            } else {
+                $locations = $this->db->query("SELECT * FROM location
+                    ORDER BY nama")
+                ->fetchAll();
+            }
+
 	        return $this->view->render($response, 'logger/edit.html', [
 	            'mode' => 'Edit',
 	            'logger' => $logger,
-	            'tenants' => $tenants
+	            'tenants' => $tenants,
+	            'locations' => $locations,
 	        ]);
 	    });
 
