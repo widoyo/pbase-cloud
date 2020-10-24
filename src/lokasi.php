@@ -44,7 +44,8 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             if ($user['tenant_id'] > 0) {
                 $location_data = $this->db->query("SELECT
                         location.*,
-                        logger.tipe AS logger_tipe
+                        logger.tipe AS logger_tipe,
+                        logger.sn AS device_sn
                     FROM
                         location
                         LEFT JOIN logger ON (location.id = logger.location_id)
@@ -55,15 +56,17 @@ $app->group('/location', function () use ($getLocationMiddleware) {
             } else {
                 $location_data = $this->db->query("SELECT
                         location.*,
-                        logger.tipe AS logger_tipe
+                        logger.tipe AS logger_tipe,
+                        logger.sn AS device_sn
                     FROM
                         location
                         LEFT JOIN logger ON (location.id = logger.location_id)
                     ORDER BY nama"
                     )->fetchAll();
             }
+            // dump($location_data);
             foreach ($location_data as &$l) {
-                $latest_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$l['id']} ORDER BY id DESC")->fetch();
+                $latest_periodik = $this->db->query("SELECT * FROM periodik WHERE location_id={$l['id']} OR device_sn='{$l['device_sn']}' ORDER BY id DESC")->fetch();
                 if ($latest_periodik) {
                     $l['latest_sampling'] = $latest_periodik['sampling'];
                 }
