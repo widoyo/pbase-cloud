@@ -73,7 +73,7 @@
                                 <select class="form-control" name="location_id">
                                     <option hidden value selected>&gt;&gt; Pilih lokasi &lt;&lt;</option>
                                     {% for location in locations %}
-                                        <option value="{{ location.id }}">{{ location.nama }}</option>
+                                        <option value="{{ location.id }}" {% if location.id == logger.location_id %} selected {% endif %}>{{ location.nama }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
