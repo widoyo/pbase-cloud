@@ -25,6 +25,10 @@
             {% endif %}
         </h1>
         {% if (user().tenant_id == 0 or user().tenant_id == logger.tenant_id) %}
+            <button class="btn btn-success" data-toggle="modal" data-target="#modal-import">
+                Import CSV
+                <i class="fas fa-upload"></i>
+            </button>
             <a href="/logger/{{ logger.sn }}/config" class="btn btn-info ml-1" id="btn-create">Config</a>
         {% endif %}
         {% if (user().tenant_id == 0) %}
@@ -85,6 +89,10 @@
             </tbody>
         </table>
     </div>
+
+    {% if (user().tenant_id == 0 or user().tenant_id == logger.tenant_id) %}
+        {% include "logger/modal_import.html" %}
+    {% endif %}
 
 {% endblock %}
 
