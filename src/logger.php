@@ -5,14 +5,15 @@ use Slim\Http\Response;
 
 function raw2periodic($raw, $logger)
 {
+    date_default_timezone_set('UTC');
     $periodic = [];
 
     if (isset($raw['tick'])) {
-        $periodic['rain'] = ($logger['tipp_fac'] ?: 0.2) * $raw['tick'];
+        $periodic['rain'] = ($raw['tipp_fac'] ?: 0.2) * $raw['tick'];
     }
 
     if (isset($raw['distance'])) {
-        $periodic['wlev'] = ($logger['ting_son'] ?: 100) - $raw['distance'] * 0.1;
+        $periodic['wlev'] = ($raw['ting_son'] ?: 100) - $raw['distance'] * 0.1;
     }
 
     $time_to = [
@@ -747,10 +748,21 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 }
                 $periodik = raw2periodic($raw, $logger);
                 $periodik['device_sn'] = $logger['sn'];
-                $periodik['location_id'] = $logger['location_id'];
+                $periodik['location_id'] = !empty($logger['location_id']) ? $logger['location_id'] : NULL;
                 $periodik['tenant_id'] = $logger['tenant_id'];
-                dump($periodik);
+                
+                $keys = [];
+                $values = [];
+                foreach ($periodik as $k => $v) {
+                    $keys[] = $k;
+                    $values[] = $v;
+                }
+                $keys = implode(',', $keys);
+                $values = "'". implode("','", $values) ."'";
+                $this->db->query("INSERT INTO periodik ({$keys}) VALUES ({$values})");
             }
+
+            return $response->withRedirect('/logger/'. $logger['sn']);
         });
     })->add($getLoggerMiddleware);
 })->add($loggedinMiddleware);
