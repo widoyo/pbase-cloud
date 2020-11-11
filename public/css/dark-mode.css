@@ -106,3 +106,8 @@
   background-color: #111;
   border-color: #666;
 }
+
+/* modal */
+[data-theme="dark"] .modal-content {
+  background-color: #333;
+}

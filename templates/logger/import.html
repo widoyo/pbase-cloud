@@ -1,0 +1,149 @@
+{% extends 'layouts/master.html' %}
+
+{% set title = 'Import Data Logger' %}
+
+{% block content %}
+
+    <form action="/logger/import" method="post" enctype="multipart/form-data">
+        <!-- Page Heading -->
+        <div class="d-flex align-items-center mb-4">
+            <h1 class="h3 mb-0 mr-auto text-gray-800">
+                <i class="fas fa-microchip fa-sm mr-1"></i>
+                Import Data Logger
+            </h1>
+        </div>
+
+        <div class="form-group">
+            <label for="file">Masukkan file CSV yang akan diimport</label>
+            <input type="file" name="file" class="form-control" accept=".csv" required onchange="on_csv_change(this)">
+        </div>
+
+        <div class="table-responsive d-none" id="app">
+
+            <hr class="my-4">
+
+            <h3>
+                SN:
+                <span id="sn"></span>
+            </h3>
+            <table class="table table-hover table-bordered mb-0" id="myTable">
+                <thead>
+                    <tr id="header-row">
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 text-right">
+            <button id="btn-submit" class="btn btn-success" type="submit" disabled="disabled">Simpan</button>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.css"/>
+    <style>
+        th.fit, td.fit {
+            width: 1%;
+        }
+
+        .btn[disabled] {
+            cursor: not-allowed
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.js"></script>
+    <script type="text/javascript" src="/js/papaparse.min.js"></script>
+    <script>
+        loggers_sn = {{ loggers_sn | json_encode | raw }}
+
+        on_csv_change = function (file) {
+            var reader = new FileReader();
+            reader.readAsText(file.files[0], "UTF-8");
+            reader.onload = function (evt) {
+                parse_csv(evt.target.result);
+            }
+            reader.onerror = function (evt) {
+                alert("error reading file");
+            }
+        }
+
+        parse_csv = function (csv_string) {
+            $('#app').addClass('d-none')
+            $('#btn-submit').attr('disabled', 'disabled')
+
+            var csv_array = csv_string.split('\n');
+            var sn = csv_array[0]
+            var csv_array = csv_array.slice(1)
+            var csv_string = csv_array.join('\n')
+
+            // parse sn
+            if (sn.indexOf('/') > 0) {
+                sn = sn.split('/')
+                sn = sn[1]
+            } else {
+                alert('Unknown SN format!');
+                return;
+            }
+
+            // parse csv
+            var csv = Papa.parse(csv_string);
+            $('#header-row').empty();
+            $('#header-row').append('<th>#</th>')
+            for (var i=0; i<csv.data[0].length; i++) {
+                $('#header-row').append('<th>'+ csv.data[0][i] +'</th>')
+            }
+
+            $('#table-body').empty();
+            for (var i=1; i<csv.data.length; i++) {
+                if (csv.data[i].length == 0 || csv.data[i][0].length == 0) {
+                    continue;
+                }
+
+                var tr = $('<tr></tr>');
+                tr.append('<td>'+ i +'</td>')
+
+                for (var col of csv.data[i]) {
+                    tr.append('<td>'+ col +'</td>')
+                }
+
+                tr.appendTo('#table-body')
+            }
+            
+            $('#sn').text(sn)
+
+            $('#app').removeClass('d-none')
+
+            init_datatable();
+
+            if (loggers_sn.includes(sn)) {
+                $('#btn-submit').removeAttr('disabled')
+            } else {
+                alert('Anda tidak dapat import data untuk logger ini ('+ sn +')')
+            }
+        }
+
+        init_datatable = function () {
+            var t = $('#myTable').DataTable({
+                "pageLength": 25,
+                "destroy": true,
+            });
+
+            t.on( 'order.dt search.dt', function () {
+                t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+                    cell.innerHTML = i+1;
+                } );
+            } ).draw();
+        };
+    </script>
+{% endblock %}

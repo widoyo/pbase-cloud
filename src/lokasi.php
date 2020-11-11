@@ -301,12 +301,15 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                     $loggers[] = $pclient->hgetall($key);
                 }
             } else {
-                $loggers = $this->db->query("SELECT device_sn as sn, COUNT(*) FROM periodik
-                    WHERE location_id={$location['id']}
-                    GROUP BY device_sn
-                    ORDER BY device_sn")->fetchAll();
+                $loggers = $this->db->query("SELECT logger.sn, COUNT(periodik.*)
+                    FROM
+                        logger
+                        LEFT JOIN periodik ON (logger.sn = periodik.device_sn)
+                    WHERE logger.location_id = {$location['id']}
+                    GROUP BY logger.sn
+                    ORDER BY logger.sn")->fetchAll();
+                // dump($loggers);
             }
-            // dump($location);
 
             $template = $request->isMobile() ?
                 'location/mobile/show.html' :
