@@ -9,11 +9,11 @@ function raw2periodic($raw, $logger)
     $periodic = [];
 
     if (isset($raw['tick'])) {
-        $periodic['rain'] = ($raw['tipp_fac'] ?: 0.2) * $raw['tick'];
+        $periodic['rain'] = ($raw['tipping_factor'] ?: 0.2) * $raw['tick'];
     }
 
     if (isset($raw['distance'])) {
-        $periodic['wlev'] = ($raw['ting_son'] ?: 100) - $raw['distance'] * 0.1;
+        $periodic['wlev'] = ($raw['tinggi_sonar'] ?: 100) - $raw['distance'] * 0.1;
     }
 
     $time_to = [
@@ -24,14 +24,14 @@ function raw2periodic($raw, $logger)
 
     $direct_to = [
         'altitude' => 'mdpl',
-        'signal_quality' => 'sq',
+        'sq' => 'sq',
         'pressure' => 'apre',
     ];
 
     $apply_to = [
-        'humidity' => 'humi',
-        'temperature' => 'temp',
-        'battery' => 'batt',
+        'humi' => 'humi',
+        'temp' => 'temp',
+        'batt' => 'batt',
     ];
 
     foreach ($time_to as $k => $v) {
@@ -311,6 +311,108 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             'sampling_prev' => $sampling_prev,
             'sampling_next' => $sampling_next,
         ]);
+    });
+
+    $this->get('/import', function (Request $request, Response $response, $args) {
+        $user = $this->user;
+
+        if ($user['tenant_id'] > 0)
+        {
+            $loggers_stmt = $this->db->query("SELECT logger.*
+                FROM logger
+                WHERE logger.tenant_id = {$user['tenant_id']}
+                ORDER BY logger.sn");
+        }
+        else
+        {
+            $loggers_stmt = $this->db->query("SELECT logger.*
+                FROM logger
+                ORDER BY logger.sn");
+        }
+        $loggers = $loggers_stmt->fetchAll();
+
+        $loggers_sn = [];
+        foreach ($loggers as $logger) {
+            $loggers_sn[] = $logger['sn'];
+        }
+
+        return $this->view->render($response, '/logger/import.html', [
+            'loggers_sn' => $loggers_sn,
+        ]);
+    });    
+    $this->post('/import', function (Request $request, Response $response, $args) {
+        // $directory = "uploads/carousel";
+        $uploaded_files = $request->getUploadedFiles();
+        if (empty($uploaded_files['file'])) {
+            $this->flash->addMessage('errors', "File CSV tidak ditemukan, mohon upload file CSV yang akan diimport");
+            return $response->withRedirect('/logger/import');
+        }
+
+        $csv_file = $uploaded_files['file'];
+        $csv_content = trim(file_get_contents($csv_file->file));
+        if (empty($csv_content)) {
+            $this->flash->addMessage('errors', "File CSV kosong / currupt, mohon upload ulang file CSV yang akan diimport");
+            return $response->withRedirect('/logger/import');
+        }
+
+        $rows = explode("\n", $csv_content);
+        if (count($rows) < 3) {
+            $this->flash->addMessage('errors', "File CSV kosong / currupt, mohon upload ulang file CSV yang akan diimport");
+            return $response->withRedirect('/logger/import');
+        }
+
+        $device_data = explode('/', $rows[0]);
+        $device_sn = trim($device_data[1]);
+        $stmt = $this->db->prepare("SELECT * FROM logger WHERE sn=:sn");
+        $stmt->execute([':sn' => $device_sn]);
+        $logger = $stmt->fetch();
+        if (!$logger) {
+            $this->flash->addMessage('errors', "Serial Number logger ({$device_sn}) tidak dikenali");
+            return $response->withRedirect('/logger/import');
+        }
+
+        if ($this->user['tenant_id'] > 0) {
+            if ($logger['tenant_id'] != $this->user['tenant_id']) {
+                $this->flash->addMessage('errors', "Anda tidak dapat import data untuk logger ini ({$device_sn})");
+                return $response->withRedirect('/logger/import');
+            }
+        }
+
+        $headers = explode(',', trim($rows[1]));
+        foreach ($rows as $i => $row) {
+            if ($i < 2) {
+                continue;
+            }
+            $row = explode(',', trim($row));
+            $raw = [];
+            foreach ($headers as $j => $h) {
+                $raw[$h] = $row[$j];
+            }
+            $periodik = raw2periodic($raw, $logger);
+            $periodik['device_sn'] = $logger['sn'];
+            if (!empty($logger['location_id'])) {
+                $periodik['location_id'] = $logger['location_id'];
+            }
+            $periodik['tenant_id'] = $logger['tenant_id'];
+            
+            $keys = [];
+            $values = [];
+            foreach ($periodik as $k => $v) {
+                $keys[] = $k;
+                $values[] = $v;
+            }
+            $keys = implode(',', $keys);
+            $values = "'". implode("','", $values) ."'";
+            $query = "INSERT INTO periodik ({$keys}) VALUES ({$values})";
+            try {
+                $this->db->query($query);
+            } catch (PDOException $e) {
+
+            }
+        }
+
+        $this->flash->addMessage('messages', "Berhasil import data untuk logger {$device_sn}");
+        return $response->withRedirect('/logger/import');
     });
 
     $this->group('/{id:[0-9]+}', function () {
@@ -697,72 +799,6 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 	        $this->flash->addMessage('messages', "Perubahan Logger {$logger['sn']} telah disimpan");
 	        
 	        return $response->withRedirect('/logger/'. $logger['sn']);
-        });
-        
-        $this->post('/import', function (Request $request, Response $response, $args) {
-            $logger = $request->getAttribute('logger');
-
-            if ($this->user['tenant_id'] > 0) {
-                if ($logger['tenant_id'] != $this->user['tenant_id']) {
-                    $this->flash->addMessage('errors', "Anda tidak dapat mengakses halaman ini");
-                    return $response->withRedirect('/logger/'. $logger['sn']);
-                }
-            }
-
-            // $directory = "uploads/carousel";
-            $uploaded_files = $request->getUploadedFiles();
-            if (empty($uploaded_files['file'])) {
-                $this->flash->addMessage('errors', "File CSV tidak ditemukan, mohon upload file CSV yang akan diimport");
-                return $response->withRedirect('/logger/'. $logger['sn']);
-            }
-
-            $csv_file = $uploaded_files['file'];
-            $csv_content = trim(file_get_contents($csv_file->file));
-            if (empty($csv_content)) {
-                $this->flash->addMessage('errors', "File CSV kosong / currupt, mohon upload ulang file CSV yang akan diimport");
-                return $response->withRedirect('/logger/'. $logger['sn']);
-            }
-
-            $rows = explode("\n", $csv_content);
-            if (count($rows) < 3) {
-                $this->flash->addMessage('errors', "File CSV kosong / currupt, mohon upload ulang file CSV yang akan diimport");
-                return $response->withRedirect('/logger/'. $logger['sn']);
-            }
-
-            $device_data = explode('_', $rows[0]);
-            $device_sn = trim(end($device_data));
-            if ($device_sn != $logger['sn']) {
-                $this->flash->addMessage('errors', "File CSV tidak sesuai, periksa Serial Number (SN) logger dan pastikan sama dengan yang akan diupload");
-                return $response->withRedirect('/logger/'. $logger['sn']);
-            }
-
-            $headers = explode(',', trim($rows[1]));
-            foreach ($rows as $i => $row) {
-                if ($i < 2) {
-                    continue;
-                }
-                $row = explode(',', trim($row));
-                $raw = [];
-                foreach ($headers as $j => $h) {
-                    $raw[$h] = $row[$j];
-                }
-                $periodik = raw2periodic($raw, $logger);
-                $periodik['device_sn'] = $logger['sn'];
-                $periodik['location_id'] = !empty($logger['location_id']) ? $logger['location_id'] : NULL;
-                $periodik['tenant_id'] = $logger['tenant_id'];
-                
-                $keys = [];
-                $values = [];
-                foreach ($periodik as $k => $v) {
-                    $keys[] = $k;
-                    $values[] = $v;
-                }
-                $keys = implode(',', $keys);
-                $values = "'". implode("','", $values) ."'";
-                $this->db->query("INSERT INTO periodik ({$keys}) VALUES ({$values})");
-            }
-
-            return $response->withRedirect('/logger/'. $logger['sn']);
         });
     })->add($getLoggerMiddleware);
 })->add($loggedinMiddleware);
