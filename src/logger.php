@@ -460,7 +460,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 ],
                 'labels' => [],
                 'colors' => ['3,172,237'],
-                'title' => ['TICK']
+                'title' => ['CURAH HUJAN']
             ];
             $result_awlr = [
                 'datasets' => [
