@@ -302,7 +302,32 @@ $getLocationMiddleware = function (Request $request, Response $response, $next) 
         }
     }
 
+    $location['das_nama'] = null;
+    if (!empty($location['das_id'])) {
+        $das = $this->db->query("SELECT * FROM das WHERE id={$location['das_id']}")->fetch();
+        if ($location) {
+            $location['das_nama'] = $das['nama'];
+        }
+    }
+
     $request = $request->withAttribute('location', $location);
+
+    return $next($request, $response);
+};
+
+$getDasMiddleware = function (Request $request, Response $response, $next) {
+	$args = $request->getAttribute('routeInfo')[2];
+    $das_id = intval($args['id']);
+    $stmt = $this->db->prepare("SELECT * FROM das WHERE id=:id");
+    $stmt->execute([':id' => $das_id]);
+    $das = $stmt->fetch();
+
+    $user = $this->user;
+    if (!$das || ($user['tenant_id'] > 0 && $user['tenant_id'] != $das['tenant_id'])) {
+        throw new \Slim\Exception\NotFoundException($request, $response);
+    }
+    
+    $request = $request->withAttribute('das', $das);
 
     return $next($request, $response);
 };
@@ -498,6 +523,7 @@ require __DIR__ . '/../src/tenant.php';
 require __DIR__ . '/../src/user.php';
 require __DIR__ . '/../src/logger.php';
 require __DIR__ . '/../src/lokasi.php';
+require __DIR__ . '/../src/das.php';
 
 /**
  * # ROUTES BLOCK

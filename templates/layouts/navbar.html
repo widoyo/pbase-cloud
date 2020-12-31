@@ -48,6 +48,13 @@
                 </a>
             </li>
 
+            <!-- Nav Item - DAS -->
+            <li class="nav-item {{ title is same as('DAS') ? 'active' : '' }}">
+                <a class="nav-link" href="/das">
+                    DAS
+                </a>
+            </li>
+
             {% if user().tenant_id == 0 %}
                 <!-- Nav Item - User -->
                 <li class="nav-item {{ title is same as('Users') ? 'active' : '' }}">

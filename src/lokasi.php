@@ -111,18 +111,30 @@ $app->group('/location', function () use ($getLocationMiddleware) {
         $this->get('', function (Request $request, Response $response, $args) {
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
 
+            $user = $this->user;
+            if ($user['tenant_id'] > 0) {
+                $das = $this->db->query("SELECT * FROM das WHERE tenant_id={$user['tenant_id']} ORDER BY nama")->fetchAll();
+            } else {
+                $das = $this->db->query("SELECT * FROM das ORDER BY nama")->fetchAll();
+            }
+
             return $this->view->render($response, 'location/add.html', [
-                'tenants' => $tenants
+                'tenants' => $tenants,
+                'das' => $das,
             ]);
         });
 
         $this->post('', function (Request $request, Response $response, $args) {
             $form = $request->getParams();
 
-            $stmt = $this->db->prepare("INSERT INTO location (nama, tenant_id, ll) VALUES (:nama, :tenant_id, :ll)");
+            $stmt = $this->db->prepare("INSERT INTO location (nama, das_id, elevasi, tenant_id, tipe, wilayah, ll) VALUES (:nama, :das_id, :elevasi, :tenant_id, :tipe, :wilayah, :ll)");
             $stmt->execute([
                 ":nama" => $form['nama'],
+                ":das_id" => !empty($form['das_id']) ? $form['das_id'] : null,
+                ":elevasi" => !empty($form['elevasi']) ? $form['elevasi'] : null,
                 ":tenant_id" => $form['tenant_id'],
+                ":tipe" => $form['tipe'],
+                ":wilayah" => !empty($form['wilayah']) ? $form['wilayah'] : null,
                 ":ll" => $form['ll']
             ]);
 
@@ -315,9 +327,17 @@ $app->group('/location', function () use ($getLocationMiddleware) {
                 'location/mobile/show.html' :
                 'location/show.html';
 
+            $user = $this->user;
+            if ($user['tenant_id'] > 0) {
+                $das = $this->db->query("SELECT * FROM das WHERE tenant_id={$user['tenant_id']} ORDER BY nama")->fetchAll();
+            } else {
+                $das = $this->db->query("SELECT * FROM das ORDER BY nama")->fetchAll();
+            }
+
             return $this->view->render($response, $template, [
                 'location' => $location,
                 'tenants' => $tenants,
+                'das' => $das,
                 'result' => $result,
                 'start_date' => $start_date,
                 'end_date' => $end_date,
