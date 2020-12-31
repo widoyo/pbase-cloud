@@ -235,6 +235,17 @@
 							{% endif %}
 							<div class="list-group-item px-3">
 								<div class="row ">
+									<div class="col-4">DAS</div>
+									<div class="col-8">
+										<span v-show="!editMode" class="">{[{ location.das_nama }]}</span>
+										<select v-show="editMode" name="das_id" class="form-control" v-model="location.das_id">
+											<option v-for="d in filteredDas" :value="d.id">{[{ d.nama }]}</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="list-group-item px-3">
+								<div class="row ">
 									<div class="col-4">LonLat</div>
 									<div class="col-8 text-ellipsis">
 										<span v-show="!editMode">{[{ location.ll ? location.ll : '-' }]}</span>
@@ -366,6 +377,7 @@
 					editMode: false,
 					location: {{ location | json_encode | raw }},
 					tenants: {{ tenants | json_encode | raw }},
+					das: {{ das | json_encode | raw }},
 					map: null,
 					tileLayer: null,
 					marker: null
@@ -379,6 +391,15 @@
 					initChartCH();
 				}
 			},
+			computed: {
+                filteredDas: function () {
+                    var das = this.das.filter(d => d.tenant_id == this.location.tenant_id);
+                    if (das.length) {
+                        return das;
+                    }
+                    return this.das;
+                }
+            },
 			methods: {
 				initMap: function() {
 					var ll = [-6.2088, 106.8456];

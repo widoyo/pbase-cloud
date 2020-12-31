@@ -100,6 +100,16 @@
                 {% endif %}
                 <div class="list-group-item rounded-0 px-3">
                     <div class="row ">
+                        <div class="col-3">DAS</div>
+                        <div class="col-9">
+                            <select name="das_id" class="form-control" v-model="location.das_id">
+                                <option v-for="d in filteredDas" :value="d.id">{[{ d.nama }]}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group-item rounded-0 px-3">
+                    <div class="row ">
                         <div class="col-3">LonLat</div>
                         <div class="col-9 text-ellipsis">
                             <div>
@@ -158,11 +168,22 @@
                         wilayah: '',
                         tipe: 1,
                         elevasi: '',
+                        das_id: '',
                     },
                     tenants: {{ tenants | json_encode | raw }},
+                    das: {{ das | json_encode | raw }},
                     map: null,
                     tileLayer: null,
                     marker: null
+                }
+            },
+            computed: {
+                filteredDas: function () {
+                    var das = this.das.filter(d => d.tenant_id == this.location.tenant_id);
+                    if (das.length) {
+                        return das;
+                    }
+                    return this.das;
                 }
             },
             mounted() {
@@ -223,7 +244,6 @@
                 },
                 updateCenterMap: function () {
                     var tenant = this.tenants.filter(t => t.id == this.location.tenant_id);
-                    console.log(tenant);
                     if (tenant.length) {
                         tenant = tenant[0];
                         if (tenant.center_map && tenant.center_map.indexOf(',') > 0) {

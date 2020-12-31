@@ -302,6 +302,14 @@ $getLocationMiddleware = function (Request $request, Response $response, $next) 
         }
     }
 
+    $location['das_nama'] = null;
+    if (!empty($location['das_id'])) {
+        $das = $this->db->query("SELECT * FROM das WHERE id={$location['das_id']}")->fetch();
+        if ($location) {
+            $location['das_nama'] = $das['nama'];
+        }
+    }
+
     $request = $request->withAttribute('location', $location);
 
     return $next($request, $response);

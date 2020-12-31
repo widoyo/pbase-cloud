@@ -293,6 +293,14 @@
 										</div>
 									</div>
 								{% endif %}
+                                <div class="list-group-item p-0">
+                                    <div class="form-group">
+                                        <label class="small">DAS</label>
+                                        <select name="das_id" class="form-control" v-model="location.das_id">
+                                            <option v-for="d in filteredDas" :value="d.id">{[{ d.nama }]}</option>
+                                        </select>
+                                    </div>
+                                </div>
 								<div class="list-group-item p-0">
 									<div class="form-group mb-4">
 										<label class="small">LonLat</label>
@@ -414,6 +422,7 @@
 					location: {{ location | json_encode | raw }},
 					loggers: {{ loggers | json_encode | raw }},
 					tenants: {{ tenants | json_encode | raw }},
+					das: {{ das | json_encode | raw }},
 					map: null,
 					mapEdit: null,
 					tileLayer: null,
@@ -422,6 +431,15 @@
 					markerEdit: null,
 				}
 			},
+            computed: {
+                filteredDas: function () {
+                    var das = this.das.filter(d => d.tenant_id == this.location.tenant_id);
+                    if (das.length) {
+                        return das;
+                    }
+                    return this.das;
+                }
+            },
 			mounted() {
 				this.initMap();
 				if (this.location.tipe == '2') {
