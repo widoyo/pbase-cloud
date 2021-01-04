@@ -9,8 +9,17 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
     	$user = $this->user;
 
 		$tenants = null;
+		$locations = null;
 		if ($user['tenant_id'] > 0) {
-			$das = $this->db->query("SELECT * FROM das WHERE tenant_id={$user['tenant_id']} ORDER BY nama")->fetchAll();
+			$das = $this->db->query("SELECT
+					das.id,
+					das.nama,
+					ST_AsGeoJSON(das.alur) AS alur
+				FROM das
+				WHERE tenant_id={$user['tenant_id']}
+				ORDER BY nama")->fetchAll();
+			$locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']}")->fetchAll();
+			$template = 'das/index_tenant.html';
 		} else {
 			$das = $this->db->query("SELECT
 					das.id,
@@ -21,11 +30,15 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
 					LEFT JOIN tenant ON (das.tenant_id = tenant.id)
 				ORDER BY nama")->fetchAll();
 			$tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+			$template = 'das/index.html';
 		}
 
-        return $this->view->render($response, 'das/index.html', [
+		// dump(json_decode($das[0]['alur'], JSON_OBJECT_AS_ARRAY));
+
+        return $this->view->render($response, $template, [
             'das' => $das,
             'tenants' => $tenants,
+            'locations' => $locations,
         ]);
     });
 
