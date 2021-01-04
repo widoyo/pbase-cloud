@@ -134,6 +134,7 @@
 
 {% block css %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.css"/>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
     <style>
         th.fit, td.fit {
             width: 1%;
@@ -147,6 +148,7 @@
 
 {% block js %}
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/datatables.min.js"></script>
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
     <script>
         $(document).ready( function () {
             var t = $('#myTable').DataTable({
@@ -163,25 +165,89 @@
             initMap();
         } );
 
+        var map;
+        var tileLayer;
+        var markers = [];
+        var polylines= [];
+        var locations = {{ locations | json_encode | raw }};
+        var das = {{ das | json_encode | raw }};
         initMap = function () {
-            var ll = [-6.2088, 106.8456];
-            if (this.location.ll) {
-                ll = this.location.ll.split(',');
+            map = L.map('mapid'); //.setView(ll, 13);
+            // map.on('click', this.onMapClick);
+
+            // garis das
+            if (das && das.length) {
+                for (let d of das) {
+                    if (!d.alur) {
+                        continue
+                    }
+
+                    let alur = JSON.parse(d.alur)
+                    // alur.type = ''
+                    L.geoJSON(alur).addTo(map)
+                    // let coordinates = [];
+                    // for (let c of alur.coordinates) {
+                    //     let c_temp = c.slice(0, 2)
+                    //     // reverse karena di DB kebalikan antara lat lng
+                    //     c_temp.reverse()
+                    //     coordinates.push(c_temp)
+                    // }
+
+                    // if (coordinates.length) {
+                    //     addPolyLine(coordinates);
+                    // }
+                }
             }
 
-            this.map = L.map('mapid').setView(ll, 13);
-            this.map.on('click', this.onMapClick);
+            let lls = [];
+            let lls_title = [];
+            if (locations && locations.length) {
+                for (let location of locations) {
+                    let ll = location.ll.split(',');
+                    if (ll && ll.length == 2) {
+                        lls.push(ll)
+                        lls_title.push(location.nama)
+                    }
+                }
+            }
 
-            this.tileLayer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoid2lkb3lvIiwiYSI6ImNqcTNmNGh5NjFlMGk0Mm9iamJxdXIxaHUifQ.hxfPpTyy8g60K9baKtbvRw', {
+            if (lls.length) {
+                boundSet = true;
+                map.fitBounds(lls);
+                for (let i in lls) {
+                    let ll = lls[i]
+                    let title = lls_title[i]
+                    addMarker(ll, title);
+                }
+            } else {
+                let ll = [-6.2088, 106.8456];
+                map.setView(ll, 13);
+            }
+
+            tileLayer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoid2lkb3lvIiwiYSI6ImNqcTNmNGh5NjFlMGk0Mm9iamJxdXIxaHUifQ.hxfPpTyy8g60K9baKtbvRw', {
                 maxZoom: 18,
                 attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' + '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' + 'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
                 id: 'mapbox/streets-v11'
             });
-            this.tileLayer.addTo(this.map);
-
-            if (this.location.ll) {
-                this.addMarker(ll);
-            }
+            tileLayer.addTo(map);
+        }
+        addMarker = function(ll, title) {
+            // if (this.marker) {
+            //     this.marker.remove();
+            // }
+            let marker = L.marker(ll);
+            let ll_string = ll.join(',');
+            marker.addTo(map);
+            marker.bindPopup(`
+                <h6 class="m-0">${title}</h6>
+                <p class="m-0">${ll_string}</p>
+            `)
+            markers.push(marker)
+        }
+        addPolyLine = function(coordinates) {
+            var polyline = L.polyline(coordinates, {color: 'red'});
+            polyline.addTo(map)
+            polylines.push(polyline)
         }
     </script>
 {% endblock %}

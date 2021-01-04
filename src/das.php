@@ -9,6 +9,7 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
     	$user = $this->user;
 
 		$tenants = null;
+		$locations = null;
 		if ($user['tenant_id'] > 0) {
 			$das = $this->db->query("SELECT
 					das.id,
@@ -17,6 +18,7 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
 				FROM das
 				WHERE tenant_id={$user['tenant_id']}
 				ORDER BY nama")->fetchAll();
+			$locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']}")->fetchAll();
 			$template = 'das/index_tenant.html';
 		} else {
 			$das = $this->db->query("SELECT
@@ -36,6 +38,7 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
         return $this->view->render($response, $template, [
             'das' => $das,
             'tenants' => $tenants,
+            'locations' => $locations,
         ]);
     });
 
