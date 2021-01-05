@@ -165,14 +165,17 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
 
         if ($user['tenant_id'] > 0) {
             $tenants = $this->db->query("SELECT * FROM tenant WHERE id={$user['tenant_id']} ORDER BY nama")->fetchAll();
+            $locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']} ORDER BY nama")->fetchAll();
         } else {
             $tenants = $this->db->query("SELECT * FROM tenant ORDER BY nama")->fetchAll();
+            $locations = $this->db->query("SELECT * FROM location ORDER BY nama")->fetchAll();
         }
 
         return $this->view->render($response, 'logger/edit.html', [
             'mode' => 'Add',
             'logger' => $logger,
-            'tenants' => $tenants
+            'tenants' => $tenants,
+            'locations' => $locations,
         ]);
     });
 
