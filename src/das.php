@@ -19,6 +19,27 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
 				WHERE tenant_id={$user['tenant_id']}
 				ORDER BY nama")->fetchAll();
 			$locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']}")->fetchAll();
+			// get latest value
+			foreach ($locations as &$l) {
+				$l['rain'] = '-';
+				$l['distance'] = '-';
+				$l['sampling'] = '-';
+
+				$logger_ids = $this->db->query("SELECT sn FROM logger WHERE location_id={$l['id']}")->fetchAll(PDO::FETCH_COLUMN);
+				if ($logger_ids && count($logger_ids) > 0) {
+					array_walk($logger_ids, function(&$val) {
+						$val = "content->>'device' LIKE '%{$val}%'";
+					});
+					$logger_ids = join(' OR ', $logger_ids);
+					$raw = $this->db->query("SELECT * FROM raw WHERE {$logger_ids} ORDER BY content->>'sampling' DESC LIMIT 1")->fetch();
+					if ($raw) {
+						$content = json_decode($raw['content'], true);
+						$l['rain'] = isset($content['tick']) ? $content['tick'] : '-';
+						$l['distance'] = isset($content['distance']) ? $content['distance'] : '-';
+						$l['sampling'] = isset($content['sampling']) ? date('Y-m-d H:i', $content['sampling']) : '-';
+					}
+				}
+			}
 			$template = 'das/index_tenant.html';
 		} else {
 			$das = $this->db->query("SELECT

@@ -200,13 +200,13 @@
             }
 
             let lls = [];
-            let lls_title = [];
+            let lls_data = [];
             if (locations && locations.length) {
                 for (let location of locations) {
                     let ll = location.ll.split(',');
                     if (ll && ll.length == 2) {
                         lls.push(ll)
-                        lls_title.push(location.nama)
+                        lls_data.push(location)
                     }
                 }
             }
@@ -216,8 +216,8 @@
                 map.fitBounds(lls);
                 for (let i in lls) {
                     let ll = lls[i]
-                    let title = lls_title[i]
-                    addMarker(ll, title);
+                    let data = lls_data[i]
+                    addMarker(ll, data);
                 }
             } else {
                 let ll = [-6.2088, 106.8456];
@@ -231,17 +231,20 @@
             });
             tileLayer.addTo(map);
         }
-        addMarker = function(ll, title) {
+        addMarker = function(ll, data) {
             // if (this.marker) {
             //     this.marker.remove();
             // }
+            let content = `<h6 class="mt-0 mb-1">${data.nama}</h6>`;
+            if (data.distance != '-') {
+                content += `<p class="m-0"><i class="fas fa-level-up-alt mr-2"></i>${data.distance} meter</p>`;
+            } else {
+                content += `<p class="m-0"><i class="fas fa-cloud-rain mr-2"></i>${data.rain} mm</p>`;
+            }
+            content += `<p class="m-0"><i class="fas fa-clock mr-2"></i>${data.sampling}</p>`;
             let marker = L.marker(ll);
-            let ll_string = ll.join(',');
             marker.addTo(map);
-            marker.bindPopup(`
-                <h6 class="m-0">${title}</h6>
-                <p class="m-0">${ll_string}</p>
-            `)
+            marker.bindPopup(content, {closeOnClick: false, autoClose: false}).openPopup()
             markers.push(marker)
         }
         addPolyLine = function(coordinates) {
