@@ -76,3 +76,8 @@
 .dropdown-toggle.noicon::after {
     content: unset;
 }
+
+
+.leaflet-popup-content-wrapper {
+    background-color: rgba(255,255,255,.5) !important;
+}
