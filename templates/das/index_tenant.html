@@ -235,13 +235,13 @@
             // if (this.marker) {
             //     this.marker.remove();
             // }
-            let content = `<h6 class="mt-0 mb-1">${data.nama}</h6>`;
+            let content = `<h6 class="text-muted mt-0 mb-1">${data.nama}</h6>`;
             if (data.distance != '-') {
-                content += `<p class="m-0"><i class="fas fa-level-up-alt mr-2"></i>${data.distance} meter</p>`;
+                content += `<h4 class="m-0"><i class="fas fa-level-up-alt mr-2"></i>${data.distance} meter</h4>`;
             } else {
-                content += `<p class="m-0"><i class="fas fa-cloud-rain mr-2"></i>${data.rain} mm</p>`;
+                content += `<h4 class="m-0"><i class="fas fa-cloud-rain mr-2"></i>${data.rain} mm</h4>`;
             }
-            content += `<p class="m-0"><i class="fas fa-clock mr-2"></i>${data.sampling}</p>`;
+            content += `<p class="text-muted m-0"><i class="fas fa-clock mr-2"></i>${data.sampling}</p>`;
             let marker = L.marker(ll);
             marker.addTo(map);
             marker.bindPopup(content, {closeOnClick: false, autoClose: false}).openPopup()
