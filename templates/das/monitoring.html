@@ -57,7 +57,7 @@
         var dt;
         if (str && str.length) {
             if (str === '-') {
-                return str;
+                return 'tidak ada data';
             }
             dt = new Date(str)
         } else {
@@ -184,7 +184,7 @@
 
         var width = $('#target').parent().innerWidth(); //window.innerWidth;
         var height = 240;
-        var margin_x = 75;
+        var margin_x = 95;
         var margin_y = 20;
 
         var projection = d3.geoEquirectangular();
@@ -272,7 +272,7 @@
         var g = svg.append("g").attr("transform", `translate(${x}, ${y})`);
 
         add_tiang(g, y, h_tma);
-        add_info(g, info);
+        add_info(g, info, 185, 66);
     }
 
     function add_info(g, info, width = 145, height = 50) {
@@ -291,7 +291,7 @@
         //         break;
         // }
 
-        g.attr("font-size", "7px")
+        g.attr("font-size", "11px")
 
         text_color = localStorage.getItem("darkSwitch") === 'dark' ? 'white' : 'black';
 
@@ -315,27 +315,27 @@
         // info
         g.append("circle")
             .attr("cx", -width / 2 + 5)
-            .attr("cy", 17)
+            .attr("cy", 24)
             .attr("r", 3)
             .style("fill", fill);
 
         g.append("text")
-            .attr("y", 20) //magic number here
+            .attr("y", 28) //magic number here
             .attr("x", -width / 2 + 9)
-            .attr("font-size", "11px")
+            .attr("font-size", "14px")
             .attr("font-weight", "bold")
             .attr("fill", text_color)
             .text(info.name);
 
         g.append("text")
-            .attr("y", 38) //magic number here
+            .attr("y", 52) //magic number here
             .attr("x", -width / 2 + 9)
-            .attr("font-size", "14px")
+            .attr("font-size", "20px")
             .attr("fill", text_color)
             .text(info.tma + " m");
 
         g.append("text")
-            .attr("y", 50) //magic number here
+            .attr("y", 68) //magic number here
             .attr("x", -width / 2 + 9)
             .attr("fill", text_color)
             .text(info.sampling);
