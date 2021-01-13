@@ -1,0 +1,376 @@
+{% extends 'layouts/master.html' %}
+
+{% set title = 'DAS Monitoring' %}
+
+{% block content %}
+
+<!-- Page Heading -->
+<div class="d-flex align-items-center mb-4">
+    <a class="btn btn-outline-primary mr-2" href="/das">
+        <i class="fas fa-angle-left"></i>
+        Kembali
+    </a>
+    <h1 class="h3 mb-0 mr-auto text-gray-800">
+        <i class="fas fa-water fa-sm mr-1"></i>
+        Monitoring Daerah Aliran Sungai
+    </h1>
+</div>
+
+<div class="mb-4">
+    <div id="loading">Loading...</div>
+    <div id="target"></div>
+</div>
+
+{% endblock %}
+
+{% block css %}
+<style>
+    #loading {
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+    var svg = null;
+    var jsonready = false;
+    var d3ready = false;
+    var geojson = {
+        type: "FeatureCollection",
+        features: []
+    };
+    var locations = {{ locations | json_encode | raw }}
+
+    $(function () {
+        format_geojson(locations)
+    })
+
+    function d3loaded() {
+        d3ready = true;
+        if (jsonready) {
+            init_graphic(geojson);
+        }
+    }
+
+    function format_date(str) {
+        var dt;
+        if (str && str.length) {
+            dt = new Date(str)
+        } else {
+            dt = new Date()
+        }
+
+        var bulan = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mei",
+            "Jun",
+            "Jul",
+            "Ags",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Des"
+        ];
+        return dt.getDate() + " " + bulan[dt.getMonth()] + ", " +
+            dt.getHours() + ":" + (dt.getMinutes() >= 10 ? dt.getMinutes() : "0" + dt.getMinutes());
+    }
+    
+    function format_geojson(tma) {
+        // sort by das_bsolo
+        var tma_max = 0
+        var tma_min = 99999999
+        var temp_tma = []
+
+        for (const data of tma) {
+            // get min & max tma
+            const nilai_tma = parseInt(data.tma)
+            if (nilai_tma > tma_max) { tma_max = nilai_tma }
+            if (nilai_tma < tma_min) { tma_min = nilai_tma }
+        }
+
+        var tma_diff = tma_max - tma_min
+
+        console.log(`max: ${tma_max}`)
+        console.log(`min: ${tma_min}`)
+        console.log(`diff: ${tma_diff}`)
+
+        // var visualisasi ketinggian
+        var start_h = 70;
+        var end_h = 10;
+        var d_h = (start_h - end_h);
+
+        let container_width = $('#target').parent().innerWidth();
+        let prevcoordinate = null;
+        let prevlat = null;
+        let mindiff = (0.5 * 800) / container_width;//window.innerWidth;
+        for (const data of tma) {
+            let id = parseInt(data.id);
+
+            let coordinates = data.ll.split(",");
+            coordinates[0] = parseFloat(coordinates[0]);
+            coordinates[1] = parseFloat(coordinates[1]);
+            console.log(id +"__"+data.nama + " : " + coordinates);
+
+            // kalau dalam km dikali 1000
+            let d = data.d //* 1000
+            if (prevcoordinate) {
+                // rumus untuk menambahkan jarak ke koordinat
+                coordinates[0] = prevcoordinate[0] + (180/Math.PI)*(d/6378137)/Math.cos(Math.PI/180*prevcoordinate[0])
+            }
+            prevcoordinate = coordinates;
+
+            // buat jadi 1 dimensi, hanya pakai lat
+            coordinates[1] = 0;
+
+            // manipulate lat
+            let difflat = 0;
+            if (prevlat) {
+                difflat = Math.abs(prevlat - coordinates[0]);
+                if (difflat < mindiff) {
+                    difflat = mindiff - difflat;
+                    coordinates[0] += difflat;
+                }
+            }
+            prevlat = coordinates[0];
+
+            let h_tma = end_h + (data.tma - tma_min) * d_h / tma_diff
+            // console.log(`${h_tma} = (${data.tma} - ${tma_min}) * ${d_h} / ${tma_diff}`)
+            // console.log(id +"__"+data.nama + " : " + coordinates + " -> " + difflat + ' -> '+ hv);
+            // console.log(data.status_tma + " : " + data.tma +"/"+ tma_min +" = "+ h_tma);
+            // console.log(data.sampling);
+
+            let feature = {
+                type: "Feature",
+                properties: {
+                    name: data.nama,
+                    tma: data.tma.toFixed(2),
+                    sampling: format_date(data.sampling),
+                    h_tma: h_tma
+                },
+                geometry: {
+                    type: "Point",
+                    coordinates: coordinates
+                }
+            };
+
+            geojson.features.push(feature);
+        }
+
+        jsonready = true;
+        if (d3ready) {
+            init_graphic(geojson);
+        }
+    }
+
+    function init_graphic(geojson) {
+        var loading = document.getElementById("loading");
+        if (loading) {
+            loading.remove();
+        }
+
+        var now = format_date();
+        // var update_time = document.getElementById("update-time");
+        // update_time.textContent = `Update: ${now}`;
+
+        var width = $('#target').parent().innerWidth(); //window.innerWidth;
+        var height = 240;
+        var margin_x = 50;
+        var margin_y = 20;
+
+        var projection = d3.geoEquirectangular();
+        projection.fitExtent(
+            [[margin_x, margin_y], [width - margin_x * 2, height - margin_y * 2]],
+            geojson
+        );
+
+        if (svg) {
+            d3.selectAll("g > *").remove()
+            svg.remove()
+        }
+
+        svg = d3
+            .selectAll("#target")
+            .append("svg")
+
+        svg.attr("width", width)
+            .attr("height", height);
+
+        // build semua info
+        var tma_line_temp = { x1: '', y1: '', x2: '', y2: '' }
+        var tma_line = []
+        var infos = []
+        for (var feature of geojson.features) {
+            var ll = feature.geometry.coordinates;
+            ll = projection(ll);
+
+            var info = {
+                name: feature.properties.name,
+                ll: ll,
+                tma: feature.properties.tma,
+                sampling: feature.properties.sampling,
+                h_tma: feature.properties.h_tma
+            };
+            infos.push(info)
+
+            var tma_line_x = ll[0]
+            var tma_line_y = ll[1] - feature.properties.h_tma - 30
+
+            tma_line_temp.x2 = tma_line_temp.x1
+            tma_line_temp.y2 = tma_line_temp.y1
+            tma_line_temp.x1 = tma_line_x
+            tma_line_temp.y1 = tma_line_y
+            if (tma_line_temp.x2 !== '' && tma_line_temp.y2 !== '') {
+                // clone pakai JSON.parse x stringify biar nggak kesimpen reference
+                tma_line.push(JSON.parse(JSON.stringify(tma_line_temp)))
+            }
+        }
+
+        // gambar line dulu agar nantinya ada di bawah tiang & tanda
+        svg.selectAll(null)
+            .data(tma_line)
+            .enter()
+            .append('line')
+            .attr('x1', d => d.x1)
+            .attr('y1', d => d.y1)
+            .attr('x2', d => d.x2)
+            .attr('y2', d => d.y2)
+            .style("stroke", '#666')
+            .style("stroke-width", 1)
+
+        // baru gambar markernya
+        for (const info of infos) {
+            add_marker(info)
+        }
+
+        setTimeout(() => {
+            window.location.reload()
+        }, 5 * 60 * 1000);
+    }
+
+    function add_marker(info) {
+        if (svg == null) {
+            return;
+        }
+
+        var ll = info.ll
+        var x = ll[0];
+        var y = 80;
+        var h_tma = info.h_tma;
+
+        var g = svg.append("g").attr("transform", `translate(${x}, ${y})`);
+
+        add_tiang(g, y, h_tma);
+        add_info(g, info);
+    }
+
+    function add_info(g, info, width = 85, height = 50) {
+        var fill = "#666";
+        // switch (info.status) {
+        //     case "sh":
+        //         fill = "lime";
+        //         break;
+
+        //     case "sk":
+        //         fill = "yellow";
+        //         break;
+
+        //     case "sm":
+        //         fill = "red";
+        //         break;
+        // }
+
+        g.attr("font-size", "7px")
+
+        // tma
+        g.append("line")
+            .attr("stroke", fill)
+            .attr("stroke-width", 5)
+            .attr("x1", -6)
+            .attr("x2", 6)
+            .attr("y1", -info.h_tma)
+            .attr("y2", -info.h_tma);
+
+        g.append("rect")
+            .attr("x", -width / 2)
+            .attr("y", 10)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", "transparent")
+            .attr("stroke", "gray");
+
+        // info
+        g.append("circle")
+            .attr("cx", -width / 2 + 5)
+            .attr("cy", 17)
+            .attr("r", 3)
+            .style("fill", fill);
+
+        g.append("text")
+            .attr("y", 20) //magic number here
+            .attr("x", -width / 2 + 9)
+            .attr("font-size", "11px")
+            .attr("font-weight", "bold")
+            .text(info.name);
+
+        g.append("text")
+            .attr("y", 38) //magic number here
+            .attr("x", -width / 2 + 9)
+            .attr("font-size", "14px")
+            .text(info.tma + " m");
+
+        g.append("text")
+            .attr("y", 50) //magic number here
+            .attr("x", -width / 2 + 9)
+            .text(info.sampling);
+
+        // g.append("text")
+        //     .attr("y", 50) //magic number here
+        //     .attr("x", -width / 2 + 9)
+        //     .attr("color", "green")
+        //     .text(`SH: ${info.sh}`);
+
+        // g.append("text")
+        //     .attr("y", 60) //magic number here
+        //     .attr("x", -width / 2 + 9)
+        //     .attr("color", "orange")
+        //     .text(`SK: ${info.sk}`);
+
+        // g.append("text")
+        //     .attr("y", 70) //magic number here
+        //     .attr("x", -width / 2 + 9)
+        //     .attr("color", "red")
+        //     .text(`SM: ${info.sm}`);
+    }
+
+    function add_tiang(g, height = 80) {
+        var stroke = "gray";
+        var stroke_width = 3;
+
+        var xh_1 = -15;
+        var xh_2 = +15;
+        var xh2_1 = -10;
+        var xh2_2 = 10;
+        var yh_1 = -57;
+        var yh_2 = -50;
+        var yh_3 = -43;
+
+        // hanya untuk grouping
+        var tiang = g.append("g").attr("class", "tiang");
+
+        // main
+        tiang
+            .append("line")
+            .attr("stroke", stroke)
+            .attr("stroke-width", stroke_width)
+            .attr("x1", 0)
+            .attr("x2", 0)
+            .attr("y1", -height)
+            .attr("y2", 0);
+    }
+</script>
+<script src="{{ asset('js/d3.v5.min.js') }}" onload=d3loaded()></script>
+{% endblock %}
