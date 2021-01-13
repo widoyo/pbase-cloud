@@ -18,7 +18,7 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
                 FROM das
                 WHERE tenant_id={$user['tenant_id']}
                 ORDER BY nama")->fetchAll();
-            $locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']}")->fetchAll();
+            $locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']} AND das_id IS NOT NULL")->fetchAll();
             // get latest value
             foreach ($locations as &$l) {
                 $l['rain'] = '-';
@@ -83,7 +83,7 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
         $user = $this->user;
 
         if ($user['tenant_id'] > 0) {
-            $locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']} ORDER BY elevasi DESC")->fetchAll();
+            $locations = $this->db->query("SELECT * FROM location WHERE tenant_id={$user['tenant_id']} AND das_id IS NOT NULL ORDER BY elevasi DESC")->fetchAll();
             $geojson = [
                 'type' => 'FeatureCollection',
                 'features' => []
