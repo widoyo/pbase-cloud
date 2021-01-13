@@ -109,20 +109,20 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
                         $l['rain'] = isset($content['tick']) ? $content['tick'] : '-';
                         $l['distance'] = isset($content['distance']) ? $content['distance'] : '-';
                         $l['sampling'] = isset($content['sampling']) ? date('Y-m-d H:i', $content['sampling']) : '-';
-
-                        $l['tma'] = intval($l['distance']);
-                        if ($l['tma'] > $tma_max) { $tma_max = $l['tma']; }
-                        if ($l['tma'] < $tma_min) { $tma_min = $l['tma']; }
-
-                        $ll = explode(',', $l['ll']);
-                        if (empty($prev_ll)) {
-                            $l['d'] = 0;
-                        } else {
-                            $l['d'] = getDistance($prev_ll[0], $prev_ll[1], $ll[0], $ll[1]);
-                        }
-                        $prev_ll = $ll;
                     }
                 }
+
+                $l['tma'] = intval($l['distance']);
+                if ($l['tma'] > $tma_max) { $tma_max = $l['tma']; }
+                if ($l['tma'] < $tma_min) { $tma_min = $l['tma']; }
+
+                $ll = explode(',', $l['ll']);
+                if (empty($prev_ll)) {
+                    $l['d'] = 0;
+                } else {
+                    $l['d'] = getDistance($prev_ll[0], $prev_ll[1], $ll[0], $ll[1]);
+                }
+                $prev_ll = $ll;
             }
 
             return $this->view->render($response, 'das/monitoring.html', [
