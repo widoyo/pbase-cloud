@@ -5,8 +5,8 @@
 {% block content %}
 
 <!-- Page Heading -->
-<div class="d-flex align-items-center mb-4">
-    <a class="btn btn-outline-primary mr-2" href="/das">
+<div class="d-flex align-items-center flex-wrap mb-4">
+    <a class="btn btn-outline-primary mr-2 mb-2 mb-md-0" href="/das">
         <i class="fas fa-angle-left"></i>
         Kembali
     </a>
@@ -41,6 +41,9 @@
         features: []
     };
     var locations = {{ locations | json_encode | raw }}
+
+    var margin_x = 105;
+    var margin_y = 20;
 
     $(function () {
         format_geojson(locations)
@@ -109,7 +112,8 @@
         let container_width = $('#target').parent().innerWidth();
         let prevcoordinate = null;
         let prevlat = null;
-        let mindiff = (0.5 * 800) / container_width;//window.innerWidth;
+        // let mindiff = (0.5 * 800) / container_width;//window.innerWidth;
+        let mindiff = (container_width - (margin_x*2)) / ((tma.length - 1)*20)
         for (const data of tma) {
             let id = parseInt(data.id);
 
@@ -184,12 +188,10 @@
 
         var width = $('#target').parent().innerWidth(); //window.innerWidth;
         var height = 240;
-        var margin_x = 95;
-        var margin_y = 20;
 
         var projection = d3.geoEquirectangular();
         projection.fitExtent(
-            [[margin_x, margin_y], [width - margin_x * 2, height - margin_y * 2]],
+            [[margin_x, margin_y], [width - margin_x, height - margin_y * 2]],
             geojson
         );
 
@@ -211,6 +213,7 @@
         var infos = []
         for (var feature of geojson.features) {
             var ll = feature.geometry.coordinates;
+            console.log(feature)
             ll = projection(ll);
 
             var info = {
@@ -236,6 +239,7 @@
                 // console.log(tma_line_temp)
             }
         }
+        console.log(infos)
 
         // gambar line dulu agar nantinya ada di bawah tiang & tanda
         svg.selectAll(null)
@@ -272,7 +276,7 @@
         var g = svg.append("g").attr("transform", `translate(${x}, ${y})`);
 
         add_tiang(g, y, h_tma);
-        add_info(g, info, 185, 66);
+        add_info(g, info, 205, 66);
     }
 
     function add_info(g, info, width = 145, height = 50) {
