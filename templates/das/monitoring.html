@@ -42,7 +42,7 @@
     };
     var locations = {{ locations | json_encode | raw }}
 
-    var margin_x = 105;
+    var margin_x = 55;
     var margin_y = 20;
 
     $(function () {
@@ -276,10 +276,44 @@
         var g = svg.append("g").attr("transform", `translate(${x}, ${y})`);
 
         add_tiang(g, y, h_tma);
-        add_info(g, info, 205, 66);
+        add_info(g, info, 110, 66);
     }
 
-    function add_info(g, info, width = 145, height = 50) {
+    // https://stackoverflow.com/a/24785497
+    function wrap(text, width) {
+        text.each(function () {
+            var text = d3.select(this),
+                words = text.text().split(/\s+/).reverse(),
+                word,
+                line = [],
+                lineNumber = 0,
+                lineHeight = 1.1, // ems
+                x = text.attr("x"),
+                y = text.attr("y"),
+                dy = 0, //parseFloat(text.attr("dy")),
+                tspan = text.text(null)
+                            .append("tspan")
+                            .attr("x", x)
+                            .attr("y", y)
+                            .attr("dy", dy + "em");
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = text.append("tspan")
+                                .attr("x", x)
+                                .attr("y", y)
+                                .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                                .text(word);
+                }
+            }
+        });
+    }
+
+    function add_info(g, info, width = 80, height = 50) {
         var fill = "#666";
         // switch (info.status) {
         //     case "sh":
@@ -308,7 +342,7 @@
             .attr("y1", -info.h_tma)
             .attr("y2", -info.h_tma);
 
-        g.append("rect")
+        let g_rect = g.append("rect")
             .attr("x", -width / 2)
             .attr("y", 10)
             .attr("width", width)
@@ -323,26 +357,37 @@
             .attr("r", 3)
             .style("fill", fill);
 
-        g.append("text")
-            .attr("y", 28) //magic number here
+        let height_pointer = 28;
+        let width_margin = 3;
+
+        let g_name = g.append("text")
+            .attr("y", height_pointer) //magic number here
             .attr("x", -width / 2 + 9)
             .attr("font-size", "14px")
             .attr("font-weight", "bold")
             .attr("fill", text_color)
-            .text(info.name);
+            .text(info.name)
+            .call(wrap, width-width_margin);
+        height_pointer += (g_name.node().getBBox().height + 7)
 
-        g.append("text")
-            .attr("y", 52) //magic number here
+        let g_tma = g.append("text")
+            .attr("y", height_pointer) //magic number here
             .attr("x", -width / 2 + 9)
             .attr("font-size", "20px")
             .attr("fill", text_color)
-            .text(info.tma + " m");
+            .text(info.tma + " m")
+            .call(wrap, width-width_margin);
+        height_pointer += (g_tma.node().getBBox().height - 8)
 
-        g.append("text")
-            .attr("y", 68) //magic number here
+        let g_sampling = g.append("text")
+            .attr("y", height_pointer) //magic number here
             .attr("x", -width / 2 + 9)
             .attr("fill", text_color)
-            .text(info.sampling);
+            .text(info.sampling)
+            .call(wrap, width-width_margin);
+        height_pointer += (g_sampling.node().getBBox().height - 15)
+
+        g_rect.attr('height', height_pointer)
 
         // g.append("text")
         //     .attr("y", 50) //magic number here
