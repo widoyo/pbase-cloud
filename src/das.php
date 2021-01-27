@@ -11,6 +11,16 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
         $tenants = null;
         $locations = null;
         if ($user['tenant_id'] > 0) {
+            // set timezone tenant
+            $timezone_default = timezone_default();
+            $tenant = $this->db->query(
+                "SELECT COALESCE(tenant.timezone, '{$timezone_default}') AS timezone
+                FROM tenant
+                WHERE id={$user['tenant_id']}"
+            )->fetch();
+            date_default_timezone_set($tenant['timezone']);
+            // set timezone tenant
+
             $das = $this->db->query("SELECT
                     das.id,
                     das.nama,
@@ -54,6 +64,9 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
             $template = 'das/index.html';
         }
 
+        // kembalikan default ke UTC, just because
+        date_default_timezone_set('UTC');
+
         // dump(json_decode($das[0]['alur'], JSON_OBJECT_AS_ARRAY));
 
         return $this->view->render($response, $template, [
@@ -83,10 +96,20 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
         $user = $this->user;
 
         if ($user['tenant_id'] > 0) {
+            // set timezone tenant
+            $timezone_default = timezone_default();
+            $tenant = $this->db->query(
+                "SELECT COALESCE(tenant.timezone, '{$timezone_default}') AS timezone
+                FROM tenant
+                WHERE id={$user['tenant_id']}"
+            )->fetch();
+            date_default_timezone_set($tenant['timezone']);
+            // set timezone tenant
+
             $locations = $this->db->query("SELECT * FROM location
                 WHERE tenant_id={$user['tenant_id']}
                     AND das_id IS NOT NULL
-                    AND tipe='2'
+                    -- AND tipe='2'
                 ORDER BY elevasi DESC")->fetchAll();
             $geojson = [
                 'type' => 'FeatureCollection',
@@ -128,6 +151,9 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
                 }
                 $prev_ll = $ll;
             }
+
+            // kembalikan default ke UTC, just because
+            date_default_timezone_set('UTC');
 
             return $this->view->render($response, 'das/monitoring.html', [
                 'locations' => $locations,
