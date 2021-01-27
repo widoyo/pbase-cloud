@@ -109,7 +109,7 @@ $app->group('/das', function () use ($getDasMiddleware, $adminRoleMiddleware) {
             $locations = $this->db->query("SELECT * FROM location
                 WHERE tenant_id={$user['tenant_id']}
                     AND das_id IS NOT NULL
-                    -- AND tipe='2'
+                    AND tipe='2'
                 ORDER BY elevasi DESC")->fetchAll();
             $geojson = [
                 'type' => 'FeatureCollection',
