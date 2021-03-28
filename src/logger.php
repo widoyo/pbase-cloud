@@ -457,6 +457,21 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 'colors' => [],
                 'title' => ['BATT','SQ']
             ];
+            $result_klimat = [[
+                'datasets' => [
+		    'tick' => [],
+                ],
+                'labels' => [],
+                'colors' => ['3,172,237'],
+                'title' => ['CURAH HUJAN']],
+		[
+		'datasets' => [
+		    'wind_speed' => [],
+                ],
+                'labels' => [],
+                'colors' => ['3,172,237'],
+                'title' => ['Kec. Angin']]
+            ];
             $result_arr = [
                 'datasets' => [
                     'tick' => [],
@@ -498,6 +513,7 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $l['batt'] = isset($content['battery']) ? $content['battery'] : null;
                 $l['tick'] = isset($content['tick']) ? $content['tick'] : null;
                 $l['distance'] = isset($content['distance']) ? $content['distance'] : null;
+                $l['wind_speed'] = isset($content['wind_speed']) ? $content['wind_speed'] : null;
                 // if use raw
 
                 // insert to line chart
@@ -517,44 +533,6 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             $plot_distance = [];
             $plot_sq = [];
             $plot_batt = [];
-            // $plot_limit = strtotime('02:00:00') - strtotime('00:00:00'); // 1 hour
-            // // get to kelipatan 5 menit terdekat
-            // $jam = strtotime(date('H:00:00'));
-            // $now = strtotime(date('H:i:s'));
-            // $plot_to = $jam;
-            // while ($plot_to + 300 <= $now) {
-            //     $plot_to += 300;
-            // }
-            // // tambahkan hari, krn sebelum ini baru jam saja
-            // $plot_to = strtotime(date('Y-m-d') .' '. date('H:i:s', $plot_to));
-            // $plot_to = strtotime('2020-08-15 08:00:00');
-            // // foreach ($axes_raw as $sampling => $data) {
-            // //     $plot_to = $sampling;
-            // //     break;
-            // // }
-            // // get from
-            // $plot_from = $plot_to - $plot_limit;
-            // $default_raw = [
-            //     'tick' => null,
-            //     'distance' => null,
-            //     'sq' => null,
-            //     'batt' => null,
-            // ];
-            // // dump(date('Y-m-d H:i:s', $plot_to), false);
-            // // dump(date('Y-m-d H:i:s', $plot_from), true);
-            // while ($plot_from <= $plot_to) {
-            //     $plot_timelines[] = $plot_from;
-            //     if (isset($axes_raw[$plot_from])) {
-            //         $raw = $axes_raw[$plot_from];
-            //     } else {
-            //         $raw = $default_raw;
-            //     }
-            //     $plot_tick[] = $raw['tick'];
-            //     $plot_distance[] = $raw['distance'];
-            //     $plot_sq[] = $raw['sq'];
-            //     $plot_batt[] = $raw['batt'];
-            //     $plot_from += 300; // 5 min
-            // }
             $date_from = '';
             $date_to = '';
             for ($i=count($loggers)-1; $i>=0; $i--) {
@@ -570,6 +548,9 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                 $result['datasets']['batt'][] = $raw['batt'];
                 if ($logger['tipe'] == 'awlr') {
                     $result_awlr['datasets']['dist'][] = $raw['distance'];
+                } elseif ($logger['tipe'] == 'klimat') {
+                    $result_klimat['datasets'][0]['tick'][] = $raw['tick'];
+                    $result_klimat['datasets'][1]['wind_speed'][] = $raw['wind_speed'];
                 } else {
                     $result_arr['datasets']['tick'][] = $raw['tick'];
                 }
@@ -591,11 +572,13 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
                     $prev_d = $md;
                     $result['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                     $result_arr['labels'][] = "{$m}/{$d}, {$H}:{$I}";
+                    $result_klimat['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                     $result_awlr['labels'][] = "{$m}/{$d}, {$H}:{$I}";
                 } else {
                     $date_to = $raw['sampling_str'];
                     $result['labels'][] = "{$H}:{$I}";
                     $result_arr['labels'][] = "{$H}:{$I}";
+                    $result_klimat['labels'][] = "{$H}:{$I}";
                     $result_awlr['labels'][] = "{$H}:{$I}";
                 }
             }
@@ -635,6 +618,17 @@ $app->group('/logger', function () use ($getLoggerMiddleware) {
             }
 
             // dump($result);
+            if ($logger['tipe'] == 'klimat') {
+            	return $this->view->render($response, 'logger/show_klimat.html', [
+			'loggers' => $loggers,
+			'logger' => $logger,
+			'locations' => $locations,
+			'plot' => $plot,
+			'result' => $result,
+			'result_arr' => $result_klimat,
+			'date_range' => $date_range,
+            	]);
+	    }
 
             return $this->view->render($response, 'logger/show.html', [
                 'loggers' => $loggers,

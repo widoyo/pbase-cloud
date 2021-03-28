@@ -10,15 +10,7 @@
             <i class="fas fa-fw fa-arrow-left"></i>
         </button> #}
         <h1 class="h3 mb-0 mr-auto text-gray-800">
-            {% if logger.tipe == 'arr' %}
-                <span class="badge badge-primary">PCH</span>
-            {% elseif logger.tipe == 'awlr' %}
-                <span class="badge badge-danger">PDA</span>
-            {% elseif logger.tipe == 'klimat' %}
-                <span class="badge badge-warning">KLIMAT</span>
-            {% else %}
-                <span class="badge text-secondary">unknown</span>
-            {% endif %}
+            <span class="badge badge-warning">Klimatologi</span>
             {{ logger.sn }}
             {% if logger.location_nama %}
                 <small class="text-secondary">{{ logger.location_nama }}</small>
@@ -32,21 +24,12 @@
         {% endif %}
     </div>
 
-    {% if logger.tipe == 'awlr' %}
         <h4 class="text-center">
-            Tinggi Muka Air
-            <br>
-            {{ date_range }}
-        </h4>
-        <canvas id="chart-awlr" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
-    {% else %}
-        <h4 class="text-center">
-		Curah Hujan
+	Klimatologi
             <br>
             {{ date_range }}
         </h4>
         <canvas id="chart-arr" class="rounded" style="width: 100%; height: 400px" class="chartjs-render-monitor"></canvas>
-    {% endif %}
 
     <br>
     <br>
@@ -67,7 +50,8 @@
                 <tr>
                     <th>#</th>
                     <th>Sampling</th>
-                    <th>{{ logger.tipe == 'awlr' ? 'Distance' : 'Curah Hujan' }}</th>
+                    <th>Curah Hujan (mm)</th>
+                    <th>Kec. Angin (M/s)</th>
                     <th>SQ</th>
                     <th>BATT</th>
                 </tr>
@@ -77,7 +61,8 @@
                     <tr>
                         <td class="text-right" data-orderable="false">{{ loop.index }}</td>
                         <td class="text-center" data-order="{{ p.sampling }}">{{ p.sampling_str }}</td>
-                        <td class="text-center">{{ logger.tipe == 'awlr' ? p.distance : p.tick*logger.tipp_fac }} | {{ logger.tipe == 'awlr' ? logger.ting_son : logger.tipp_fac }}</td>
+                        <td class="text-center">{{ p.tick*logger.tipp_fac }}</td>
+                        <td class="text-center">{{ p.wind_speed }}</td>
                         <td class="text-center">{{ p.sq }}</td>
                         <td class="text-center">{{ p.batt }}</td>
                     </tr>
@@ -114,61 +99,6 @@
 
     {# plot #}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-    {% if logger.tipe == 'awlr' %}
-        <script>
-            initChartAwlr = function () {
-                let ctx = document.getElementById('chart-awlr').getContext('2d');
-                let myChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: {{ result_awlr.labels|json_encode|raw }},
-                        datasets: [
-                            {% for data in result_awlr.datasets %}
-                            {
-                                label: "{{ result_awlr.title[loop.index0] }}",
-                                data: {{ data|json_encode|raw }},
-                                backgroundColor: 'rgba({{ result_awlr.colors[loop.index0] }},0.5)',
-                                borderColor: 'rgba({{ result_awlr.colors[loop.index0] }},1)',
-                                borderWidth: 3,
-				pointRadius: 0,
-                                fill: false,
-                            },
-                            {% endfor %}
-                        ]
-                    },
-                    options: {
-                        scales: {
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: true,
-                                    min: 0,
-                                    // max: 200,
-                                },
-                                // scaleLabel: {
-                                // 	display: true,
-                                // 	labelString: 'm'
-                                // }
-                            }],
-                            // xAxes: [{
-                            // 	ticks: {
-                            // 		maxTicksLimit: 12
-                            // 	}
-                            // }]
-                        },
-                        legend: {
-                            position: 'bottom'
-                        },
-                        // tooltips: {
-                        // 	callbacks: {
-                        // 		label: (item, data) => `${data.datasets[item.datasetIndex].label} : ${item.yLabel} mm`,
-                        // 	},
-                        // },
-                    }
-                });
-            }
-            initChartAwlr();
-        </script>
-    {% else %}
         <script>
             initChartArr = function () {
                 let ctx = document.getElementById('chart-arr').getContext('2d');
@@ -177,15 +107,28 @@
                     data: {
                         labels: {{ result_arr.labels|json_encode|raw }},
                         datasets: [
-                            {% for data in result_arr.datasets %}
+                            {% for data in result_arr.datasets.0 %}
                             {
-                                label: "{{ result_arr.title[loop.index0] }}",
+                                label: "Curah Hujan",
                                 data: {{ data|json_encode|raw }},
-                                backgroundColor: 'rgba({{ result_arr.colors[loop.index0] }},0.5)',
+                                backgroundColor: 'rgba(0,0,255,0.5)',
                                 borderColor: 'rgba({{ result_arr.colors[loop.index0] }},1)',
                                 borderWidth: 3,
 				pointRadius: 0,
                                 fill: true,
+				yAxisID: 'y-axis-1'
+                            },
+                            {% endfor %}
+                            {% for data in result_arr.datasets.1 %}
+                            {
+                                label: "Kec. Angin",
+                                data: {{ data|json_encode|raw }},
+                                backgroundColor: 'rgb(201, 203, 207)',
+                                borderColor: 'rgb(201, 203, 207)',
+                                borderWidth: 3,
+				pointRadius: 0,
+                                fill: true,
+				yAxisID: 'y-axis-2'
                             },
                             {% endfor %}
                         ]
@@ -193,6 +136,8 @@
                     options: {
                         scales: {
                             yAxes: [{
+				id: 'y-axis-1',
+				position: 'left',
                                 ticks: {
                                     beginAtZero: true,
                                     min: 0,
@@ -201,6 +146,18 @@
                                 scaleLabel: {
                                 	display: true,
                                 	labelString: 'mm'
+				}},
+				{
+				id: 'y-axis-2',
+				position: 'right',
+                                ticks: {
+                                    beginAtZero: true,
+                                    min: 0,
+                                    max: 32,
+                                },
+                                scaleLabel: {
+                                	display: true,
+                                	labelString: 'm/s'
                                 }
                             }],
                             // xAxes: [{
@@ -214,7 +171,7 @@
                         },
                         tooltips: {
                         	callbacks: {
-                        		label: (item, data) => `${data.datasets[item.datasetIndex].label} : ${item.yLabel} mm`,
+					label: (item, data) => `${data.datasets[item.datasetIndex].label} : ${item.yLabel}`,
                         	},
                         },
                     }
@@ -222,7 +179,6 @@
             }
             initChartArr();
         </script>
-    {% endif %}
     <script>
         initChart = function () {
 			let ctx = document.getElementById('chart-bar').getContext('2d');

@@ -8,7 +8,7 @@
     <div class="d-flex align-items-center mb-4">
         <h1 class="h3 mb-0 mr-auto text-gray-800">
             <i class="fas fa-microchip fa-sm mr-1"></i>
-            Daftar Logger
+	    Logger <small class="text-muted">({{ loggers|length}})</small>
         </h1>
         {% if (user().tenant_id > 0) %}
             <a class="btn btn-success" href="/logger/import">
